@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import managerApi from "../../Axios/managerInstance";
 import type { RootState } from "../../redux/store";
 import { setProfile, setError, setLoading } from "../../redux/managerSlice";
-
+import toast from 'react-hot-toast'
 const ManagerProfile: React.FC = () => {
   const dispatch = useDispatch();
   const { manager, profile, loading, error } = useSelector(
@@ -21,7 +21,8 @@ const ManagerProfile: React.FC = () => {
       try {
         dispatch(setLoading());
         const response: any = await managerApi.get(`/profile/${manager._id}`);
-        dispatch(setProfile(response.data));
+        dispatch(setProfile(response.data.data));
+        console.log(response)
       } catch (err) {
         dispatch(setError("Failed to fetch profile."));
       }

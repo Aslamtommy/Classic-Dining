@@ -16,6 +16,7 @@ import ManagerDashboard from './pages/Manager/ManagerDashboard';
 import ManagerProtected from './components/Manager/ManagerProtected';
 import UserProtected from './components/User/UserPrrotected';
  import AdminProtected from './components/Admin/AdminProtected';
+ 
 const App = () => {
   return (
     <div>

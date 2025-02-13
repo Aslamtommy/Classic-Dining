@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { IOtpService } from "../interfaces/otp/OtpServiceInterface";
- 
+ import { HttpStatus } from "../constants/HttpStatus";
 
  
 export class OtpController {

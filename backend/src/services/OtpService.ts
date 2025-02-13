@@ -44,4 +44,6 @@ export class OtpService implements IOtpService {
   async resendOtp(email: string): Promise<boolean> {
     return await this.sendOtp(email);
   }
+
+  
 }

@@ -10,6 +10,7 @@ import sendOtp from '../../utils/sentotp';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+ 
 
 interface SignupFormInputs {
   name: string;
@@ -93,27 +94,34 @@ const SignupForm: React.FC = () => {
   const handleOtpSuccess = async (successMessage: string) => {
     setMessage(successMessage);
     setShowOtpModal(false);
-
+  
     // Retrieve the latest values from the form.
     const data = getValues();
+  
     try {
       dispatch(setLoading());
-      await api.post('/register', {
+      const response  = await api.post<{ message: string }>('/register', {
         name: data.name,
         email: data.email,
         password: data.password,
         mobile_no: data.mobileNo,
       });
-
-      
-      setMessage('User registered successfully!');
+  
+      setMessage(response.data.message || 'User registered successfully!');
       navigate('/login');
     } catch (error: any) {
       console.error(error);
-      dispatch(setError('Error registering user.'));
-      setMessage('Error registering user. Please try again.');
+  
+      // Check if the error response contains the 'User already exists' message
+      if (error.response?.data?.message === 'User with this email already exists') {
+        setMessage('This email is already registered. Please use a different email.');
+      } else {
+        dispatch(setError('Error registering user.'));
+        setMessage('Error registering user. Please try again.');
+      }
     }
   };
+  
 
   const handleGoogleSignIn = async () => {
     const auth = getAuth(App);
@@ -127,6 +135,7 @@ const SignupForm: React.FC = () => {
       const response = await api.post<GoogleSignInResponse>('/google', {
         idToken,
       });
+      
       dispatch(setUser(response.data.user));
       setMessage('Google Sign-In successful!');
       navigate('/')

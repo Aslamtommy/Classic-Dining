@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 import { logoutUser } from '../redux/userslice';
+import toast  from  'react-hot-toast';;
 
 interface TokenResponse {
   tokens: {
@@ -26,11 +27,12 @@ const logout = (): void => {
   // Dispatch the logout action to clear user state
   dispatch(logoutUser());
 
-  // Redirect to login route
-  window.location.href = '/login';
+  // Redirect to login route after 5 seconds
+  
+    window.location.href = '/login';
+ 
 };
 
- 
 api.interceptors.response.use(
   (response) => {
     // If the response is successful, just return it
@@ -44,13 +46,14 @@ api.interceptors.response.use(
 
       if (status === 403) {
         // Handle 403 Forbidden - User might be blocked
-        alert('You have been blocked by the admin.');
-        logout();
+        toast.error('You have been blocked by the admin.', {
+       
+        });
+        setTimeout(() => logout(), 5000); // Redirect after 5 seconds
         return Promise.reject(error);
       }
 
       if (status === 401 && !originalRequest._retry) {
-      
         originalRequest._retry = true; // Mark the request as retried to avoid an infinite loop
 
         try {
@@ -67,7 +70,10 @@ api.interceptors.response.use(
           return axios(originalRequest);
         } catch (refreshError) {
           console.error('Failed to refresh token:', refreshError);
-          logout();
+          toast.error('Session expired. Please log in again.', {
+            duration: 5000, // Display the toast for 5 seconds
+          });
+          setTimeout(() => logout(), 5000); // Redirect after 5 seconds
           return Promise.reject(refreshError);
         }
       }

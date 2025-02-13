@@ -95,10 +95,11 @@ class AdminService implements IAdminService {
       if (!user) {
         throw new Error("User not found");
       }
-
-      user.is_blocked = isBlocked;
-      await user.save();
-      return user;
+console.log('user is blocking bolean',isBlocked)
+      user.isBlocked = isBlocked;
+      const updatedUser=await this.userRepository.save(user) 
+      
+      return updatedUser;
     } catch (error: any) {
       throw new Error(error.message);
     }

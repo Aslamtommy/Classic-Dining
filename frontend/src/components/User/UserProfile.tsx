@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfilePicture, setUser } from '../../redux/userslice';
 import api from '../../Axios/userInstance';
-
+import toast from 'react-hot-toast'
  
 
 const UserProfile: React.FC = () => {
@@ -15,20 +15,25 @@ const email=storedUser?.email
   useEffect(() => {
     
    
-      const fetchProfile = async () => {
-        try {
-          const response:any = await api.get ('/profile',{ params: { email } } );
-          console.log('Fetched profile:', response.data.user);
-          dispatch(setUser(response.data.user));
-          localStorage.setItem('userProfile', JSON.stringify(response.data.user));
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-        }
-      };
+    
       fetchProfile();
    
   }, [dispatch]);
 
+  
+  
+
+  const fetchProfile = async () => {
+    try {
+      const response:any = await api.get ('/profile',{ params: { email } } );
+      console.log(response)
+      console.log('Fetched profile:', response.data.data );
+      dispatch(setUser(response.data.data ));
+      
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setSelectedFile(file);
@@ -43,33 +48,36 @@ const email=storedUser?.email
       alert('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('profilePicture', selectedFile);
-
+  
     try {
+
+      console.log('FormData:', formData);
       const response = await api.post<{ profilePicture: string }>('/uploadProfilePicture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       const uploadedImageUrl = response.data.profilePicture;
-
-      alert('Profile picture updated successfully!');
-
+  
+    toast.success('Profile picture uploaded successfully')
+  
+      // Update Redux store
       dispatch(updateProfilePicture(uploadedImageUrl));
-
-      const updatedProfile = { ...profile, profilePicture: uploadedImageUrl };
-      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-
-      setPreview(null);
+   
+  
+      // Update local preview to trigger re-render
+      
       setSelectedFile(null);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
       alert('Failed to upload profile picture.');
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-sepia-100 flex flex-col justify-center items-center p-4">

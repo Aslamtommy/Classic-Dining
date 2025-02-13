@@ -7,17 +7,16 @@ import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import App from "../../features/FirebaseAuthentication/config"
 import { useNavigate } from "react-router-dom"
 import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal"
-
+import toast from "react-hot-toast"
 interface LoginResponse {
+  success: boolean;
   message: string
-  user: {
-    id: string
-    name: string
-    email: string
-  }
-  tokens: {
-    accessToken: string
-    refreshToken: string
+  data: {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
   }
 }
 
@@ -52,10 +51,11 @@ const LoginForm = () => {
     dispatch(setLoading())
     try {
       const response = await api.post<LoginResponse>("/login", { email, password }, { withCredentials: true })
-
-      const { user } = response.data
+console.log(response)
+      const { user } = response.data.data
       dispatch(setUser({ name: user.name, email: user.email }))
-      setMessage("Login successful!")
+      toast.success('Login successfil')
+   
       navigate("/")
     } catch (error: any) {
       console.error(error)
@@ -74,11 +74,13 @@ const LoginForm = () => {
       const result = await signInWithPopup(auth, provider)
       const idToken = await result.user.getIdToken()
 
-      const response = await api.post<GoogleSignInResponse>("/google", { idToken }, { withCredentials: true })
-      const { user } = response.data
-
+      const response :any= await api.post<GoogleSignInResponse>("/google", { idToken }, { withCredentials: true })
+      console
+      const user  = response.data.data
+console.log(user)
       dispatch(setUser(user))
-      setMessage("Google Sign-In successful!")
+      toast.success('Google Sign-In successful!')
+     
       navigate("/")
     } catch (error: any) {
       console.error(error)

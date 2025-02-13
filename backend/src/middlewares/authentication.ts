@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
-
+import { HttpStatus } from '../constants/HttpStatus';
 export const authenticateToken = (requiredRole?: string) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
@@ -35,7 +35,7 @@ export const authenticateToken = (requiredRole?: string) => {
       // Check if the required role matches the token's role
       if (requiredRole && decoded.role !== requiredRole) {
         console.log('Forbidden access: insufficient permissions for role', decoded.role);
-        res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+        res.status(HttpStatus.Forbidden).json({ message: 'Forbidden: Insufficient permissions' });
         return;
       }
 

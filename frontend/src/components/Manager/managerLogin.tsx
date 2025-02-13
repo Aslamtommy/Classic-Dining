@@ -20,27 +20,29 @@ const ManagerLogin: React.FC = () => {
     setErrorState("");
     dispatch(setLoading());
     setLoadingState(true);
-
+  
     try {
-      const response: any = await managerApi.post("/login", {
-        email,
-        password,
-      });
-
-      const managerData = response.data.manager;
-      dispatch(setManager(managerData));
-
-      // Redirect to manager dashboard
-      navigate('/manager/home')
-     
+      const response:any = await managerApi.post("/login", { email, password });
+  
+      console.log("Manager login response:", response);
+  
+      if (response.data.success) {
+        dispatch(setManager(response.data.data)); // Store manager info
+        console.log("Login successful. Redirecting to /manager/home");
+        navigate("/manager/home", { replace: true });
+      } else {
+        setErrorState("Login failed. Please try again.");
+      }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || "Something went wrong.";
-      dispatch(setError(errorMsg));
+      console.error("Login error:", err);
+      const errorMsg = err.response?.data?.message || "Something went wrong.";
       setErrorState(errorMsg);
+      dispatch(setError(errorMsg));
     } finally {
       setLoadingState(false);
     }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -49,10 +51,7 @@ const ManagerLogin: React.FC = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
@@ -66,10 +65,7 @@ const ManagerLogin: React.FC = () => {
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -84,7 +80,9 @@ const ManagerLogin: React.FC = () => {
           </div>
           <button
             type="submit"
-            className={`w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 ${loading ? "opacity-50" : ""}`}
+            className={`w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 ${
+              loading ? "opacity-50" : ""
+            }`}
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

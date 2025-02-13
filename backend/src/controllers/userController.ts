@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
- 
 import admin from "../config/Firebase/firebase";
 import { googleUserData } from "../types/google";
-
-
+import { HttpStatus } from "../constants/HttpStatus";
+import { CookieManager } from "../utils/cookiemanager";
 import { IUserService } from "../interfaces/user/UserServiceInterface";
+import { MessageConstants } from "../constants/MessageConstants";
+import { sendResponse, sendError } from "../utils/responseUtils"; // Import utility functions
 
 declare global {
   namespace Express {
@@ -12,27 +13,18 @@ declare global {
       data?: {
         id: string;
         role: string;
-        userId?: string; 
-        
+        userId?: string;
       };
     }
   }
 }
 
 export class Usercontroller {
- 
-
-  constructor(    private userService:IUserService ) {
-
-  }
+  constructor(private userService: IUserService) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { name, email, password, mobile_no } = req.body;
-
-    
-
-      // Calling the UserService to handle the business logic
       const newUser = await this.userService.registerUser(
         name,
         email,
@@ -40,82 +32,55 @@ export class Usercontroller {
         mobile_no
       );
 
-      
-      res.status(201).json({
-        message: "User registered successfully",
+      const responseData = {
         user: {
           id: newUser._id,
           name: newUser.name,
           email: newUser.email,
           mobile_no: newUser.mobile_no,
         },
-      });
+      };
+      sendResponse(res, HttpStatus.Created, MessageConstants.USER_REGISTER_SUCCESS, responseData);
     } catch (error: any) {
-      console.log(error.message);
-      res
-        .status(500)
-        .json({ message: "Internal Server Error", error: error.message });
+      if (error.message === "User with this email already exists.") {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ALREADY_EXISTS, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
 
   async signIn(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      if (!email || !password) {
-        res.status(400).json({ message: "Email and password are required" });
-        return;
-      }
-
       const { user, accessToken, refreshToken } =
         await this.userService.authenticateUser(email, password);
 
-      // Set cookies securely
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 10 * 60 * 1000,
-      });
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      CookieManager.setAuthCookies(res, { accessToken, refreshToken });
 
-      res.status(200).json({
-        message: "Login successful",
+      const responseData = {
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
           mobile_no: user.mobile_no,
         },
-      });
+      };
+      sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, responseData);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.LOGIN_FAILED, error.message);
     }
   }
 
   async googleSignIn(req: Request, res: Response): Promise<void> {
     try {
-      console.log("GoogleSignIn: Received request with body:", req.body);
-
       const { idToken } = req.body;
-
       if (!idToken) {
-        console.log("GoogleSignIn: No ID token provided.");
-        res.status(400).json({ message: "ID token is required" });
+        sendError(res, HttpStatus.BadRequest, MessageConstants.ID_TOKEN_REQUIRED);
         return;
       }
 
-      console.log("GoogleSignIn: Verifying ID token.");
       const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-      // Log the decoded token to verify its contents
-      console.log(
-        "GoogleSignIn: ID token verified. Decoded token:",
-        decodedToken
-      );
-
       const userData: googleUserData = {
         uid: decodedToken.uid,
         email: decodedToken.email!,
@@ -123,243 +88,132 @@ export class Usercontroller {
         name: decodedToken.name || "Unknown",
       };
 
-      console.log("GoogleSignIn: Prepared user data:", userData);
-
-      console.log("GoogleSignIn: Attempting to handle user sign-in/creation.");
       const { user, accessToken, refreshToken } =
         await this.userService.googleSignIn(userData);
+      CookieManager.setAuthCookies(res, { accessToken, refreshToken });
 
-      console.log(
-        "GoogleSignIn: user, accessToken, refreshToken:",
-        user,
-        accessToken,
-        refreshToken
-      );
-
-      // Set cookies for authentication tokens
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 3000,
-      });
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
-      res.status(200).json({
-        message: "Google Sign-In successful",
+      const responseData = {
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
         },
-      });
+      };
+      sendResponse(res, HttpStatus.OK, MessageConstants.GOOGLE_SIGNIN_SUCCESS, responseData);
     } catch (error: any) {
-      // Log the entire error object for debugging
-      console.error("GoogleSignIn: Error occurred:", error);
-      res.status(500).json({
-        message: "Google Sign-In failed",
-        error: error.message,
-      });
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.GOOGLE_SIGNIN_FAILED, error.message);
     }
   }
 
   async refreshAccessToken(req: Request, res: Response): Promise<void> {
     try {
-      console.log("Cookies received in refreshAccessToken:", req.cookies);
-
       const refreshToken = req.cookies.refreshToken;
-
       if (!refreshToken) {
-        console.warn("No refresh token found in cookies");
-        res.status(400).json({ message: "Refresh token is required" });
+        sendError(res, HttpStatus.BadRequest, MessageConstants.REFRESH_TOKEN_REQUIRED);
         return;
       }
-
-      console.log(
-        "Attempting to refresh access token with refreshToken:",
-        refreshToken
-      );
 
       const tokens = await this.userService.refreshAccessToken(refreshToken);
-
-      if (!tokens || !tokens.accessToken) {
-        console.warn("Invalid refresh token or no tokens returned");
-        res
-          .status(400)
-          .json({ message: "Invalid refresh token or no tokens returned" });
+      if (!tokens?.accessToken) {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.INVALID_REFRESH_TOKEN);
         return;
       }
 
-      // Set the new access token in cookies
-      console.log("Setting new access token in cookies");
-      res.cookie("accessToken", tokens.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 3000, // 15 minutes
-      });
-
-      res.status(200).json({
-        tokens: {
-          accessToken: tokens.accessToken,
-        },
+      res.cookie(
+        "accessToken",
+        tokens.accessToken,
+        CookieManager.getCookieOptions()
+      );
+      sendResponse(res, HttpStatus.OK, MessageConstants.ACCESS_TOKEN_REFRESHED, {
+        accessToken: tokens.accessToken,
       });
     } catch (error: any) {
-      console.error("Failed to refresh tokens:", error.message);
-      res
-        .status(500)
-        .json({ message: "Failed to refresh tokens", error: error.message });
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INVALID_REFRESH_TOKEN, error.message);
     }
   }
 
-  public async getProfile(req: Request, res: Response): Promise<void> {
+  async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      console.log("UserController: Received getProfile request");
-
       const userId = req.data?.userId;
-      console.log("UserController: Extracted userId:", userId);
-
       if (!userId) {
-        res.status(400).json({ message: "User ID not found in token" });
+        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
         return;
       }
 
       const userProfile = await this.userService.getUserProfile(userId);
-
       if (!userProfile) {
-        res.status(404).json({ message: "User not found" });
+        sendError(res, HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
         return;
       }
 
-      res.status(200).json({ message: "Profile fetched successfully", user: userProfile });
+      sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_FETCHED_SUCCESS, userProfile);
     } catch (error: any) {
-      console.error("UserController: Error in getProfile:", error.message);
-      res.status(500).json({ message: "Internal Server Error", error: error.message });
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
+
   async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
-      console.log("forgetemail", email);
       if (!email) {
-        res.status(400).json({ success: false, message: "Email is required" });
+        sendError(res, HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
         return;
       }
-      const response = await this.userService.forgotPasswordVerify(email);
-      if (response.success) {
-        res.status(200).json(response);
+
+      const serviceResponse = await this.userService.forgotPasswordVerify(email);
+      if (serviceResponse.success) {
+        sendResponse(res, HttpStatus.OK, serviceResponse.message, serviceResponse.data);
       } else {
-        res.status(400).json(response);
+        sendError(res, HttpStatus.BadRequest, serviceResponse.message, serviceResponse.error);
       }
     } catch (error: any) {
-      console.error("Error in forgotPassword controller:", error.message);
-      res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
+
   async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
+      await this.userService.resetPassword(email, password);
 
-      // Log the received request body
-      console.log("Received request body:", req.body);
+      sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
 
-      if (!email || !password) {
-        console.log("Missing email or newPassword in request body");
-        res.status(400).json({
-          success: false,
-          message: "Email and new password are required",
-        });
+  async uploadProfilePicture(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.data?.userId;
+      if (!userId) {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
         return;
       }
 
-      console.log(`Attempting to reset password for email: ${email}`);
-
-      const response = await this.userService.resetPassword(email, password);
-
-      // Log the response from the userService
-      console.log("Response from userService.resetPassword:", response);
-
-      if (response.success) {
-        console.log(`Password successfully updated for email: ${email}`);
-        res
-          .status(200)
-          .json({ success: true, message: "Password successfully updated" });
-      } else {
-        console.log(
-          `Failed to update password for email: ${email}. Reason:`,
-          response
-        );
-        res.status(400).json(response);
+      if (!req.file?.path) {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.FILE_NOT_UPLOADED);
+        return;
       }
-    } catch (error: any) {
-      
-      console.error(
-        "Error in resetPassword controller:",
-        error.message,
-        error.stack
-      );
-      res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
-    }
-  }
-  async uploadProfilePicture(req: Request, res: Response): Promise<void> {
-    try {
-      console.log("Starting uploadProfilePicture method");
-  
-      const userId: string | undefined = req.data?.userId;
-      if (!userId) {
-        res.status(400).json({ message: "User ID not found in token" });
-        return;  
-      }
-  
-      if (!req.file || !req.file.path) {
-        res.status(400).json({ message: "No file uploaded" });
-        return 
-      }
-  
+
       const result = await this.userService.uploadProfilePicture(userId, req.file.path);
-  
-      res.status(result.success ? 200 : 404).json(result);
-      return; 
+      if (result.success) {
+        sendResponse(res, HttpStatus.OK, result.message, {
+          profilePicture: result.profilePicture,
+        });
+      } else {
+        sendError(res, HttpStatus.BadRequest, result.message, "Failed to upload profile picture");
+      }
     } catch (error: any) {
-      console.error("Error in uploadProfilePicture method:", error.message);
-      res.status(500).json({ message: "Internal Server Error", error: error.message });
-      return;  
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
-  
-  
 
   async logout(req: Request, res: Response): Promise<void> {
     try {
-      res.clearCookie("accessToken", {
-        httpOnly: true,
-        secure: false,
-        // sameSite: 'none',
-      });
-
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: false,
-        //  sameSite: 'none',
-      });
-
-      res
-        .status(200)
-        .json({ success: true, message: "Signed Out Successfully" });
+      CookieManager.clearAuthCookies(res);
+      sendResponse(res, HttpStatus.OK, MessageConstants.LOGOUT_SUCCESS);
     } catch (error: any) {
-      console.error(error.message);
-
-      res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
-
 }

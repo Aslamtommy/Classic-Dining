@@ -7,7 +7,7 @@ export interface IUser extends Document {
   password?: string;  
   mobile_no?: string;   
   is_verified: boolean;
-  is_blocked: boolean;
+   isBlocked: boolean;
   google_id?: string;  
   profilePicture?: string;
 }
@@ -20,7 +20,7 @@ const userSchema: Schema = new Schema(
     password: { type: String, required: false },  
     mobile_no: { type: String, required: false },
     is_verified: { type: Boolean, default: false },
-    is_blocked: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
     profilePicture: { type: String },
   },
   { timestamps: true },

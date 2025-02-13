@@ -4,6 +4,6 @@ export interface Signup {
   password?: string;  
   mobile_no?: string;
   is_verified: boolean;
-  is_blocked: boolean;
+   isBlocked: boolean;
   google_id?: string;
 }

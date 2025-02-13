@@ -14,12 +14,13 @@ import { sentMail } from '../utils/SendMails';
 import { IUserService } from '../interfaces/user/UserServiceInterface';
 import { UserRepositoryInterface } from '../interfaces/user/UserRepositoryInterface';
 import { OtpRepository } from '../repositories/otpRepository';
-import userModel from "../models/User/userModel";
+ 
 import cloudinary from "../config/cloudinary";
 export interface ForgotPasswordResponse {
   success: boolean;
   message: string;
   data: string | null;
+  error?: string
 }
 export class UserService implements IUserService {
  
@@ -54,7 +55,7 @@ export class UserService implements IUserService {
       password: hashedPassword,
       mobile_no,
       is_verified: false,
-      is_blocked: false,
+       isBlocked: false,
     } 
 
     console.log('Register: Creating new user with data:', userData) 

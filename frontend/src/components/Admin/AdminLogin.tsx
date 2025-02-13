@@ -1,8 +1,9 @@
-import React, { useState  } from 'react';
-import { adminLogin } from '../../redux/adminSlice';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { useNavigate } from 'react-router-dom';
+import { adminLogin } from '../../redux/adminSlice';
+import adminApi from '../../Axios/adminInstance';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -10,29 +11,42 @@ const AdminLogin: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  
-  const { loading, error  } = useSelector((state: RootState) => state.admin);
+  // Global loading and error state from Redux store
+  const { loading, error } = useSelector((state: RootState) => state.admin);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // Handle form submission
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Logging in with:', { email, password });  
- 
-    const result = await dispatch(adminLogin({ email, password }));
-    
-    
-    if (result.meta.requestStatus === 'fulfilled') {
+    console.log('Logging in with:', { email, password });
+
+    setLocalError(null); // Reset error before new request
+
+    try {
+      const response:any = await adminApi.post('/login', { email, password });
+      console.log('Admin response received successfully:', response);
+
+      dispatch(adminLogin({ email: response.data.data.email })); // Dispatch the login action
       navigate('/admin/dashboard');
+    } catch (error: any) {
+      console.error('Login error:', error);
+
+      // Extract the error response message from the backend
+      const errorMessage =
+        error.response?.data?.message || "Invalid email or password. Please try again.";
+      
+      setLocalError(errorMessage);
     }
   };
 
-   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
 
-        {error && <p className="mb-4 text-center text-red-500">{error}</p>}
+        {/* Show error messages */}
+        {localError && <p className="mb-4 text-center text-red-500">{localError}</p>}
+        {error && !localError && <p className="mb-4 text-center text-red-500">{error}</p>}
 
         <form onSubmit={handleLogin}>
           <div className="mb-4">

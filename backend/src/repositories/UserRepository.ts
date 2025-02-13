@@ -14,7 +14,7 @@ export class UserRepository implements UserRepositoryInterface {
           email: googleUser.email,
           google_id: googleUser.uid,
           is_verified: googleUser.email_verified,
-          is_blocked: false, // Default to false
+           isBlocked: false, // Default to false
         });
 
         const savedUser = await newUser.save();
@@ -85,6 +85,10 @@ export class UserRepository implements UserRepositoryInterface {
   }
   async updateProfilePicture(userId: string, profilePicture: string) {
     return await User.findByIdAndUpdate(userId, { profilePicture }, { new: true });
+  }
+
+  async save(user:IUser):Promise<IUser>{
+    return await user.save()
   }
 }
 
