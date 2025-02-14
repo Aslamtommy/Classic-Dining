@@ -4,7 +4,9 @@ export interface IManagerRepository {
   findByEmail(email: string): Promise<IManager | null>;
   create(managerData: Partial<IManager>): Promise<IManager>;
   findAllPending(): Promise<IManager[]>;
-  updateManagerStatus(managerId: string, isBlocked: boolean): Promise<IManager | null>;
+  updateManagerStatus( managerId: string,
+    isBlocked: boolean,
+    blockReason?: string): Promise<IManager | null>;
   findById(managerId: string): Promise<IManager | null>;
   save(manager: IManager): Promise<IManager>;
   findAll(filter: any, skip: number, limit: number): Promise<any[]>;

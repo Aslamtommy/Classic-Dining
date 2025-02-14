@@ -59,6 +59,6 @@ userRoute.post('/uploadProfilePicture',authenticateToken('user'),upload.single('
   userController.uploadProfilePicture(req,res)
 })
 userRoute.post('/logout',(req,res)=>userController.logout(req,res))
-
+userRoute.put('/updateProfile',authenticateToken('user'),(req,res)=>userController.updateProfile(req,res))
 
 export default userRoute;

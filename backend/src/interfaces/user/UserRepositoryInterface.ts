@@ -14,4 +14,5 @@ export interface UserRepositoryInterface {
     updateProfilePicture(userId: string, profilePicture: string): Promise<any>;
  
   save(user:IUser):Promise<IUser>
+  update(id: string, updateData: any): Promise<any>
 }

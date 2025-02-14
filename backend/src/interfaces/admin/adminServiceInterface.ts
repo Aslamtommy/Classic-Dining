@@ -2,7 +2,7 @@ export interface IAdminService {
   adminLogin(email: string, password: string): Promise<{ admin: any; accessToken: string; refreshToken: string }>;
   refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }>;
   getPendingManagers(): Promise<any>;
-  updateManagerStatus(managerId: string, isBlocked: boolean): Promise<any>;
+  updateManagerStatus(managerId: string, isBlocked: boolean,  blockReason?: string) : Promise<any>;
   // Updated getAllManagers to support search and filter parameters.
   getAllManagers(
     page: number,

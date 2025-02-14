@@ -1,6 +1,6 @@
 import express, { Application } from 'express';
 import userRoute from './routes/userRoutes';
-import otpRoute from './routes/OtpRourtes';
+import otpRoute from './routes/OtpRoutes';
 import connectDB from './config/db';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';

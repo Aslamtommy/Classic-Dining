@@ -27,5 +27,7 @@ export const MessageConstants = {
     REFRESH_TOKEN_FAILED: "Failed to refresh tokens.",
     ACCESS_DENIED: "Access denied.",
     INVALID_CREDENTIALS: "Invalid credentials.",
+    PROFILE_UPDATED_SUCCESS: 'Profile updated successfully',
+EMAIL_ALREADY_EXISTS: 'Email already in use',
   };
   

@@ -90,6 +90,14 @@ export class UserRepository implements UserRepositoryInterface {
   async save(user:IUser):Promise<IUser>{
     return await user.save()
   }
+
+  public async update(id: string, updateData: any): Promise<any> {
+    return User.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true } // Return the updated document
+    ).exec();
+  }
 }
 
  

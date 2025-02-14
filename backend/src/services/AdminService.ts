@@ -54,8 +54,8 @@ class AdminService implements IAdminService {
     return await this.managerRepository.findAllPending();
   }
 
-  async updateManagerStatus(managerId: string, isBlocked: boolean): Promise<any> {
-    return await this.managerRepository.updateManagerStatus(managerId, isBlocked);
+  async updateManagerStatus(managerId: string, isBlocked: boolean,  blockReason?: string): Promise<any> {
+    return await this.managerRepository.updateManagerStatus(managerId, isBlocked, blockReason);
   }
 
   // services/adminService.ts

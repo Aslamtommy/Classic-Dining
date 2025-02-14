@@ -41,16 +41,22 @@ export class ManagerService implements IManagerService {
     });
   }
 
+  // In managerService.ts
   async loginManager(email: string, password: string): Promise<ILoginResponse> {
     const manager = await this.managerRepository.findByEmail(email);
-    if (!manager) throw new Error(MessageConstants.INVALID_CREDENTIALS);
-    if (manager.isBlocked) throw new Error(MessageConstants.ACCESS_DENIED);
-
-    // Validate password
+    if (!manager) throw new Error(MessageConstants.LOGIN_FAILED);
+  
+    if (manager.isBlocked) {
+      throw new Error(JSON.stringify({
+        code: MessageConstants.MANAGER_BLOCKED,
+        message: 'Account blocked',
+        reason: manager.blockReason || 'Contact support for details'
+      }));
+    }
+  
     const isPasswordValid = await bcrypt.compare(password, manager.password);
-    if (!isPasswordValid) throw new Error(MessageConstants.INVALID_CREDENTIALS);
-
-    // Generate tokens
+    if (!isPasswordValid) throw new Error(MessageConstants.LOGIN_FAILED);
+  
     return {
       manager,
       accessToken: generateAccessToken(manager._id.toString(), "manager"),

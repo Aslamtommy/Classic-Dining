@@ -28,15 +28,27 @@ class AdminController {
         }
     }
 
-    async updateManagerStatus(req: Request, res: Response): Promise<void> {
-        const { managerId, isBlocked } = req.body;
-        try {
-            const updatedManager = await this.adminService.updateManagerStatus(managerId, isBlocked);
-            sendResponse(res, HttpStatus.OK, MessageConstants.MANAGER_STATUS_UPDATED, { updatedManager });
-        } catch (error: any) {
-            sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
-        }
+// Controller
+async updateManagerStatus(req: Request, res: Response): Promise<void> {
+    const { managerId, isBlocked, blockReason } = req.body; // Add blockReason
+  
+    // Validate block reason if blocking
+    if (isBlocked && !blockReason) {
+      sendError(res, HttpStatus.BadRequest, 'Block reason is required.');
+      return;
     }
+  
+    try {
+      const updatedManager = await this.adminService.updateManagerStatus(
+        managerId,
+        isBlocked,
+        blockReason // Pass blockReason to service
+      );
+      sendResponse(res, HttpStatus.OK, MessageConstants.MANAGER_STATUS_UPDATED, { updatedManager });
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
+    }
+  }
 
     async refreshAccessToken(req: Request, res: Response): Promise<void> {
         try {

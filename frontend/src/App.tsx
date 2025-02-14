@@ -14,7 +14,7 @@ import ManagerList from './components/Admin/ManagerList';
 import UserList from './components/Admin/userList';
 import ManagerDashboard from './pages/Manager/ManagerDashboard';
 import ManagerProtected from './components/Manager/ManagerProtected';
-import UserProtected from './components/User/UserPrrotected';
+import UserProtected from './components/User/UserProtected';
  import AdminProtected from './components/Admin/AdminProtected';
  
 const App = () => {

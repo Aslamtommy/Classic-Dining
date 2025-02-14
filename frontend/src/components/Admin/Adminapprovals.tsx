@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import adminApi from '../../Axios/adminInstance';
 
-// Define the type for a manager
 interface Manager {
   _id: string;
   name: string;
@@ -11,7 +10,6 @@ interface Manager {
   isBlocked: boolean;
 }
 
-// Define the type for the API response
 interface PendingManagersResponse {
   success: boolean;
   message: string;
@@ -21,40 +19,43 @@ interface PendingManagersResponse {
 }
 
 const ApproveManagers: React.FC = () => {
-  const [pendingManagers, setPendingManagers] = useState<Manager[]>([]); // Default is an empty array
+  const [pendingManagers, setPendingManagers] = useState<Manager[]>([]);
   const [error, setError] = useState<string>('');
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [selectedManager, setSelectedManager] = useState<string | null>(null);
+  const [blockReason, setBlockReason] = useState('');
 
-  // Fetch pending managers on component mount
   useEffect(() => {
     fetchPendingManagers();
   }, []);
 
-  // Function to fetch pending managers
   const fetchPendingManagers = async () => {
     try {
       const response = await adminApi.get<PendingManagersResponse>('/pending');
-      console.log('Response:', response.data); // Log the response
-
-      // Access the managers array from the data field
-      setPendingManagers(response.data.data.managers || []); // Set managers (fallback to empty array)
+      setPendingManagers(response.data.data.managers || []);
     } catch (err: any) {
-      console.error('Error fetching pending managers:', err); // Log the error
       setError(err.response?.data?.message || 'Failed to fetch pending managers.');
     }
   };
 
-  // Function to update manager status (approve or block)
+  const handleBlockClick = (managerId: string) => {
+    setSelectedManager(managerId);
+    setShowBlockModal(true);
+  };
+
   const handleUpdateStatus = async (managerId: string, isBlocked: boolean) => {
     try {
       await adminApi.post('/update-status', {
         managerId,
         isBlocked,
+        blockReason: isBlocked ? blockReason : undefined,
       });
+
       alert(`Manager ${isBlocked ? 'blocked' : 'approved'} successfully!`);
-      // Remove the updated manager from the list
       setPendingManagers((prev) => prev.filter((manager) => manager._id !== managerId));
+      setShowBlockModal(false);
+      setBlockReason('');
     } catch (err: any) {
-      console.error('Error updating manager status:', err); // Log the error
       setError(err.response?.data?.message || 'Failed to update manager status.');
     }
   };
@@ -62,8 +63,43 @@ const ApproveManagers: React.FC = () => {
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Approve Managers</h2>
+
+      {/* Block Reason Modal */}
+      {showBlockModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h3 className="text-lg font-bold mb-4">Block Reason</h3>
+            <textarea
+              value={blockReason}
+              onChange={(e) => setBlockReason(e.target.value)}
+              className="w-full p-2 border rounded mb-4"
+              placeholder="Enter reason for blocking..."
+              rows={4}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowBlockModal(false);
+                  setBlockReason('');
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUpdateStatus(selectedManager!, true)} // Pass selectedManager and true
+                className="px-4 py-2 bg-red-500 text-white rounded"
+              >
+                Confirm Block
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      {pendingManagers && pendingManagers.length > 0 ? (
+
+      {pendingManagers.length > 0 ? (
         <table className="table-auto w-full border-collapse border border-gray-400">
           <thead>
             <tr>
@@ -92,13 +128,13 @@ const ApproveManagers: React.FC = () => {
                 </td>
                 <td className="border border-gray-400 px-4 py-2">
                   <button
-                    onClick={() => handleUpdateStatus(manager._id, false)}
+                    onClick={() => handleUpdateStatus(manager._id, false)} // Pass manager._id and false
                     className="px-4 py-2 bg-green-500 text-white rounded mr-2 hover:bg-green-600"
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(manager._id, true)}
+                    onClick={() => handleBlockClick(manager._id)} // Open the modal
                     className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     Block

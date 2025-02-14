@@ -2,38 +2,84 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfilePicture, setUser } from '../../redux/userslice';
 import api from '../../Axios/userInstance';
-import toast from 'react-hot-toast'
- 
+import toast from 'react-hot-toast';
+import OtpModal from '../CommonComponents/Modals/OtpModal';
+import sendOtp from '../../utils/sentotp';
+import NewPasswordModal from '../CommonComponents/Modals/NewPaawordModal';
 
 const UserProfile: React.FC = () => {
   const dispatch = useDispatch();
   const profile = useSelector((state: any) => state.user.user);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-const storedUser=useSelector((state:any)=>state.user.user)
-const email=storedUser?.email
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedEmail, setEditedEmail] = useState('');
+  const [editedMobile, setEditedMobile] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [tempEmail, setTempEmail] = useState('');
+
+  // State for change password
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
   useEffect(() => {
-    
-   
-    
-      fetchProfile();
-   
+    fetchProfile();
   }, [dispatch]);
 
-  
-  
+  useEffect(() => {
+    if (profile) {
+      setEditedName(profile.name);
+      setEditedEmail(profile.email);
+      setEditedMobile(profile.mobile_no);
+    }
+  }, [profile]);
 
   const fetchProfile = async () => {
     try {
-      const response:any = await api.get ('/profile',{ params: { email } } );
-      console.log(response)
-      console.log('Fetched profile:', response.data.data );
-      dispatch(setUser(response.data.data ));
-      
+      const response: any = await api.get('/profile');
+      dispatch(setUser(response.data.data));
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
   };
+
+  const handleSave = async () => {
+    if (editedEmail !== profile.email) {
+      setTempEmail(editedEmail);
+      const { success, message: otpMessage } = await sendOtp(editedEmail, dispatch);
+      if (!success) {
+        toast.error(otpMessage);
+        return;
+      }
+      setShowOtpModal(true);
+    } else {
+      saveProfile();
+    }
+  };
+
+  const saveProfile = async () => {
+    try {
+      const updatedData = {
+        name: editedName,
+        email: editedEmail,
+        mobile_no: editedMobile,
+      };
+
+      const response: any = await api.put('/updateProfile', updatedData);
+      dispatch(setUser(response.data.data));
+      setIsEditing(false);
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update profile');
+      console.error('Update error:', error);
+    }
+  };
+
+  const handleOtpSuccess = async () => {
+    await saveProfile();
+    setShowOtpModal(false);
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setSelectedFile(file);
@@ -48,36 +94,27 @@ const email=storedUser?.email
       alert('Please select a file to upload.');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('profilePicture', selectedFile);
-  
-    try {
 
-      console.log('FormData:', formData);
+    try {
       const response = await api.post<{ profilePicture: string }>('/uploadProfilePicture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
+
       const uploadedImageUrl = response.data.profilePicture;
-  
-    toast.success('Profile picture uploaded successfully')
-  
-      // Update Redux store
+      toast.success('Profile picture uploaded successfully');
+
       dispatch(updateProfilePicture(uploadedImageUrl));
-   
-  
-      // Update local preview to trigger re-render
-      
       setSelectedFile(null);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
       alert('Failed to upload profile picture.');
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-sepia-100 flex flex-col justify-center items-center p-4">
@@ -142,8 +179,9 @@ const email=storedUser?.email
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-sepia-900 leading-tight focus:outline-none focus:shadow-outline bg-sepia-100"
                       id="name"
                       type="text"
-                      value={profile.name}
-                      readOnly
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      readOnly={!isEditing}
                     />
                   </div>
                   <div>
@@ -154,8 +192,9 @@ const email=storedUser?.email
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-sepia-900 leading-tight focus:outline-none focus:shadow-outline bg-sepia-100"
                       id="email"
                       type="email"
-                      value={profile.email}
-                      readOnly
+                      value={editedEmail}
+                      onChange={(e) => setEditedEmail(e.target.value)}
+                      readOnly={!isEditing}
                     />
                   </div>
                   <div>
@@ -166,10 +205,53 @@ const email=storedUser?.email
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-sepia-900 leading-tight focus:outline-none focus:shadow-outline bg-sepia-100"
                       id="phone"
                       type="tel"
-                      value={profile.mobile_no}
-                      readOnly
+                      value={editedMobile}
+                      onChange={(e) => setEditedMobile(e.target.value)}
+                      readOnly={!isEditing}
                     />
                   </div>
+                </div>
+
+                {/* Edit/Save Buttons */}
+                <div className="mt-8 flex gap-4 justify-end">
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-sepia-700 text-sepia-100 px-6 py-2 rounded-full hover:bg-sepia-800 transition-colors"
+                    >
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleSave}
+                        className="bg-sepia-700 text-sepia-100 px-6 py-2 rounded-full hover:bg-sepia-800 transition-colors"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditing(false);
+                          setEditedName(profile.name);
+                          setEditedEmail(profile.email);
+                          setEditedMobile(profile.mobile_no);
+                        }}
+                        className="bg-sepia-300 text-sepia-700 px-6 py-2 rounded-full hover:bg-sepia-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Change Password Button */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
+                  >
+                    Change Password
+                  </button>
                 </div>
               </div>
             </div>
@@ -181,9 +263,28 @@ const email=storedUser?.email
           </div>
         )}
       </div>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <OtpModal
+          show={showOtpModal}
+          email={tempEmail}
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={handleOtpSuccess}
+        />
+      )}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <NewPasswordModal
+          show={showPasswordModal}
+          email={profile.email}
+          onClose={() => setShowPasswordModal(false)}
+          role="user" // Assuming the role is 'user' for this profile
+        />
+      )}
     </div>
   );
 };
 
 export default UserProfile;
-

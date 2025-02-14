@@ -46,26 +46,34 @@ export class ManagerController {
     }
   }
 
-  public async loginManager(req: Request, res: Response): Promise<void> {
+// In managerController.ts
+public async loginManager(req: Request, res: Response): Promise<void> {
+  try {
+    const { email, password } = req.body;
+    const result = await this.managerService.loginManager(email, password);
+    
+    CookieManager.setAuthCookies(res, result);
+    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, result.manager);
+  } catch (error: any) {
+    let status = HttpStatus.InternalServerError;
+    let message = 'Login failed';
+
     try {
-      const { email, password } = req.body;
-
-      // Authenticate manager
-      const { manager, accessToken, refreshToken } = await this.managerService.loginManager(email, password);
-
-      // Set cookies
-      CookieManager.setAuthCookies(res, { accessToken, refreshToken });
-
-      sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, manager);
-    } catch (error: any) {
-      console.log('login error',error.message)
-      if (error.message === MessageConstants.INVALID_CREDENTIALS) {
-        sendError(res, HttpStatus.Unauthorized, MessageConstants.LOGIN_FAILED);
-      } else {
-        sendError(res, HttpStatus.Forbidden, error.message);
+      const errorData = JSON.parse(error.message);
+      if (errorData.code === MessageConstants.MANAGER_BLOCKED) {
+        status = HttpStatus.Forbidden;
+        message = `${errorData.message}: ${errorData.reason}`;
+      }
+    } catch {
+      if (error.message === MessageConstants.LOGIN_FAILED) {
+        status = HttpStatus.Unauthorized;
+        message = MessageConstants.LOGIN_FAILED;
       }
     }
+
+    sendError(res, status, message);
   }
+}
 
   public async getProfile(req: Request, res: Response): Promise<void> {
     try {

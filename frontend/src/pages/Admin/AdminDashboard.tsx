@@ -11,7 +11,7 @@ const AdminDashboard: React.FC = () => {
   const handleLogout = async () => {
     console.log("Logging out admin...");
     try {
-      await dispatch(adminLogout()).unwrap();
+      await dispatch(adminLogout()) 
       console.log("Admin logged out successfully");
       window.location.href = "/admin/login";
     } catch (err) {

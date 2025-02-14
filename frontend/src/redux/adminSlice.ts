@@ -1,11 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-interface AdminLoginResponse {
-  email: string;
-  success: boolean;
-  message: string;
-}
-
+ 
 interface AdminState {
   email: string | null;
   loading: boolean;

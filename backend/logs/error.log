@@ -107,3 +107,19 @@
 2025-02-14T11:15:29.478Z [ERROR]: Error Response - Status: 500, Message: getaddrinfo ENOTFOUND cluster0-shard-00-00.bgj2b.mongodb.net, Error: No additional details
 2025-02-14T15:08:54.078Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
 2025-02-14T15:08:54.142Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-14T17:19:22.183Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
+2025-02-14T18:04:17.718Z [ERROR]: Error Response - Status: 400, Message: User not found., Error: No additional details
+2025-02-14T18:16:23.125Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
+2025-02-14T18:29:23.714Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
+2025-02-14T18:29:25.902Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
+2025-02-14T18:36:16.609Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-14T19:00:59.376Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-14T19:00:59.383Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-14T19:15:31.076Z [ERROR]: Error Response - Status: 403, Message: Account blocked. Reason: done brpo, Error: No additional details
+2025-02-14T19:26:23.368Z [ERROR]: Error Response - Status: 403, Message: Account blocked: done brpo, Error: No additional details
+2025-02-14T19:26:31.338Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-14T19:26:31.344Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-14T19:27:37.314Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-14T19:27:43.255Z [ERROR]: Error Response - Status: 403, Message: Account blocked: not intrest, Error: No additional details
+2025-02-14T19:28:10.171Z [ERROR]: Error Response - Status: 500, Message: Login failed, Error: No additional details
+2025-02-14T19:28:27.912Z [ERROR]: Error Response - Status: 403, Message: Account blocked: not intrest, Error: No additional details

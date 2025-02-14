@@ -218,4 +218,39 @@ export class Usercontroller {
       sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
+
+  async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.data?.userId; // Extracted from authentication middleware
+      if (!userId) {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
+        return;
+      }
+
+      const { name, email, mobile_no } = req.body;
+console.log('reqbody',req.body)
+      // Validate required fields
+      
+
+     
+
+      // Update the profile
+      const updatedUser = await this.userService.updateUserProfile(userId, {
+        name,
+        email,
+        mobile_no,
+      });
+
+      if (!updatedUser) {
+        sendError(res, HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
+        return;
+      }
+
+      sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_UPDATED_SUCCESS, updatedUser);
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
+ 
+
 }

@@ -42,5 +42,7 @@ export interface IUserService {
  
     uploadProfilePicture(userId: string, filePath: string): Promise<{ success: boolean; message: string; profilePicture?: string }>;
  
-  
+    updateUserProfile( userId: string,
+      updateData: { name: string; email: string; mobile_no: string }
+    ): Promise<any>
 }

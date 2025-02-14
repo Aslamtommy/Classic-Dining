@@ -260,4 +260,21 @@ export class UserService implements IUserService {
       return { success: false, message: MessageConstants.INTERNAL_SERVER_ERROR };
     }
   }
+
+  public async updateUserProfile(
+    userId: string,
+    updateData: { name: string; email: string; mobile_no: string }
+  ): Promise<any> {
+    const updatedUser = await this.userRepository.update(userId, updateData);
+    if (!updatedUser) return null;
+
+    return {
+      id: updatedUser._id.toString(),
+      name: updatedUser.name,
+      email: updatedUser.email,
+      mobile_no: updatedUser.mobile_no,
+      profilePicture: updatedUser.profilePicture || '',
+    };
+  }
+
 }

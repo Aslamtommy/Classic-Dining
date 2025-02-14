@@ -18,14 +18,23 @@ export class ManagerRepository implements IManagerRepository {
   }
 
   // Update manager's approval status
-  async updateManagerStatus(managerId: string, isBlocked: boolean): Promise<IManager | null> {
+  async updateManagerStatus(
+    managerId: string,
+    isBlocked: boolean,
+    blockReason?: string // Add blockReason parameter
+  ): Promise<IManager | null> {
     return ManagerModel.findByIdAndUpdate(
       managerId,
-      { isBlocked },
+      {
+        isBlocked,
+       
+        ...(isBlocked && { blockReason }),
+        // Clear blockReason when unblocking (optional)
+        ...(!isBlocked && { blockReason: null }),
+      },
       { new: true }
     );
   }
-
 async findById(managerId:string):Promise<any>{
   return   ManagerModel.findById(managerId)
 }
