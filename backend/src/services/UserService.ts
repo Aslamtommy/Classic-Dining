@@ -1,4 +1,3 @@
- 
 import { IUser } from '../models/User/userModel';
 import { Signup } from '../interfaces/user/signupInterface';
 import bcrypt from 'bcrypt';
@@ -10,26 +9,24 @@ import {
 } from '../utils/jwt';
 import { generateOtp, hashOtp } from '../utils/GenerateOtp';
 import { sentMail } from '../utils/SendMails';
- 
 import { IUserService } from '../interfaces/user/UserServiceInterface';
 import { UserRepositoryInterface } from '../interfaces/user/UserRepositoryInterface';
 import { OtpRepository } from '../repositories/otpRepository';
- 
 import cloudinary from "../config/cloudinary";
+import { MessageConstants } from '../constants/MessageConstants';
+
 export interface ForgotPasswordResponse {
   success: boolean;
   message: string;
   data: string | null;
-  error?: string
+  error?: string;
 }
+
 export class UserService implements IUserService {
- 
-  constructor(private userRepository:UserRepositoryInterface,
-    private  otpRepository:OtpRepository
-  ) {
- 
-    
-  }
+  constructor(
+    private userRepository: UserRepositoryInterface,
+    private otpRepository: OtpRepository
+  ) {}
 
   // Register a new user
   async registerUser(
@@ -43,7 +40,7 @@ export class UserService implements IUserService {
     const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
       console.log('Register: User already exists for email:', email);
-      throw new Error('User with this email already exists.');
+      throw new Error(MessageConstants.USER_ALREADY_EXISTS);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -55,22 +52,21 @@ export class UserService implements IUserService {
       password: hashedPassword,
       mobile_no,
       is_verified: false,
-       isBlocked: false,
-    } 
+      isBlocked: false,
+    };
 
-    console.log('Register: Creating new user with data:', userData) 
+    console.log('Register: Creating new user with data:', userData);
     return await this.userRepository.create(userData);
   }
 
   // Authenticate user
   async authenticateUser(email: string, password: string) {
-    const user = await this.userRepository.findByEmail(email) 
+    const user = await this.userRepository.findByEmail(email);
     if (!user) {
       console.log('Login: User not found for email:', email);
-      throw new Error('User not found for email');
+      throw new Error(MessageConstants.USER_NOT_FOUND);
     }
 
-     
     const isPassword =
       user.password && password
         ? await bcrypt.compare(password, user.password)
@@ -78,11 +74,11 @@ export class UserService implements IUserService {
 
     if (!isPassword) {
       console.log('Login: Invalid password for email:', email);
-      throw new Error('Wrong Password');
+      throw new Error(MessageConstants.INVALID_CREDENTIALS);
     }
 
-    const accessToken = generateAccessToken(user._id.toString(),'user');
-    const refreshToken = generateRefreshToken(user._id.toString(),'user');
+    const accessToken = generateAccessToken(user._id.toString(), 'user');
+    const refreshToken = generateRefreshToken(user._id.toString(), 'user');
 
     return { user, accessToken, refreshToken };
   }
@@ -101,8 +97,8 @@ export class UserService implements IUserService {
     if (existingUser) {
       console.log('Google Sign-In: Existing user found, generating tokens');
 
-      const accessToken = generateAccessToken(existingUser._id.toString(),'user');
-      const refreshToken = generateRefreshToken(existingUser._id.toString(),'user');
+      const accessToken = generateAccessToken(existingUser._id.toString(), 'user');
+      const refreshToken = generateRefreshToken(existingUser._id.toString(), 'user');
 
       return { user: existingUser, accessToken, refreshToken };
     }
@@ -119,8 +115,8 @@ export class UserService implements IUserService {
 
     console.log('Google Sign-In: New user created:', newUser);
 
-    const accessToken = generateAccessToken(newUser._id.toString(),'user');
-    const refreshToken = generateRefreshToken(newUser._id.toString(),'user');
+    const accessToken = generateAccessToken(newUser._id.toString(), 'user');
+    const refreshToken = generateRefreshToken(newUser._id.toString(), 'user');
 
     return { user: newUser, accessToken, refreshToken };
   }
@@ -129,29 +125,28 @@ export class UserService implements IUserService {
   async refreshAccessToken(refreshToken: string) {
     try {
       console.log('Verifying refresh token:', refreshToken);
-  
+
       const decoded = verifyToken(refreshToken);
-  
+
       if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
         console.warn('Invalid or malformed token during verification:', decoded);
-        throw new Error('Invalid or malformed token');
+        throw new Error(MessageConstants.INVALID_REFRESH_TOKEN);
       }
-  
+
       console.log('Refresh token verified. Decoded payload:', decoded);
-  
+
       const userId = decoded.id;
       const role = decoded.role;
-  
+
       console.log('Generating new access token for user ID:', userId, 'Role:', role);
       const newAccessToken = generateAccessToken(userId, role);
-  
+
       return { accessToken: newAccessToken };
     } catch (error: any) {
       console.error('Refresh Token: Error verifying token:', error.message);
-      throw new Error('Failed to refresh tokens');
+      throw new Error(MessageConstants.REFRESH_TOKEN_FAILED);
     }
   }
-  
 
   async forgotPasswordVerify(email: string): Promise<ForgotPasswordResponse> {
     try {
@@ -159,7 +154,7 @@ export class UserService implements IUserService {
       if (!userData) {
         return {
           success: false,
-          message: 'Mail not registered',
+          message: MessageConstants.USER_NOT_FOUND,
           data: null,
         };
       }
@@ -181,12 +176,12 @@ export class UserService implements IUserService {
 
       return {
         success: true,
-        message: 'Mail sent successfully',
+        message: MessageConstants.PASSWORD_RESET_SUCCESS,
         data: userData.email,
       };
     } catch (error: any) {
       console.log(error.message);
-      return { success: false, message: 'Couldnt verify mail', data: null };
+      return { success: false, message: MessageConstants.INTERNAL_SERVER_ERROR, data: null };
     }
   }
 
@@ -198,22 +193,22 @@ export class UserService implements IUserService {
     profilePicture: string;
   } | null> {
     console.log("UserService: Fetching profile for userId:", userId);
-  
+
     const user = await this.userRepository.findById(userId);
     if (!user) {
       console.log("UserService: User not found");
       return null;
     }
-  
+
     return {
       id: user._id.toString(),
-      name: user.name ?? "Unknown",   
+      name: user.name ?? "Unknown",
       email: user.email ?? "No Email",
       mobile_no: user.mobile_no ?? "No Mobile",
       profilePicture: user.profilePicture ?? "",
     };
   }
-  
+
   async uploadProfilePicture(userId: string, filePath: string): Promise<{ success: boolean; message: string; profilePicture?: string }> {
     try {
       console.log("Uploading file to Cloudinary...");
@@ -227,47 +222,42 @@ export class UserService implements IUserService {
       const updatedUser = await this.userRepository.updateProfilePicture(userId, result.secure_url);
 
       if (!updatedUser) {
-        return { success: false, message: "User not found or unable to update profile" };
+        return { success: false, message: MessageConstants.USER_NOT_FOUND };
       }
 
       return {
         success: true,
-        message: "Profile picture uploaded successfully",
+        message: MessageConstants.PROFILE_FETCHED_SUCCESS,
         profilePicture: updatedUser.profilePicture,
       };
     } catch (error: any) {
       console.error("Error in uploadProfilePicture method:", error.message);
-      return { success: false, message: "Internal Server Error" };
+      return { success: false, message: MessageConstants.INTERNAL_SERVER_ERROR };
     }
   }
 
   async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     console.log(`resetPassword called with email: ${email}`);
-  
-    // Attempt to find the user by email using the repository
+
     const user = await this.userRepository.findByEmail(email);
-  
+
     if (!user) {
       console.log(`No user found with email: ${email}`);
-      return { success: false, message: 'User not found' };
+      return { success: false, message: MessageConstants.USER_NOT_FOUND };
     }
-  
+
     console.log(`User found: ${user.email}. Proceeding to hash the new password.`);
-  
-    // Hash the new password
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     console.log(`Password hashed successfully for email: ${email}`);
-  
-    // Update the user's password through the repository
+
     try {
-      await this.userRepository.updatePassword(user.id, hashedPassword);   
+      await this.userRepository.updatePassword(user.id, hashedPassword);
       console.log(`Password updated successfully for email: ${email}`);
-      return { success: true, message: 'Password updated successfully' };
+      return { success: true, message: MessageConstants.PASSWORD_RESET_SUCCESS };
     } catch (error) {
       console.error(`Error updating password for email: ${email}`, error);
-      return { success: false, message: 'Error updating password. Please try again.' };
+      return { success: false, message: MessageConstants.INTERNAL_SERVER_ERROR };
     }
   }
-  
-  
 }

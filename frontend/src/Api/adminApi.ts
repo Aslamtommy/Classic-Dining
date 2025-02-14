@@ -2,10 +2,11 @@
 import adminApi from '../Axios/adminInstance';
  
 
-export const fetchManagers = async (page: number, limit: number) => {
+export const fetchManagers = async (page: number, limit: number,searchTerm: string,
+  isBlocked: string) => {
   try {
     const response = await adminApi.get<any>('/managers', {
-      params: { page, limit }
+      params: { page, limit,searchTerm,isBlocked }
     });
 
     // Extract the nested `data` object from the response
@@ -19,10 +20,11 @@ export const fetchManagers = async (page: number, limit: number) => {
   }
 };
 // Fetch all users
-export const fetchUsers = async (page: number, limit: number) => {
+export const fetchUsers = async (page: number, limit: number,searchTerm: string,
+  isBlocked: string) => {
   try {
     const response = await adminApi.get<any>('/users', {
-      params: { page, limit }
+      params: { page, limit ,searchTerm,isBlocked}
     });
 
     // Extract the nested `data` object from the response

@@ -58,20 +58,58 @@ class AdminService implements IAdminService {
     return await this.managerRepository.updateManagerStatus(managerId, isBlocked);
   }
 
-  async getAllManagers(page: number, limit: number): Promise<{ managers: any[]; total: number }> {
+  // services/adminService.ts
+  async getAllManagers(
+    page: number,
+    limit: number,
+    searchTerm: string,
+    isBlocked: string
+  ): Promise<{ managers: any[]; total: number }> {
     const skip = (page - 1) * limit;
+    
+    // Build filter query
+    const filter: any = {};
+    if (searchTerm) {
+      filter.$or = [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { email: { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+    if (isBlocked === 'blocked') {
+      filter.isBlocked = true;
+    } else if (isBlocked === 'active') {
+      filter.isBlocked = false;
+    }
+  
     const [managers, total] = await Promise.all([
-      this.managerRepository.findAll(skip, limit),
-      this.managerRepository.countAll(),
+      this.managerRepository.findAll(filter, skip, limit),
+      this.managerRepository.countAll(filter),
     ]);
+  
     return { managers, total };
   }
 
-  async getAllUsers(page: number, limit: number): Promise<{ users: any[]; total: number }> {
+
+  async getAllUsers(page: number, limit: number,searchTerm: string,
+    isBlocked: string): Promise<{ users: any[]; total: number }> {
     const skip = (page - 1) * limit;
+
+     // Build filter query
+     const filter: any = {};
+     if (searchTerm) {
+       filter.$or = [
+         { name: { $regex: searchTerm, $options: 'i' } },
+         { email: { $regex: searchTerm, $options: 'i' } }
+       ];
+     }
+     if (isBlocked === 'blocked') {
+       filter.isBlocked = true;
+     } else if (isBlocked === 'active') {
+       filter.isBlocked = false;
+     }
     const [users, total] = await Promise.all([
-      this.userRepository.findAll(skip, limit),
-      this.userRepository.countAll(),
+      this.userRepository.findAll(filter,skip, limit),
+      this.userRepository.countAll(filter),
     ]);
     return { users, total };
   }

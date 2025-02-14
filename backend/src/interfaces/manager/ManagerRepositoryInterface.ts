@@ -7,7 +7,8 @@ export interface IManagerRepository {
   updateManagerStatus(managerId: string, isBlocked: boolean): Promise<IManager | null>;
   findById(managerId: string): Promise<IManager | null>;
   save(manager: IManager): Promise<IManager>;
-  findAll(skip: number, limit: number): Promise<IManager[]>;
-  countAll(): Promise<number>;
+  findAll(filter: any, skip: number, limit: number): Promise<any[]>;
+  // Updated countAll method to accept optional search and filter parameters.
+  countAll(filter: any): Promise<number>;
   updatePassword(userId: string, hashedPassword: string): Promise<void>;
 }

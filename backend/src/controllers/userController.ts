@@ -53,22 +53,24 @@ export class Usercontroller {
   async signIn(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      const { user, accessToken, refreshToken } =
-        await this.userService.authenticateUser(email, password);
-
+      const { user, accessToken, refreshToken } = await this.userService.authenticateUser(email, password);
+  
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
-
-      const responseData = {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          mobile_no: user.mobile_no,
-        },
-      };
-      sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, responseData);
+  
+      sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
+        user: { id: user._id, name: user.name, email: user.email }
+      });
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.LOGIN_FAILED, error.message);
+      switch (error.message) {
+        case MessageConstants.USER_NOT_FOUND:
+          sendError(res, HttpStatus.NotFound, error.message);
+          break;
+        case MessageConstants.INVALID_CREDENTIALS:
+          sendError(res, HttpStatus.Unauthorized, error.message);
+          break;
+        default:
+          sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 

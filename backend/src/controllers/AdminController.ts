@@ -70,8 +70,22 @@ class AdminController {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
-            const { managers, total } = await this.adminService.getAllManagers(page, limit);
-            sendResponse(res, HttpStatus.OK, "Managers retrieved successfully", { managers, total, page, limit });
+            const searchTerm = req.query.searchTerm as string || '';
+            const isBlocked = req.query.isBlocked as string || 'all';
+            const { managers, total } = await this.adminService.getAllManagers(
+                page,
+                limit,
+                searchTerm,
+                isBlocked
+              );
+
+
+    sendResponse(res, HttpStatus.OK, "Managers retrieved successfully", { 
+      managers, 
+      total, 
+      page, 
+      limit 
+    });
         } catch (error: any) {
             sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
         }
@@ -81,7 +95,10 @@ class AdminController {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
-            const { users, total } = await this.adminService.getAllUsers(page, limit);
+            const searchTerm = req.query.searchTerm as string || '';
+            const isBlocked = req.query.isBlocked as string || 'all';
+            const { users, total } = await this.adminService.getAllUsers(page, limit,searchTerm,
+                isBlocked);
             sendResponse(res, HttpStatus.OK, "Users retrieved successfully", { users, total, page, limit });
         } catch (error: any) {
             sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);

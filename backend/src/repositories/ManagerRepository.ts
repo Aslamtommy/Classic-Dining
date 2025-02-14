@@ -34,16 +34,18 @@ async findById(managerId:string):Promise<any>{
 async save(manager: IManager): Promise<IManager> {
   return await manager.save();   
 }
-async findAll(skip: number, limit: number): Promise<any[]> {
-  return await ManagerModel.find()
+// repositories/managerRepository.ts
+async findAll(filter: any, skip: number, limit: number): Promise<any[]> {
+  return await ManagerModel.find(filter)
     .skip(skip)
     .limit(limit)
     .exec();
 }
 
-async countAll(): Promise<number> {
-  return await ManagerModel.countDocuments();
+async countAll(filter: any): Promise<number> {
+  return await ManagerModel.countDocuments(filter);
 }
+
 
    async updatePassword(userId: string, hashedPassword: string): Promise<void> {
      try {

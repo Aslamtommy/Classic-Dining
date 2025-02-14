@@ -59,11 +59,11 @@ export class UserRepository implements UserRepositoryInterface {
     }
   }
 
-  async findAll(skip:number,limit:number): Promise<any[]> {
-   return await User.find().skip(skip).limit(limit).exec()
+  async findAll(filter: any, skip: number, limit: number): Promise<any[]> {
+   return await User.find(filter).skip(skip).limit(limit).exec()
   }
-  async countAll(): Promise<number> {
-    return await User.countDocuments();
+  async countAll(filter:any): Promise<number> {
+    return await User.countDocuments(filter);
   }
 
   async findById(userId: string): Promise<IUser | null> {

@@ -6,8 +6,8 @@ export interface UserRepositoryInterface {
   findByEmail(email: string): Promise<IUser | null>;
   findByGoogleId(googleId: string): Promise<IUser | null>;
   updatePassword(userId: string, hashedPassword: string): Promise<void>;
-  findAll(skip: number, limit: number): Promise<IUser[]>;
-  countAll(): Promise<number>;
+  findAll(filter: any, skip: number, limit: number): Promise<IUser[]>;
+  countAll(filter:any): Promise<number>;
   findById(userId: string): Promise<IUser | null>;
  
  

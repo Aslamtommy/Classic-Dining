@@ -8,10 +8,12 @@ import Pagination from '../../Pagination/Pagination';
 
 const UserList: React.FC = () => {
   const [page, setPage] = useState<number>(1);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [isBlockedFilter, setIsBlockedFilter] = useState<string>('all');
   const limit = 2;
 
   // Memoize the fetch function so it only changes when page or limit changes.
-  const fetchUsersCallback = useCallback(() => fetchUsers(page, limit), [page, limit]);
+  const fetchUsersCallback = useCallback(() => fetchUsers(page, limit,searchTerm,isBlockedFilter), [page, limit, searchTerm, isBlockedFilter]);
 
   const { data, loading, error, refetch } = useFetchData(fetchUsersCallback);
 
@@ -27,6 +29,12 @@ const UserList: React.FC = () => {
       console.error('Error blocking/unblocking user:', err);
     }
   };
+  
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.trimStart();
+      setSearchTerm(value);
+      setPage(1);
+    };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -40,6 +48,30 @@ const UserList: React.FC = () => {
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Users</h2>
+
+      
+       {/* Search and Filter Controls */}
+       <div className="flex gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="Search by name or email"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="border p-2 rounded w-64"
+        />
+        <select
+          value={isBlockedFilter}
+          onChange={(e) => {
+            setIsBlockedFilter(e.target.value);
+            setPage(1); // Reset page on filter change
+          }}
+          className="border p-2 rounded"
+        >
+         <option value="">All</option>
+        <option value="active">Active</option>
+        <option value="blocked">Blocked</option>
+        </select>
+      </div>
       <DataTable
   columns={['name', 'email']}
   data={users}

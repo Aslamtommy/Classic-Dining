@@ -5,7 +5,7 @@ import { CookieManager } from '../utils/cookiemanager';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { sendResponse, sendError } from '../utils/responseUtils';
-import logger from '../utils/logger';
+ 
 
 export class ManagerController {
   constructor(private managerService: any) {}
