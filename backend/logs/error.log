@@ -89,3 +89,34 @@
 2025-02-15T19:39:06.093Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
 2025-02-15T19:41:38.190Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
 2025-02-15T19:41:38.198Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T15:46:55.612Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T15:46:58.531Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T15:47:03.012Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T15:47:34.227Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T15:47:34.279Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T15:48:01.881Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T15:48:01.891Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T15:48:18.345Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T15:48:18.357Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T15:49:21.916Z [ERROR]: Error Response - Status: 403, Message: Account Not Approved: Contact support for details, Error: No additional details
+2025-02-16T15:54:29.921Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T15:54:35.961Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T15:54:48.457Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T15:55:46.460Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T15:55:46.740Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T15:56:06.206Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T15:57:54.117Z [ERROR]: Error Response - Status: 400, Message: Branch validation failed: parentRestaurant: Path `parentRestaurant` is required., Error: No additional details
+2025-02-16T16:30:29.744Z [ERROR]: Error Response - Status: 400, Message: Branch with this email already exists, Error: No additional details
+2025-02-16T17:43:37.665Z [ERROR]: Error Response - Status: 500, Message: Login failed, Error: No additional details
+2025-02-16T17:43:59.487Z [ERROR]: Error Response - Status: 500, Message: Login failed, Error: No additional details
+2025-02-16T17:45:32.624Z [ERROR]: Error Response - Status: 500, Message: Login failed, Error: No additional details
+2025-02-16T18:32:11.626Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T19:07:11.410Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T19:08:27.646Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T19:08:27.657Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T19:08:29.998Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T19:08:30.007Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T19:08:49.951Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-16T19:08:49.961Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-16T19:38:53.362Z [ERROR]: Error Response - Status: 500, Message: Authentication data missing from request, Error: No additional details
+2025-02-16T19:38:53.397Z [ERROR]: Error Response - Status: 500, Message: Authentication data missing from request, Error: No additional details

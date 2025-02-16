@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path'; // Import path for static file handling
 import adminRoute from './routes/adminRoutes';
 import restaurentRoute from './routes/restaurentRoutes';
+ 
 
 const app: Application = express();
 
@@ -35,7 +36,8 @@ app.use('/users', userRoute);
 app.use('/users/otp', otpRoute);
 app.use('/admin',adminRoute)
 app.use('/restaurent', restaurentRoute)
-// Default route for invalid paths
+
+ 
 app.use('*', (req, res) => {
   res.status(404).json({ message: 'Endpoint not found' });
 });

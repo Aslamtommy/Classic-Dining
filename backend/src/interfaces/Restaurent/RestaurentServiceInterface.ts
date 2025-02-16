@@ -10,6 +10,7 @@ export interface ILoginResponse {
   restaurent: IRestaurent;
   accessToken: string;
   refreshToken: string;
+  role: string;
 }
 
 export interface IResetPasswordResponse {

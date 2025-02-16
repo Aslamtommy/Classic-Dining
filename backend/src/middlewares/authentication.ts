@@ -22,15 +22,20 @@ export const authenticateToken = (requiredRole?: string) => {
       console.log('Decoded token:', decoded);
 
       // Populate req.data with decoded token info
-      req.data = {
-        id: decoded.id, 
-        role: decoded.role,  
-      };
-
+         // Attach user data to request
+         req.data = {
+          id: decoded.id,
+          role: decoded.role,
+          parentRestaurantId: decoded.parentRestaurantId
+        } as {
+          id: string;
+          role: string;
+          userId?: string;
+          parentRestaurantId?: string;
+        };
+        
       // If it's a user, add userId to req.data
-      if (decoded.role === 'user') {
-        req.data.userId = decoded.id;
-      }
+       
 
       // Check if the required role matches the token's role
       if (requiredRole && decoded.role !== requiredRole) {

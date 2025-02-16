@@ -6,7 +6,7 @@ export class RestaurentRepository implements IRestaurentRepository {
   
   // Find restaurent  by email
   public async findByEmail(email: string): Promise<IRestaurent| null> {
-    return RestaurentModel.findOne({ email });
+    return RestaurentModel.findOne({ email }).lean()
   }
 
   // Create a new restaurent 
@@ -71,7 +71,13 @@ async countAll(filter: any): Promise<number> {
      }
    }
 
-
+   async addBranchToRestaurant(restaurantId: string, branchId: string): Promise<IRestaurent | null> {
+    return RestaurentModel.findByIdAndUpdate(
+      restaurantId,
+      { $push: { branches: branchId } }, // Add branch ID to branches array
+      { new: true }
+    );
+  }
 
 }
  

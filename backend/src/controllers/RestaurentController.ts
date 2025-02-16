@@ -52,7 +52,7 @@ public async loginRestaurent(req: Request, res: Response): Promise<void> {
     const { email, password } = req.body;
     const result = await this.restaurentService.loginRestaurent(email, password);
     CookieManager.setAuthCookies(res, result)
-    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, result.restaurent);
+    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {...result.restaurent, role:result. role});
   } catch (error: any) {
     let status = HttpStatus.InternalServerError;
     let message = 'Login failed';

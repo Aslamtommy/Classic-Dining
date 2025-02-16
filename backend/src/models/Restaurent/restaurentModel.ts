@@ -9,6 +9,8 @@ export interface IRestaurent extends Document {
     phone: string;
     certificate: string;
     isBlocked: boolean;
+    isBranch: boolean;
+    branches?: mongoose.Types.ObjectId[];
     blockReason?: string; // Add this field
     createdAt: Date;
     updatedAt: Date;
@@ -22,6 +24,8 @@ const RestaurentSchema: Schema = new Schema<IRestaurent>(
     certificate: { type: String, required: true },
     isBlocked: { type: Boolean, default: true },  
     blockReason: { type: String, default: null }, 
+    isBranch: { type: Boolean, default: false },
+    branches: [{ type: Schema.Types.ObjectId, ref: "Branch" }],
   },
   { timestamps: true }
 );

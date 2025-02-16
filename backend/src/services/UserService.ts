@@ -77,8 +77,9 @@ export class UserService implements IUserService {
       throw new Error(MessageConstants.INVALID_CREDENTIALS);
     }
 
-    const accessToken = generateAccessToken(user._id.toString(), 'user');
-    const refreshToken = generateRefreshToken(user._id.toString(), 'user');
+    // Updated token generation: Pass an object payload
+    const accessToken = generateAccessToken({ id: user._id.toString(), role: 'user' });
+    const refreshToken = generateRefreshToken({ id: user._id.toString(), role: 'user' });
 
     return { user, accessToken, refreshToken };
   }
@@ -97,8 +98,9 @@ export class UserService implements IUserService {
     if (existingUser) {
       console.log('Google Sign-In: Existing user found, generating tokens');
 
-      const accessToken = generateAccessToken(existingUser._id.toString(), 'user');
-      const refreshToken = generateRefreshToken(existingUser._id.toString(), 'user');
+      // Updated token generation
+      const accessToken = generateAccessToken({ id: existingUser._id.toString(), role: 'user' });
+      const refreshToken = generateRefreshToken({ id: existingUser._id.toString(), role: 'user' });
 
       return { user: existingUser, accessToken, refreshToken };
     }
@@ -115,8 +117,9 @@ export class UserService implements IUserService {
 
     console.log('Google Sign-In: New user created:', newUser);
 
-    const accessToken = generateAccessToken(newUser._id.toString(), 'user');
-    const refreshToken = generateRefreshToken(newUser._id.toString(), 'user');
+    // Updated token generation
+    const accessToken = generateAccessToken({ id: newUser._id.toString(), role: 'user' });
+    const refreshToken = generateRefreshToken({ id: newUser._id.toString(), role: 'user' });
 
     return { user: newUser, accessToken, refreshToken };
   }
@@ -139,7 +142,8 @@ export class UserService implements IUserService {
       const role = decoded.role;
 
       console.log('Generating new access token for user ID:', userId, 'Role:', role);
-      const newAccessToken = generateAccessToken(userId, role);
+      // Updated token generation: Pass an object payload
+      const newAccessToken = generateAccessToken({ id: userId, role });
 
       return { accessToken: newAccessToken };
     } catch (error: any) {
@@ -276,5 +280,4 @@ export class UserService implements IUserService {
       profilePicture: updatedUser.profilePicture || '',
     };
   }
-
 }
