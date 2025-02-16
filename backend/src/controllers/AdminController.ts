@@ -12,25 +12,25 @@ class AdminController {
         const { email, password } = req.body;
         try {
             const { admin, accessToken, refreshToken } = await this.adminService.adminLogin(email, password);
-            CookieManager.setAuthCookies(res, { accessToken, refreshToken });
+            CookieManager.setAuthCookies(res,{accessToken ,refreshToken})
             sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, { admin, email });
         } catch (error: any) {
             sendError(res, HttpStatus.Unauthorized,  MessageConstants.LOGIN_FAILED || error.message );
         }
     }
 
-    async getPendingManagers(req: Request, res: Response): Promise<void> {
+    async getPendingRestaurent(req: Request, res: Response): Promise<void> {
         try {
-            const pendingManagers = await this.adminService.getPendingManagers();
-            sendResponse(res, HttpStatus.OK, "Pending managers retrieved successfully", { managers: pendingManagers });
+            const pendingRestaurent = await this.adminService.getPendingRestaurents();
+            sendResponse(res, HttpStatus.OK, "Pending restaurent retrieved successfully", { restaurents: pendingRestaurent });
         } catch (error: any) {
             sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
         }
     }
 
 // Controller
-async updateManagerStatus(req: Request, res: Response): Promise<void> {
-    const { managerId, isBlocked, blockReason } = req.body; // Add blockReason
+async updateRestaurentStatus(req: Request, res: Response): Promise<void> {
+    const { restaurentId, isBlocked, blockReason } = req.body; // Add blockReason
   
     // Validate block reason if blocking
     if (isBlocked && !blockReason) {
@@ -39,12 +39,12 @@ async updateManagerStatus(req: Request, res: Response): Promise<void> {
     }
   
     try {
-      const updatedManager = await this.adminService.updateManagerStatus(
-        managerId,
+      const updatedRestaurent = await this.adminService.updateRestaurentStatus(
+        restaurentId,
         isBlocked,
         blockReason // Pass blockReason to service
       );
-      sendResponse(res, HttpStatus.OK, MessageConstants.MANAGER_STATUS_UPDATED, { updatedManager });
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESTAURENT_STATUS_UPDATED , { updatedRestaurent });
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
     }
@@ -78,13 +78,13 @@ async updateManagerStatus(req: Request, res: Response): Promise<void> {
         }
     }
 
-    async getAllManagers(req: Request, res: Response): Promise<void> {
+    async getAllRestaurents(req: Request, res: Response): Promise<void> {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const searchTerm = req.query.searchTerm as string || '';
             const isBlocked = req.query.isBlocked as string || 'all';
-            const { managers, total } = await this.adminService.getAllManagers(
+            const { restaurents, total } = await this.adminService.getAllRestaurents(
                 page,
                 limit,
                 searchTerm,
@@ -92,8 +92,8 @@ async updateManagerStatus(req: Request, res: Response): Promise<void> {
               );
 
 
-    sendResponse(res, HttpStatus.OK, "Managers retrieved successfully", { 
-      managers, 
+    sendResponse(res, HttpStatus.OK, "Restaurents retrieved successfully", { 
+        restaurents, 
       total, 
       page, 
       limit 
@@ -117,12 +117,12 @@ async updateManagerStatus(req: Request, res: Response): Promise<void> {
         }
     }
 
-    async blockManager(req: Request, res: Response): Promise<void> {
-        const { managerId, isBlocked } = req.body;
+    async blockRestaurent(req: Request, res: Response): Promise<void> {
+        const { restaurentId, isBlocked } = req.body;
         try {
-            const updatedManager = await this.adminService.managerBlock(managerId, isBlocked);
-            const message = isBlocked ? MessageConstants.MANAGER_BLOCKED : MessageConstants.MANAGER_UNBLOCKED;
-            sendResponse(res, HttpStatus.OK, message, { updatedManager });
+            const updatedRestaurent = await this.adminService.restaurentBlock(restaurentId, isBlocked);
+            const message = isBlocked ? MessageConstants.RESTAURENT_BLOCKED : MessageConstants.RESTAURENT_BLOCKED;
+            sendResponse(res, HttpStatus.OK, message, { updatedRestaurent });
         } catch (error: any) {
             sendError(res, HttpStatus.BadRequest, error.message);
         }

@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import managerApi from "../../Axios/managerInstance";
+import restaurentApi from "../../Axios/restaurentInstance";
 import { useDispatch } from "react-redux";
-import { setManager, setError, setLoading } from "../../redux/managerSlice";
+import { setRestaurent, setError, setLoading } from "../../redux/restaurentSlice";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal";
 
-const ManagerLogin: React.FC = () => {
+const RestaurentLogin: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setErrorState] = useState("");
@@ -22,16 +23,18 @@ const ManagerLogin: React.FC = () => {
     setLoadingState(true);
   
     try {
-      const response:any = await managerApi.post("/login", { email, password });
+      const response:any = await  restaurentApi.post("/login", { email, password });
   
-      console.log("Manager login response:", response);
+      console.log("Restaurent login response:", response);
   
       if (response.data.success) {
-        dispatch(setManager(response.data.data)); // Store manager info
-        console.log("Login successful. Redirecting to /manager/home");
-        navigate("/manager/home", { replace: true });
+        dispatch(setRestaurent(response.data.data));  
+        console.log("Login successful. Redirecting to /restaurent/home");
+        navigate("/restaurent/home", { replace: true });
       } else {
-        setErrorState("Login failed. Please try again.");
+        const errorMsg = response.data.message || "Login failed. Please try again.";
+    setErrorState(errorMsg);
+    toast.error(errorMsg);
       }
     } catch (err: any) {
       console.error("Login error:", err);
@@ -47,7 +50,7 @@ const ManagerLogin: React.FC = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-4">Manager Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">Restaurent Login</h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -98,14 +101,14 @@ const ManagerLogin: React.FC = () => {
         </div>
       </div>
 
-      {/* Show ForgotPasswordModal with role="manager" */}
+      {/* Show ForgotPasswordModal with role="restaurent" */}
       <ForgotPasswordModal
         show={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
-        role="manager"
+        role="restaurent"
       />
     </div>
   );
 };
 
-export default ManagerLogin;
+export default RestaurentLogin;

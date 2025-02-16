@@ -1,4 +1,4 @@
-// src/controllers/ManagerController.ts
+// src/controllers/RestaurentController.ts
 import { Request, Response } from 'express';
 import { CloudinaryService } from '../utils/cloudinary.service';
 import { CookieManager } from '../utils/cookiemanager';
@@ -7,10 +7,10 @@ import { MessageConstants } from '../constants/MessageConstants';
 import { sendResponse, sendError } from '../utils/responseUtils';
  
 
-export class ManagerController {
-  constructor(private managerService: any) {}
+export class RestaurentController {
+  constructor(private restaurentService: any) {}
 
-  async registerManager(req: Request, res: Response): Promise<void> {
+  async registerRestaurent(req: Request, res: Response): Promise<void> {
     try {
       const { name, email, password, phone } = req.body;
 
@@ -23,12 +23,12 @@ export class ManagerController {
       // Upload certificate to Cloudinary
       const certificatePath = await CloudinaryService.uploadFile(
         req.file.path,
-        'manager_certificates',
-        `manager_${email}`
+        'restaurent_certificates',
+        `restaurent_${email}`
       );
 
-      // Register manager
-      const manager = await this.managerService.registerManager({
+      // Register restaurent
+      const restaurent = await this.restaurentService.registerRestaurent({
         name,
         email,
         password,
@@ -36,7 +36,7 @@ export class ManagerController {
         certificate: certificatePath,
       });
 
-      sendResponse(res, HttpStatus.Created, MessageConstants.USER_REGISTER_SUCCESS, manager);
+      sendResponse(res, HttpStatus.Created, MessageConstants.USER_REGISTER_SUCCESS, restaurent);
     } catch (error: any) {
       if (error.message === MessageConstants.USER_ALREADY_EXISTS) {
         sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ALREADY_EXISTS);
@@ -46,21 +46,20 @@ export class ManagerController {
     }
   }
 
-// In managerController.ts
-public async loginManager(req: Request, res: Response): Promise<void> {
+ 
+public async loginRestaurent(req: Request, res: Response): Promise<void> {
   try {
     const { email, password } = req.body;
-    const result = await this.managerService.loginManager(email, password);
-    
-    CookieManager.setAuthCookies(res, result);
-    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, result.manager);
+    const result = await this.restaurentService.loginRestaurent(email, password);
+    CookieManager.setAuthCookies(res, result)
+    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, result.restaurent);
   } catch (error: any) {
     let status = HttpStatus.InternalServerError;
     let message = 'Login failed';
 
     try {
       const errorData = JSON.parse(error.message);
-      if (errorData.code === MessageConstants.MANAGER_BLOCKED) {
+      if (errorData.code === MessageConstants.RESTAURENT_BLOCKED) {
         status = HttpStatus.Forbidden;
         message = `${errorData.message}: ${errorData.reason}`;
       }
@@ -77,8 +76,8 @@ public async loginManager(req: Request, res: Response): Promise<void> {
 
   public async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      const managerId = req.params.id;
-      const profile = await this.managerService.getManagerProfile(managerId);
+      const restaurentId = req.params.id;
+      const profile = await this.restaurentService.getRestaurentProfile(restaurentId);
 
       if (!profile) {
         sendError(res, HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
@@ -100,7 +99,7 @@ public async loginManager(req: Request, res: Response): Promise<void> {
       }
 
       // Generate new access token
-      const tokens = await this.managerService.refreshAccessToken(refreshToken);
+      const tokens = await this.restaurentService.refreshAccessToken(refreshToken);
       res.cookie('accessToken', tokens.accessToken, CookieManager.getCookieOptions());
 
       sendResponse(res, HttpStatus.OK, MessageConstants.ACCESS_TOKEN_REFRESHED, tokens);
@@ -117,7 +116,7 @@ public async loginManager(req: Request, res: Response): Promise<void> {
         return;
       }
 
-      const response = await this.managerService.forgotPasswordVerify(email);
+      const response = await this.restaurentService.forgotPasswordVerify(email);
       if (response.success) {
         sendResponse(res, HttpStatus.OK, response.message, response.data);
       } else {
@@ -136,12 +135,20 @@ public async loginManager(req: Request, res: Response): Promise<void> {
         return;
       }
 
-      const response = await this.managerService.resetPassword(email, password);
+      const response = await this.restaurentService.resetPassword(email, password);
       if (response.success) {
         sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
       } else {
         sendError(res, HttpStatus.BadRequest, response.message);
       }
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      CookieManager.clearAuthCookies(res);
+      sendResponse(res, HttpStatus.OK, MessageConstants.LOGOUT_SUCCESS);
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }

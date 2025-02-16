@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
 import { Home, Calendar, Tag, User, Mail, LogOut } from "lucide-react";
-import { logoutManager } from "../../../redux/managerSlice";
+import { logoutRestaurent } from "../../../redux/restaurentSlice";
 import { useDispatch } from "react-redux";
+import restaurentApi from "../../../Axios/restaurentInstance";
 const menuItems = [
-  { name: "Dashboard", key: "dashboard", icon: <Home size={20} />, path: "/manager/dashboard" },
-  { name: "Booking", key: "booking", icon: <Calendar size={20} />, path: "/manager/booking" },
-  { name: "Offer", key: "offers", icon: <Tag size={20} />, path: "/manager/offers" },
-  { name: "Profile", key: "profile", icon: <User size={20} />, path: "/manager/profile" },  // Added path for Profile
-  { name: "Messages", key: "messages", icon: <Mail size={20} />, path: "/manager/messages" },
+  { name: "Dashboard", key: "dashboard", icon: <Home size={20} />, path: "/restaurent/dashboard" },
+  { name: "Booking", key: "booking", icon: <Calendar size={20} />, path: "/restaurent/booking" },
+  { name: "Offer", key: "offers", icon: <Tag size={20} />, path: "/restaurent/offers" },
+  { name: "Profile", key: "profile", icon: <User size={20} />, path: "/restaurent/profile" },  // Added path for Profile
+  { name: "Messages", key: "messages", icon: <Mail size={20} />, path: "/restaurent/messages" },
 ];
 
 const Sidebar = () => {
@@ -22,9 +23,16 @@ const Sidebar = () => {
  
 
 
-  const handleLogout=()=>{
-    dispatch(logoutManager())
-    navigate("/manager/login")
+  const handleLogout=async ()=>{
+
+    try {
+    await restaurentApi.post('/logout')
+     await dispatch(logoutRestaurent())
+      navigate("/restaurent/login")
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+
   }
   return (
     <aside className="w-72 h-screen bg-white border-r shadow-md flex flex-col justify-between">

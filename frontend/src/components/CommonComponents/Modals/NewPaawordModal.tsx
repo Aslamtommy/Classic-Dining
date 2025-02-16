@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import api from '../../../Axios/userInstance';
-import managerApi from '../../../Axios/managerInstance';
+import  restaurentApi from '../../../Axios/restaurentInstance';
 interface NewPasswordModalProps {
   show: boolean; // Whether the modal is visible
   email: string; // Email of the user resetting the password
@@ -12,7 +12,7 @@ const NewPasswordModal: React.FC<NewPasswordModalProps> = ({ show, email, onClos
   const [newPassword, setNewPassword] = useState<string>('');  
   const [confirmPassword, setConfirmPassword] = useState<string>('');  
   const [message, setMessage] = useState<string>('');  
-  const apiInstance = role === 'manager' ? managerApi : api;
+  const apiInstance = role === 'restaurent' ?  restaurentApi : api;
 
   const handleNewPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); 

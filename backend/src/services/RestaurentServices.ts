@@ -1,37 +1,37 @@
-// src/services/ManagerService.ts
-import { IManagerService, ILoginResponse, IForgotPasswordResponse, IResetPasswordResponse } from "../interfaces/manager/ManagerServiceInterface";
+ 
+import { IRestaurentService, ILoginResponse, IForgotPasswordResponse, IResetPasswordResponse } from "../interfaces/Restaurent/RestaurentServiceInterface";
 import IOtpRepository from "../interfaces/otp/OtpRepositoryInterface";
 import bcrypt from "bcrypt";
-import { IManager } from "../models/Manager/managerModel";
+import { IRestaurent } from "../models/Restaurent/RestaurentModel";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../utils/jwt";
 import { generateOtp, hashOtp } from "../utils/GenerateOtp";
 import { sentMail } from "../utils/SendMails";
-import { IManagerRepository } from "../interfaces/manager/ManagerRepositoryInterface";
+import {IRestaurentRepository } from "../interfaces/Restaurent/RestaurentRepositoryInterface";
 import { MessageConstants } from "../constants/MessageConstants";
 
-export class ManagerService implements IManagerService {
+export class  RestaurentServices implements  IRestaurentService {
   constructor(
-    private managerRepository: IManagerRepository,
+    private restaurentRepository: IRestaurentRepository ,
     private otpRepository: IOtpRepository
   ) {}
 
-  async registerManager(managerData: Partial<IManager>): Promise<IManager> {
-    const { name, email, password, phone, certificate } = managerData;
+  async registerRestaurent(restaurentData: Partial<IRestaurent>): Promise<IRestaurent> {
+    const { name, email, password, phone, certificate } = restaurentData;
 
     // Validate required fields
     if (!name || !email || !password || !phone || !certificate) {
       throw new Error(MessageConstants.FILE_NOT_UPLOADED);
     }
 
-    // Check for existing manager
-    const existingManager = await this.managerRepository.findByEmail(email);
-    if (existingManager) {
+    // Check for existing restaurent
+    const existingRestaurent = await this.restaurentRepository.findByEmail(email);
+    if (existingRestaurent) {
       throw new Error(MessageConstants.USER_ALREADY_EXISTS);
     }
 
-    // Hash password and create manager
+    // Hash password and create restaurent
     const hashedPassword = await bcrypt.hash(password, 10);
-    return this.managerRepository.create({
+    return this.restaurentRepository.create({
       name,
       email,
       password: hashedPassword,
@@ -41,31 +41,31 @@ export class ManagerService implements IManagerService {
     });
   }
 
-  // In managerService.ts
-  async loginManager(email: string, password: string): Promise<ILoginResponse> {
-    const manager = await this.managerRepository.findByEmail(email);
-    if (!manager) throw new Error(MessageConstants.LOGIN_FAILED);
+  // In restaurentService.ts
+  async loginRestaurent(email: string, password: string): Promise<ILoginResponse> {
+    const restaurent = await this.restaurentRepository.findByEmail(email);
+    if (!restaurent) throw new Error(MessageConstants.LOGIN_FAILED);
   
-    if (manager.isBlocked) {
+    if (restaurent.isBlocked) {
       throw new Error(JSON.stringify({
-        code: MessageConstants.MANAGER_BLOCKED,
-        message: 'Account blocked',
-        reason: manager.blockReason || 'Contact support for details'
+        code: MessageConstants.RESTAURENT_BLOCKED,
+        message: 'Account Not Approved',
+        reason: restaurent.blockReason || 'Contact support for details'
       }));
     }
   
-    const isPasswordValid = await bcrypt.compare(password, manager.password);
+    const isPasswordValid = await bcrypt.compare(password,restaurent.password);
     if (!isPasswordValid) throw new Error(MessageConstants.LOGIN_FAILED);
   
     return {
-      manager,
-      accessToken: generateAccessToken(manager._id.toString(), "manager"),
-      refreshToken: generateRefreshToken(manager._id.toString(), "manager"),
+      restaurent,
+      accessToken: generateAccessToken(restaurent._id.toString(), "Restaurent"),
+      refreshToken: generateRefreshToken(restaurent._id.toString(), "Restaurent"),
     };
   }
 
-  async getManagerProfile(managerId: string): Promise<IManager | null> {
-    return this.managerRepository.findById(managerId);
+  async getRestaurentProfile(restaurentId: string): Promise<IRestaurent | null> {
+    return this.restaurentRepository.findById(restaurentId);
   }
 
   async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }> {
@@ -73,11 +73,11 @@ export class ManagerService implements IManagerService {
     if (!decoded || typeof decoded !== "object") {
       throw new Error(MessageConstants.INVALID_REFRESH_TOKEN);
     }
-    return { accessToken: generateAccessToken(decoded.id, "manager") };
+    return { accessToken: generateAccessToken(decoded.id, "Restaurent") };
   }
 
   async forgotPasswordVerify(email: string): Promise<IForgotPasswordResponse> {
-    const userData = await this.managerRepository.findByEmail(email);
+    const userData = await this.restaurentRepository.findByEmail(email);
     if (!userData) {
       return { success: false, message: MessageConstants.USER_NOT_FOUND, data: null };
     }
@@ -89,22 +89,22 @@ export class ManagerService implements IManagerService {
       "Forgot Password Verification",
       `<p>Enter this code <b>${otp}</b> to verify your email for resetting the password.</p>`
     );
-
+console.log('OTP',otp)
     if (mailSent) {
       const hashedOtp = await hashOtp(otp);
       await this.otpRepository.storeOtp(hashedOtp, userData.email);
     }
 
-    return { success: true, message: MessageConstants.PASSWORD_RESET_SUCCESS, data: userData.email };
+    return { success: true, message: MessageConstants.OTP_SENT, data: userData.email };
   }
 
   async resetPassword(email: string, newPassword: string): Promise<IResetPasswordResponse> {
-    const user = await this.managerRepository.findByEmail(email);
+    const user = await this.restaurentRepository.findByEmail(email);
     if (!user) return { success: false, message: MessageConstants.USER_NOT_FOUND };
 
     // Update password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.managerRepository.updatePassword(user.id, hashedPassword);
+    await this.restaurentRepository.updatePassword(user.id, hashedPassword);
     return { success: true, message: MessageConstants.PASSWORD_RESET_SUCCESS };
   }
 }

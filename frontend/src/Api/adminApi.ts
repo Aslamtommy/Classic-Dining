@@ -2,10 +2,10 @@
 import adminApi from '../Axios/adminInstance';
  
 
-export const fetchManagers = async (page: number, limit: number,searchTerm: string,
+export const fetchRestaurents = async (page: number, limit: number,searchTerm: string,
   isBlocked: string) => {
   try {
-    const response = await adminApi.get<any>('/managers', {
+    const response = await adminApi.get<any>('/restaurent', {
       params: { page, limit,searchTerm,isBlocked }
     });
 
@@ -15,8 +15,8 @@ export const fetchManagers = async (page: number, limit: number,searchTerm: stri
     console.log('Extracted data:', data); // Log the extracted data
     return data; // Return the nested `data` object
   } catch (error) {
-    console.error('Error fetching managers:', error);
-    throw new Error('Failed to fetch managers. Please try again later.');
+    console.error('Error fetching restaurents:', error);
+    throw new Error('Failed to fetch restaurents. Please try again later.');
   }
 };
 // Fetch all users
@@ -38,14 +38,14 @@ export const fetchUsers = async (page: number, limit: number,searchTerm: string,
   }
 };
 
-// Block or unblock a manager
-export const blockManager = async (managerId: string, isBlocked: boolean) => {
+// Block or unblock a restaurent
+export const blockRestaurent = async (restaurentId: string, isBlocked: boolean) => {
     try {
 
-        console.log('managerid',managerId)
-        await adminApi.post('/block', { managerId, isBlocked });
+        console.log('restaurentId',restaurentId)
+        await adminApi.post('/block', { restaurentId, isBlocked });
       } catch (error: any) {
-        console.error('Error blocking manager:', error.response?.data || error.message);
+        console.error('Error blocking restaurent:', error.response?.data || error.message);
       }
 };
 export const blockUser = async (userId: string, isBlocked: boolean) => {

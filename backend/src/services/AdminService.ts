@@ -1,5 +1,5 @@
 import { IAdminService } from "../interfaces/admin/adminServiceInterface";
- import { IManagerRepository } from "../interfaces/manager/ManagerRepositoryInterface";
+ import { IRestaurentRepository } from "../interfaces/Restaurent/RestaurentRepositoryInterface";
  import { UserRepositoryInterface } from "../interfaces/user/UserRepositoryInterface";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../utils/jwt";
  import { IAdminrepository } from "../interfaces/admin/adminRepositoryInterface";
@@ -7,7 +7,7 @@ import { generateAccessToken, generateRefreshToken, verifyToken } from "../utils
 class AdminService implements IAdminService {
   
 
-  constructor(private adminRepository:IAdminrepository ,private managerRepository:IManagerRepository,private userRepository:UserRepositoryInterface ) {
+  constructor(private adminRepository:IAdminrepository ,private restaurentRepository:IRestaurentRepository,private userRepository:UserRepositoryInterface ) {
    
   }
 
@@ -50,21 +50,21 @@ class AdminService implements IAdminService {
     }
   }
 
-  async getPendingManagers(): Promise<any> {
-    return await this.managerRepository.findAllPending();
+  async getPendingRestaurents(): Promise<any> {
+    return await this.restaurentRepository.findAllPending();
   }
 
-  async updateManagerStatus(managerId: string, isBlocked: boolean,  blockReason?: string): Promise<any> {
-    return await this.managerRepository.updateManagerStatus(managerId, isBlocked, blockReason);
+  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean,  blockReason?: string): Promise<any> {
+    return await this.restaurentRepository.updateRestaurentStatus(restaurentId, isBlocked, blockReason);
   }
 
   // services/adminService.ts
-  async getAllManagers(
+  async getAllRestaurents(
     page: number,
     limit: number,
     searchTerm: string,
     isBlocked: string
-  ): Promise<{ managers: any[]; total: number }> {
+  ): Promise<{ restaurents: any[]; total: number }> {
     const skip = (page - 1) * limit;
     
     // Build filter query
@@ -81,12 +81,12 @@ class AdminService implements IAdminService {
       filter.isBlocked = false;
     }
   
-    const [managers, total] = await Promise.all([
-      this.managerRepository.findAll(filter, skip, limit),
-      this.managerRepository.countAll(filter),
+    const [restaurents, total] = await Promise.all([
+      this.restaurentRepository.findAll(filter, skip, limit),
+      this.restaurentRepository.countAll(filter),
     ]);
   
-    return { managers, total };
+    return { restaurents, total };
   }
 
 
@@ -114,17 +114,17 @@ class AdminService implements IAdminService {
     return { users, total };
   }
 
-  async managerBlock(managerId: string, isBlocked: boolean): Promise<any> {
-    const manager = await this.managerRepository.findById(managerId);
+  async restaurentBlock(restaurentId: string, isBlocked: boolean): Promise<any> {
+    const restaurent = await this.restaurentRepository.findById(restaurentId);
 
-    if (!manager) {
-      throw new Error("Manager not found");
+    if (!restaurent) {
+      throw new Error("Restaurent not found");
     }
 
-    manager.isBlocked = isBlocked;
-    const updatedManager = await this.managerRepository.save(manager);
+   restaurent.isBlocked = isBlocked;
+    const updatedRestaurent = await this.restaurentRepository.save(restaurent);
 
-    return updatedManager;
+    return updatedRestaurent;
   }
 
   async blockUser(userId: string, isBlocked: boolean): Promise<any> {

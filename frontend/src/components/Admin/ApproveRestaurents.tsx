@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import adminApi from '../../Axios/adminInstance';
 
-interface Manager {
+interface Restaurent {
   _id: string;
   name: string;
   email: string;
@@ -10,59 +10,59 @@ interface Manager {
   isBlocked: boolean;
 }
 
-interface PendingManagersResponse {
+interface PendingRestaurentsResponse {
   success: boolean;
   message: string;
   data: {
-    managers: Manager[];
+    restaurents: Restaurent[];
   };
 }
 
-const ApproveManagers: React.FC = () => {
-  const [pendingManagers, setPendingManagers] = useState<Manager[]>([]);
+const ApproveRestaurents: React.FC = () => {
+  const [pendingRestaurents, setPendingRestaurents] = useState<Restaurent[]>([]);
   const [error, setError] = useState<string>('');
   const [showBlockModal, setShowBlockModal] = useState(false);
-  const [selectedManager, setSelectedManager] = useState<string | null>(null);
+  const [selectedRestaurent, setSelectedRestaurent] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState('');
 
   useEffect(() => {
-    fetchPendingManagers();
+    fetchPendingRestaurents();
   }, []);
 
-  const fetchPendingManagers = async () => {
+  const fetchPendingRestaurents = async () => {
     try {
-      const response = await adminApi.get<PendingManagersResponse>('/pending');
-      setPendingManagers(response.data.data.managers || []);
+      const response = await adminApi.get<PendingRestaurentsResponse>('/pending');
+      setPendingRestaurents(response.data.data.restaurents || []);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch pending managers.');
+      setError(err.response?.data?.message || 'Failed to fetch pending restaurents.');
     }
   };
 
-  const handleBlockClick = (managerId: string) => {
-    setSelectedManager(managerId);
+  const handleBlockClick = (restaurentId: string) => {
+    setSelectedRestaurent(restaurentId);
     setShowBlockModal(true);
   };
 
-  const handleUpdateStatus = async (managerId: string, isBlocked: boolean) => {
+  const handleUpdateStatus = async (restaurentId: string, isBlocked: boolean) => {
     try {
       await adminApi.post('/update-status', {
-        managerId,
+        restaurentId,
         isBlocked,
         blockReason: isBlocked ? blockReason : undefined,
       });
 
-      alert(`Manager ${isBlocked ? 'blocked' : 'approved'} successfully!`);
-      setPendingManagers((prev) => prev.filter((manager) => manager._id !== managerId));
+      alert(`Restaurent ${isBlocked ? 'blocked' : 'approved'} successfully!`);
+      setPendingRestaurents((prev) => prev.filter((restaurent) => restaurent._id !== restaurentId));
       setShowBlockModal(false);
       setBlockReason('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update manager status.');
+      setError(err.response?.data?.message || 'Failed to update restaurent status.');
     }
   };
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Approve Managers</h2>
+      <h2 className="text-2xl font-bold mb-4">Approve Restaurents</h2>
 
       {/* Block Reason Modal */}
       {showBlockModal && (
@@ -87,7 +87,7 @@ const ApproveManagers: React.FC = () => {
                 Cancel
               </button>
               <button
-                onClick={() => handleUpdateStatus(selectedManager!, true)} // Pass selectedManager and true
+                onClick={() => handleUpdateStatus(selectedRestaurent!, true)} // Pass selectedRestaurentand true
                 className="px-4 py-2 bg-red-500 text-white rounded"
               >
                 Confirm Block
@@ -99,7 +99,7 @@ const ApproveManagers: React.FC = () => {
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
-      {pendingManagers.length > 0 ? (
+      {pendingRestaurents.length > 0 ? (
         <table className="table-auto w-full border-collapse border border-gray-400">
           <thead>
             <tr>
@@ -111,14 +111,14 @@ const ApproveManagers: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {pendingManagers.map((manager) => (
-              <tr key={manager._id}>
-                <td className="border border-gray-400 px-4 py-2">{manager.name}</td>
-                <td className="border border-gray-400 px-4 py-2">{manager.email}</td>
-                <td className="border border-gray-400 px-4 py-2">{manager.phone}</td>
+            {pendingRestaurents.map((restaurent) => (
+              <tr key={restaurent._id}>
+                <td className="border border-gray-400 px-4 py-2">{restaurent.name}</td>
+                <td className="border border-gray-400 px-4 py-2">{restaurent.email}</td>
+                <td className="border border-gray-400 px-4 py-2">{restaurent.phone}</td>
                 <td className="border border-gray-400 px-4 py-2">
                   <a
-                    href={manager.certificate}
+                    href={restaurent.certificate}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
@@ -128,13 +128,13 @@ const ApproveManagers: React.FC = () => {
                 </td>
                 <td className="border border-gray-400 px-4 py-2">
                   <button
-                    onClick={() => handleUpdateStatus(manager._id, false)} // Pass manager._id and false
+                    onClick={() => handleUpdateStatus(restaurent._id, false)} // Pass restaurent._id and false
                     className="px-4 py-2 bg-green-500 text-white rounded mr-2 hover:bg-green-600"
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => handleBlockClick(manager._id)} // Open the modal
+                    onClick={() => handleBlockClick(restaurent._id)} // Open the modal
                     className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                   >
                     Block
@@ -145,10 +145,10 @@ const ApproveManagers: React.FC = () => {
           </tbody>
         </table>
       ) : (
-        <p>No pending managers to approve.</p>
+        <p>No pending restaurents to approve.</p>
       )}
     </div>
   );
 };
 
-export default ApproveManagers;
+export default ApproveRestaurents;

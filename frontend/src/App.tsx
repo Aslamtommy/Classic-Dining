@@ -6,14 +6,14 @@ import UserHomePage from './pages/User/UserHomePage';
 import UserProfile from './components/User/UserProfile';
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/AdminDashboard';
-import ManagerSignup from './components/Manager/managerSignup';
-import ManagerLogin from './components/Manager/managerLogin';
-import ApproveManagers from './components/Admin/Adminapprovals';
-import ManagerProfile from './components/Manager/ManagerProfile';
-import ManagerList from './components/Admin/ManagerList';
+ import RestaurentSignup from './components/Restaurent/restaurentSignup';
+ import RestaurentLogin from './components/Restaurent/RestaurentLogin';
+import ApproveRestaurents from './components/Admin/ApproveRestaurents';
+import RestaurentProfile from './components/Restaurent/RestaurentProfile';
+import RestaurentList from './components/Admin/RestaurentList';
 import UserList from './components/Admin/userList';
-import ManagerDashboard from './pages/Manager/ManagerDashboard';
-import ManagerProtected from './components/Manager/ManagerProtected';
+import RestaurentDashboard from './pages/Restaurent/RestaurentDashboard';
+import RestaurentProtected from './components/Restaurent/RestaurentProtected';
 import UserProtected from './components/User/UserProtected';
  import AdminProtected from './components/Admin/AdminProtected';
  
@@ -32,20 +32,20 @@ const App = () => {
 
 
 
-          <Route path="/manager/signup" element={<ManagerSignup />} />
-          <Route path="/manager/login" element={<ManagerLogin/>} />
+          <Route path="/restaurent/signup" element={<RestaurentSignup />} />
+          <Route path="/restaurent/login" element={<RestaurentLogin/>} />
     
-       <Route element={<ManagerProtected />}>
-          <Route path="/manager/profile" element={<ManagerProfile />} />
-          <Route path="/manager/home" element={<ManagerDashboard />} />
+       <Route element={< RestaurentProtected />}>
+          <Route path="/restaurent/profile" element={<RestaurentProfile />} />
+          <Route path="/restaurent/home" element={<RestaurentDashboard />} />
         </Route>
         <Route >
         <Route path="/admin/login" element={<AdminLogin />} />
           <Route element={<AdminProtected/>}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
         
-          <Route path="/admin/approvals" element={<ApproveManagers/>} />
-          <Route path="/admin/managers" element={<ManagerList />} />
+          <Route path="/admin/approvals" element={<ApproveRestaurents/>} />
+          <Route path="/admin/restaurents" element={<RestaurentList />} />
           <Route path="/admin/users" element={<UserList />} />
           </Route>
           </Route>

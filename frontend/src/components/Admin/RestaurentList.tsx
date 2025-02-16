@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { fetchManagers, blockManager } from '../../Api/adminApi';
+import { fetchRestaurents, blockRestaurent } from '../../Api/adminApi';
 import useFetchData from '../../hooks/useFetchData';
 import DataTable from './DataTable';
 import TableActions from './TableActions';
 import Loader from './Loader';
 import Pagination from '../../Pagination/Pagination';
 
-const ManagerList: React.FC = () => {
+const RestaurentList: React.FC = () => {
    
   const [page, setPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -14,22 +14,22 @@ const ManagerList: React.FC = () => {
   const limit =4;
 
   // Memoize the fetch function so it only changes when page or limit changes.
-  const fetchManagersCallback = useCallback(() => fetchManagers(page, limit,searchTerm,isBlockedFilter), [page, limit, searchTerm, isBlockedFilter]);
+  const fetchRestaurentsCallback = useCallback(() => fetchRestaurents(page, limit,searchTerm,isBlockedFilter), [page, limit, searchTerm, isBlockedFilter]);
 
-  const { data, loading, error, refetch } = useFetchData(fetchManagersCallback);
+  const { data, loading, error, refetch } = useFetchData(fetchRestaurentsCallback);
 
  
-  const managers = data?.managers || [];
+  const restaurents = data?.restaurents || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
-  const handleBlockManager = async (managerId: string, isBlocked: boolean) => {
+  const handleBlockRestaurent = async (restaurentId: string, isBlocked: boolean) => {
     try {
-      await blockManager(managerId, isBlocked);
+      await blockRestaurent(restaurentId, isBlocked);
     
       refetch();
     } catch (err) {
-      console.error('Error blocking/unblocking manager:', err);
+      console.error('Error blocking/unblocking restaurent:', err);
     }
   };
 
@@ -50,7 +50,7 @@ const ManagerList: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Managers</h2>
+      <h2 className="text-2xl font-bold mb-4">Restaurents</h2>
 
        {/* Search and Filter Controls */}
        <div className="flex gap-4 mb-4">
@@ -76,11 +76,11 @@ const ManagerList: React.FC = () => {
       </div>
       <DataTable
         columns={['name', 'email']}
-        data={managers}
-        actions={(manager) => (
+        data={restaurents}
+        actions={(restaurent) => (
           <TableActions
-            onBlock={() => handleBlockManager(manager._id, !manager.isBlocked)}
-            isBlocked={manager.isBlocked}
+            onBlock={() => handleBlockRestaurent(restaurent._id, !restaurent.isBlocked)}
+            isBlocked={restaurent.isBlocked}
           />
         )}
       />
@@ -91,4 +91,4 @@ const ManagerList: React.FC = () => {
   );
 };
 
-export default ManagerList;
+export default RestaurentList;

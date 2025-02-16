@@ -5,8 +5,8 @@ import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { setLoading, setManager, setError } from "../../redux/managerSlice";
-import managerApi from "../../Axios/managerInstance";
+import { setLoading, setRestaurent, setError } from "../../redux/restaurentSlice";
+import restaurentApi from "../../Axios/restaurentInstance";
 import OtpModal from "../CommonComponents/Modals/OtpModal";
 import sendOtp from "../../utils/sentotp";
 
@@ -54,14 +54,14 @@ const validationSchema = yup.object().shape({
 
 type FormData = yup.InferType<typeof validationSchema>;
 
-const ManagerSignup: React.FC = () => {
+const RestaurentSignup: React.FC = () => {
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(validationSchema),
   });
 
   const [showOtpModal, setShowOtpModal] = useState(false);
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state: RootState) => state.manager);
+  const { loading, error } = useSelector((state: RootState) => state.restaurent);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -96,12 +96,12 @@ const ManagerSignup: React.FC = () => {
   
     try {
       dispatch(setLoading());
-      const response: any = await managerApi.post("/signup", formDataToSend, {
+      const response: any = await restaurentApi.post("/signup", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      dispatch(setManager(response.data.manager));
+      dispatch(setRestaurent(response.data.restaurent));
       setShowOtpModal(false);
-      navigate("/manager/login");
+      navigate("/restaurent/login");
     } catch (err: any) {
       dispatch(setError(err.response?.data?.error || "Signup failed"));
     }
@@ -111,7 +111,7 @@ const ManagerSignup: React.FC = () => {
 
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">Manager Signup</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Restaurent Signup</h2>
       {error && (
         <p className="text-red-500 text-sm mb-4">
           {error.split(", ").map((msg, i) => (
@@ -240,4 +240,4 @@ const ManagerSignup: React.FC = () => {
   );
 };
 
-export default ManagerSignup;
+export default RestaurentSignup;

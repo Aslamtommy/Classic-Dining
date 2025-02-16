@@ -29,9 +29,9 @@ export function AdminSiderbar({ className }: SidebarProps) {
       badge: "12",
     },
     {
-      name: "Managers",
+      name: "Restaurents",
       icon: UserCog,
-      path: "/admin/managers",
+      path: "/admin/restaurents",
       badge: "3",
     },
     {

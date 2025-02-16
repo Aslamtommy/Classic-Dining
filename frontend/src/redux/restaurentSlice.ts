@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
  
 
  
-interface Manager {
+interface Restaurent {
   _id: string;   
   name: string;
   email: string;
@@ -10,34 +10,34 @@ interface Manager {
   certificate?: string;   
 }
 
-interface ManagerState {
-  manager: Manager | null;
-  profile: Manager | null;
+interface RestaurentState {
+  restaurent: Restaurent | null;
+  profile: Restaurent | null;
   loading: boolean;
   error: string | null;
 }
 
-const initialState: ManagerState = {
-  manager: null,
+const initialState: RestaurentState = {
+  restaurent: null,
   profile: null,
   loading: false,
   error: null,
 };
 
 // Reducers for profile and error handling
-const managerSlice = createSlice({
-  name: 'manager',
+const restaurentSlice = createSlice({
+  name: 'restaurent',
   initialState,
   reducers: {
     setLoading: (state) => {
       state.loading = true;
     },
-    setManager: (state, action: PayloadAction<Manager>) => {
-      state.manager = action.payload;
+    setRestaurent: (state, action: PayloadAction<Restaurent>) => {
+      state.restaurent = action.payload;
       state.loading = false;
       state.error = null;
     },
-    setProfile: (state, action: PayloadAction<Manager>) => {
+    setProfile: (state, action: PayloadAction<Restaurent>) => {
       state.profile = action.payload;
       state.loading = false;
       state.error = null;
@@ -46,8 +46,8 @@ const managerSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
-    logoutManager: (state) => {
-      state.manager = null;
+    logoutRestaurent: (state) => {
+      state.restaurent = null;
       state.profile = null;
       state.loading = false;
       state.error = null;
@@ -55,6 +55,6 @@ const managerSlice = createSlice({
   },
 });
 
-export const { setLoading, setManager, setProfile, setError, logoutManager } = managerSlice.actions;
+export const { setLoading, setRestaurent, setProfile, setError, logoutRestaurent } = restaurentSlice.actions;
 
-export default managerSlice.reducer;
+export default restaurentSlice.reducer;

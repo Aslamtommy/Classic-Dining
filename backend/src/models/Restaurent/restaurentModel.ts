@@ -1,28 +1,31 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document,ObjectId } from 'mongoose';
 
-interface Location {
-  address: string;
-}
-
-export interface Restaurant extends Document {
-  name: string;
-  locations: Location[];
-  licenseCertificate: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const restaurantSchema = new Schema<Restaurant>(
+export interface IRestaurent extends Document {
+ 
+    _id: ObjectId;
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    certificate: string;
+    isBlocked: boolean;
+    blockReason?: string; // Add this field
+    createdAt: Date;
+    updatedAt: Date;
+  }
+const RestaurentSchema: Schema = new Schema<IRestaurent>(
   {
     name: { type: String, required: true },
-    locations: [
-      {
-        address: { type: String, required: true },
-      },
-    ],
-    licenseCertificate: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    phone: { type: String, required: true },
+    certificate: { type: String, required: true },
+    isBlocked: { type: Boolean, default: true },  
+    blockReason: { type: String, default: null }, 
   },
   { timestamps: true }
 );
 
-export const Restaurant = mongoose.model<Restaurant>('Restaurant', restaurantSchema);
+const RestaurentModel = mongoose.model<IRestaurent>('Restaurent', RestaurentSchema);
+
+export default RestaurentModel;

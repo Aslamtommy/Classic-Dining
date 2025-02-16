@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../../../Axios/userInstance';
 import OtpModal from './OtpModal';  
  import NewPasswordModal from './NewPaawordModal';
- import managerApi from '../../../Axios/managerInstance';
+ import  restaurentApi from '../../../Axios/restaurentInstance';
 interface ForgotPasswordProps {
   show: boolean;
   onClose: () => void;
@@ -22,7 +22,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordProps> = ({ show, onClose,role
   const [email, setEmail] = useState('');
 
 
-  const apiInstance = role === 'manager' ? managerApi : api;
+  const apiInstance = role === 'restaurent' ?  restaurentApi : api;
   // Handle forgot password submission
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();

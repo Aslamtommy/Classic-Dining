@@ -2,7 +2,7 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import userReducer from './userslice';
 import otpReducer from './otpslice';
 import adminReducer from './adminSlice';
-import managerReducer from './managerSlice'
+import restaurentReducer from './restaurentSlice'
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage' 
 import { ThunkDispatch } from 'redux-thunk';
@@ -12,7 +12,7 @@ import { AnyAction } from 'redux';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['user', 'admin','manager'],  
+  whitelist: ['user', 'admin','restaurent'],  
 };
 
 // Combine all reducers into a rootReducer
@@ -20,7 +20,7 @@ const rootReducer = combineReducers({
   user: userReducer,
   otp: otpReducer,
   admin: adminReducer,
-  manager:managerReducer
+  restaurent:restaurentReducer
  
 });
 

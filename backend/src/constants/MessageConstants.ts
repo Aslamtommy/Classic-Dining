@@ -19,9 +19,9 @@ export const MessageConstants = {
     LOGOUT_SUCCESS: "Logged out successfully.",
     USER_ALREADY_EXISTS: "User with this email already exists",
     ACCESS_TOKEN_REFRESHED: "Access token refreshed successfully",
-    MANAGER_STATUS_UPDATED: "Manager status updated successfully.",
-    MANAGER_BLOCKED: "Manager blocked successfully.",
-    MANAGER_UNBLOCKED: "Manager unblocked successfully.",
+    RESTAURENT_STATUS_UPDATED: "Restaurent status updated successfully.",
+    RESTAURENT_BLOCKED: "Restaurent blocked successfully.",
+    RESTAURENT_UNBLOCKED: "Restaurent unblocked successfully.",
     USER_BLOCKED: "User blocked successfully.",
     USER_UNBLOCKED: "User unblocked successfully.",
     REFRESH_TOKEN_FAILED: "Failed to refresh tokens.",
@@ -29,5 +29,6 @@ export const MessageConstants = {
     INVALID_CREDENTIALS: "Invalid credentials.",
     PROFILE_UPDATED_SUCCESS: 'Profile updated successfully',
 EMAIL_ALREADY_EXISTS: 'Email already in use',
+OTP_SENT:'OTP sent successfully'
   };
   

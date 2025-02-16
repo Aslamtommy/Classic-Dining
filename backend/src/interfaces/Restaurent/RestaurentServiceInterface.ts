@@ -1,4 +1,4 @@
-import { IManager } from "../../models/Manager/managerModel";
+import { IRestaurent} from "../../models/Restaurent/RestaurentModel";
 
 export interface IForgotPasswordResponse {
   success: boolean;
@@ -7,7 +7,7 @@ export interface IForgotPasswordResponse {
 }
 
 export interface ILoginResponse {
-  manager: IManager;
+  restaurent: IRestaurent;
   accessToken: string;
   refreshToken: string;
 }
@@ -17,10 +17,10 @@ export interface IResetPasswordResponse {
   message: string;
 }
 
-export interface IManagerService {
-  registerManager(managerData: Partial<IManager>): Promise<IManager>;
-  loginManager(email: string, password: string): Promise<ILoginResponse>;
-  getManagerProfile(managerId: string): Promise<IManager | null>;
+export interface IRestaurentService {
+  registerRestaurent(restaurentData: Partial<IRestaurent>): Promise<IRestaurent>;
+  loginRestaurent(email: string, password: string): Promise<ILoginResponse>;
+  getRestaurentProfile(restaurentId: string): Promise<IRestaurent | null>;
   refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }>;
   forgotPasswordVerify(email: string): Promise<IForgotPasswordResponse>;
   resetPassword(email: string, newPassword: string): Promise<IResetPasswordResponse>;

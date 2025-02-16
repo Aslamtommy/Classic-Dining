@@ -1,26 +1,26 @@
 import type React from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import managerApi from "../../Axios/managerInstance";
+import  restaurentApi from "../../Axios/restaurentInstance";
 import type { RootState } from "../../redux/store";
-import { setProfile, setError, setLoading } from "../../redux/managerSlice";
-import toast from 'react-hot-toast'
-const ManagerProfile: React.FC = () => {
+import { setProfile, setError, setLoading } from "../../redux/restaurentSlice";
+ 
+const RestaurentProfile: React.FC = () => {
   const dispatch = useDispatch();
-  const { manager, profile, loading, error } = useSelector(
-    (state: RootState) => state.manager
+  const { restaurent, profile, loading, error } = useSelector(
+    (state: RootState) => state.restaurent
   );
 
   useEffect(() => {
-    if (!manager) {
-      dispatch(setError("Manager not logged in."));
+    if (!restaurent) {
+      dispatch(setError("Restaurent not logged in."));
       return;
     }
 
     const fetchProfile = async () => {
       try {
         dispatch(setLoading());
-        const response: any = await managerApi.get(`/profile/${manager._id}`);
+        const response: any = await  restaurentApi.get(`/profile/${restaurent._id}`);
         dispatch(setProfile(response.data.data));
         console.log(response)
       } catch (err) {
@@ -29,7 +29,7 @@ const ManagerProfile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [dispatch, manager]);
+  }, [dispatch, restaurent]);
 
   if (loading)
     return (
@@ -54,7 +54,7 @@ const ManagerProfile: React.FC = () => {
         <div className="absolute bottom-0 right-0 w-12 h-12 border-r-2 border-b-2 border-[#b08a60]"></div>
 
         <h1 className="text-2xl font-serif font-bold text-[#5a3e36] mb-6 text-center">
-          Manager Profile
+        restaurent Profile
         </h1>
 
         {profile ? (
@@ -91,4 +91,4 @@ const ManagerProfile: React.FC = () => {
   );
 };
 
-export default ManagerProfile;
+export default RestaurentProfile;

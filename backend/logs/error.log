@@ -1,125 +1,91 @@
-2025-02-11T16:40:22.042Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: undefined
-2025-02-11T16:40:22.098Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: undefined
-2025-02-11T16:42:41.511Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T16:42:41.542Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T16:57:02.514Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T16:57:02.616Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T16:57:08.457Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T16:57:08.469Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:03:40.260Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:03:40.274Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:03:44.566Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:03:44.579Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:07:16.792Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:07:16.802Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:07:21.196Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:07:21.202Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:09:28.015Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:09:28.029Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:09:32.528Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:09:32.538Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:11:16.992Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:11:18.264Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:11:20.339Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:11:37.210Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:11:37.230Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:11:38.516Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:11:38.555Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:11:39.286Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:11:39.299Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:11:47.530Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:11:47.538Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:12:12.020Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:12:13.142Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:14:19.815Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:14:19.844Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:14:23.584Z [ERROR]: Error Response - Status: 401, Message: Admin not found, Error: No additional details
-2025-02-11T17:14:23.593Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:14:59.666Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:14:59.687Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:15:02.703Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:15:03.612Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:15:03.620Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:15:22.588Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:15:22.610Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:15:26.649Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:15:26.658Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-11T17:15:35.074Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T17:15:40.725Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-11T18:06:13.037Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T18:06:13.054Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T18:36:02.165Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T18:36:02.176Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T18:58:53.004Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T19:10:43.665Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-11T19:10:43.670Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-12T07:57:38.681Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-12T08:20:00.167Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:20:11.652Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:20:16.028Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:20:17.614Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:20:23.005Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:20:27.701Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:21:53.559Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:22:13.475Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-12T08:22:30.370Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T13:34:00.420Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T13:34:00.434Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T14:33:18.905Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T14:33:18.918Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T14:33:42.562Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:33:55.506Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:37:54.067Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:41:39.219Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:41:54.600Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:42:16.502Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:43:01.956Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T14:45:47.132Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T14:45:50.714Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T14:46:33.069Z [ERROR]: Error Response - Status: 403, Message: Your account is not approved yet. Please contact the admin., Error: No additional details
-2025-02-13T15:18:01.775Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T15:18:01.784Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T15:18:15.294Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T15:18:16.842Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T15:18:24.817Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:18:31.024Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:18:40.433Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T15:18:44.518Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T15:18:47.889Z [ERROR]: Error Response - Status: 403, Message: Access denied., Error: No additional details
-2025-02-13T15:18:55.917Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:33:43.886Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:36:12.868Z [ERROR]: Error Response - Status: 500, Message: Login failed. Please check your credentials., Error: User not found for email
-2025-02-13T15:36:15.569Z [ERROR]: Error Response - Status: 500, Message: Login failed. Please check your credentials., Error: User not found for email
-2025-02-13T15:36:29.701Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:36:29.708Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-13T15:48:02.383Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:49:32.450Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:49:43.001Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T15:51:51.305Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T16:00:50.671Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T17:22:07.996Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T17:22:08.005Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-13T17:23:20.758Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T17:23:35.340Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T17:23:46.413Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-13T18:28:12.410Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-14T11:15:09.468Z [ERROR]: Error Response - Status: 500, Message: getaddrinfo ENOTFOUND cluster0-shard-00-00.bgj2b.mongodb.net, Error: No additional details
-2025-02-14T11:15:29.478Z [ERROR]: Error Response - Status: 500, Message: getaddrinfo ENOTFOUND cluster0-shard-00-00.bgj2b.mongodb.net, Error: No additional details
-2025-02-14T15:08:54.078Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-14T15:08:54.142Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
-2025-02-14T17:19:22.183Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
-2025-02-14T18:04:17.718Z [ERROR]: Error Response - Status: 400, Message: User not found., Error: No additional details
-2025-02-14T18:16:23.125Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
-2025-02-14T18:29:23.714Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
-2025-02-14T18:29:25.902Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
-2025-02-14T18:36:16.609Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-14T19:00:59.376Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-14T19:00:59.383Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-14T19:15:31.076Z [ERROR]: Error Response - Status: 403, Message: Account blocked. Reason: done brpo, Error: No additional details
-2025-02-14T19:26:23.368Z [ERROR]: Error Response - Status: 403, Message: Account blocked: done brpo, Error: No additional details
-2025-02-14T19:26:31.338Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-14T19:26:31.344Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
-2025-02-14T19:27:37.314Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
-2025-02-14T19:27:43.255Z [ERROR]: Error Response - Status: 403, Message: Account blocked: not intrest, Error: No additional details
-2025-02-14T19:28:10.171Z [ERROR]: Error Response - Status: 500, Message: Login failed, Error: No additional details
-2025-02-14T19:28:27.912Z [ERROR]: Error Response - Status: 403, Message: Account blocked: not intrest, Error: No additional details
+2025-02-15T14:08:05.844Z [ERROR]: Error Response - Status: 403, Message: Account blocked: Contact support for details, Error: No additional details
+2025-02-15T14:10:27.476Z [ERROR]: Error Response - Status: 403, Message: Account Not Approved: Contact support for details, Error: No additional details
+2025-02-15T14:10:29.698Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-15T14:10:29.705Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-15T14:24:29.875Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:24:39.649Z [ERROR]: Error Response - Status: 403, Message: Account Not Approved: nothing, Error: No additional details
+2025-02-15T14:24:41.756Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:24:46.907Z [ERROR]: Error Response - Status: 403, Message: Account Not Approved: nothing, Error: No additional details
+2025-02-15T14:25:06.253Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:25:33.646Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:26:04.185Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:26:04.192Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T14:28:40.704Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:28:40.711Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T14:28:44.321Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:28:44.335Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T14:28:47.454Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:28:47.460Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T14:31:51.974Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T14:31:51.989Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T17:43:03.435Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T17:43:03.453Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T17:43:51.147Z [ERROR]: Error Response - Status: 403, Message: Account Not Approved: nothing, Error: No additional details
+2025-02-15T17:44:07.411Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T17:44:09.776Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T17:55:24.264Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-15T17:55:24.270Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-15T17:55:27.053Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T18:02:06.237Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T18:02:06.267Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T18:19:55.663Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T18:38:58.941Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-15T18:38:58.964Z [ERROR]: Error Response - Status: 500, Message: Failed to refresh tokens, Error: No additional details
+2025-02-15T18:39:01.494Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T18:42:48.309Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:42:55.160Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:42:56.491Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:42:57.985Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:19.944Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.145Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.152Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.162Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.670Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.696Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.712Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:20.793Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:43:24.545Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T18:44:16.515Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T19:12:52.372Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:12:52.411Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:12:55.161Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:12:55.192Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:13:17.406Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:13:17.412Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:13:47.975Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:13:47.983Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:13:55.480Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:13:55.575Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:14:20.133Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:14:20.137Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:14:53.623Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:14:53.669Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:14:59.436Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:14:59.466Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:15:43.706Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:15:43.719Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:15:50.829Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:15:50.833Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:15:57.215Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:15:57.222Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:17:07.430Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
+2025-02-15T19:17:11.242Z [ERROR]: Error Response - Status: 404, Message: User not found., Error: No additional details
+2025-02-15T19:17:15.476Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:17:15.503Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:17:18.030Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:17:18.054Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:17:24.167Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:17:24.190Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:17:27.751Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:17:27.773Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:17:32.567Z [ERROR]: Error Response - Status: 401, Message: Login failed. Please check your credentials., Error: No additional details
+2025-02-15T19:17:32.624Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:30:36.760Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:30:36.766Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:31:34.276Z [ERROR]: Error Response - Status: 401, Message: Invalid credentials., Error: No additional details
+2025-02-15T19:37:13.872Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:37:13.881Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:39:06.059Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:39:06.093Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:41:38.190Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details
+2025-02-15T19:41:38.198Z [ERROR]: Error Response - Status: 400, Message: Refresh token is required., Error: No additional details

@@ -1,10 +1,10 @@
 import type React from "react";
 
-import Sidebar from "../../components/Manager/Home/Sidebar";
+import Sidebar from "../../components/Restaurent/Home/Sidebar";
  
 import { Outlet } from "react-router-dom";
 
-const Dashboard: React.FC = () => {
+const RestaurentDashboard: React.FC = () => {
     return (
       <div className="flex h-screen bg-sepia-100">
         <Sidebar  />
@@ -18,4 +18,4 @@ const Dashboard: React.FC = () => {
     )
   }
   
-  export default Dashboard
+  export default RestaurentDashboard

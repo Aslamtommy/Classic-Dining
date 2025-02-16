@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { adminLogout } from "../../redux/adminSlice";
 import { AdminSiderbar } from "../../components/Admin/Home/AdminSiderbar";
-
+import adminApi from "../../Axios/adminInstance";
 const AdminDashboard: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { email, loading, error } = useSelector((state: RootState) => state.admin);
@@ -11,6 +11,7 @@ const AdminDashboard: React.FC = () => {
   const handleLogout = async () => {
     console.log("Logging out admin...");
     try {
+await adminApi.post('/logout')
       await dispatch(adminLogout()) 
       console.log("Admin logged out successfully");
       window.location.href = "/admin/login";
