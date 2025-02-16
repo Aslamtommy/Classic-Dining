@@ -21,36 +21,51 @@ const RestaurentLogin: React.FC = () => {
     setErrorState("");
     dispatch(setLoading());
     setLoadingState(true);
-  
+
     try {
-      const response:any = await  restaurentApi.post("/login", { email, password });
-  
-      console.log("Restaurent login response:", response);
-  
+      const response: any = await restaurentApi.post("/login", { email, password });
+
       if (response.data.success) {
-        dispatch(setRestaurent(response.data.data));  
-        console.log("Login successful. Redirecting to /restaurent/home");
-        navigate("/restaurent/home", { replace: true });
+        // Dispatch the restaurant/branch data to Redux
+        dispatch(setRestaurent(response.data.data));
+        console.log("Updated Redux State:", response.data.data);
+        // Redirect based on role
+        if (response.data.data.role === "branch") {
+          navigate("/restaurent/home", { replace: true });
+        } else {
+          
+          navigate("/restaurent/home", { replace: true });
+        }
+
+        toast.success("Login successful!");
       } else {
         const errorMsg = response.data.message || "Login failed. Please try again.";
-    setErrorState(errorMsg);
-    toast.error(errorMsg);
+        setErrorState(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (err: any) {
-      console.error("Login error:", err);
-      const errorMsg = err.response?.data?.message || "Something went wrong.";
+      let errorMsg = "Something went wrong.";
+
+      // Handle blocked account error
+      if (err.response?.data?.message?.includes("Account Not Approved")) {
+        const errorData = JSON.parse(err.response.data.message);
+        errorMsg = `${errorData.message}: ${errorData.reason}`;
+      } else {
+        errorMsg = err.response?.data?.message || "Something went wrong.";
+      }
+
       setErrorState(errorMsg);
       dispatch(setError(errorMsg));
+      toast.error(errorMsg);
     } finally {
       setLoadingState(false);
     }
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-4">Restaurent Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>

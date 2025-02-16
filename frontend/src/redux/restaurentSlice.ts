@@ -1,13 +1,13 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
- 
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
- 
 interface Restaurent {
-  _id: string;   
+  _id: string;
   name: string;
   email: string;
   phone?: string;
-  certificate?: string;   
+  certificate?: string;
+  role?: "restaurent" | "branch"; // Add role field
+  parentRestaurantId?: string; // For branches
 }
 
 interface RestaurentState {
@@ -24,9 +24,8 @@ const initialState: RestaurentState = {
   error: null,
 };
 
-// Reducers for profile and error handling
 const restaurentSlice = createSlice({
-  name: 'restaurent',
+  name: "restaurent",
   initialState,
   reducers: {
     setLoading: (state) => {
@@ -55,6 +54,7 @@ const restaurentSlice = createSlice({
   },
 });
 
-export const { setLoading, setRestaurent, setProfile, setError, logoutRestaurent } = restaurentSlice.actions;
+export const { setLoading, setRestaurent, setProfile, setError, logoutRestaurent } =
+  restaurentSlice.actions;
 
 export default restaurentSlice.reducer;

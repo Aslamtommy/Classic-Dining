@@ -16,7 +16,8 @@ import RestaurentDashboard from './pages/Restaurent/RestaurentDashboard';
 import RestaurentProtected from './components/Restaurent/RestaurentProtected';
 import UserProtected from './components/User/UserProtected';
  import AdminProtected from './components/Admin/AdminProtected';
- 
+ import AddBranch from './components/BranchManagement/AddBranch';
+ import Branches from './components/BranchManagement/Branches';
 const App = () => {
   return (
     <div>
@@ -38,6 +39,8 @@ const App = () => {
        <Route element={< RestaurentProtected />}>
           <Route path="/restaurent/profile" element={<RestaurentProfile />} />
           <Route path="/restaurent/home" element={<RestaurentDashboard />} />
+          <Route path='/restaurent/addbranch' element={<AddBranch/>}/>
+          <Route path='/restaurent/branches' element={<Branches/>}/>
         </Route>
         <Route >
         <Route path="/admin/login" element={<AdminLogin />} />

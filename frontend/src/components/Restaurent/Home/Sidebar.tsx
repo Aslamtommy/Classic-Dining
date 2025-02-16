@@ -3,16 +3,32 @@ import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
 import { Home, Calendar, Tag, User, Mail, LogOut } from "lucide-react";
 import { logoutRestaurent } from "../../../redux/restaurentSlice";
 import { useDispatch } from "react-redux";
+ import { useSelector } from "react-redux";
+ import { RootState } from "../../../redux/store";
 import restaurentApi from "../../../Axios/restaurentInstance";
-const menuItems = [
-  { name: "Dashboard", key: "dashboard", icon: <Home size={20} />, path: "/restaurent/dashboard" },
-  { name: "Booking", key: "booking", icon: <Calendar size={20} />, path: "/restaurent/booking" },
-  { name: "Offer", key: "offers", icon: <Tag size={20} />, path: "/restaurent/offers" },
-  { name: "Profile", key: "profile", icon: <User size={20} />, path: "/restaurent/profile" },  // Added path for Profile
-  { name: "Messages", key: "messages", icon: <Mail size={20} />, path: "/restaurent/messages" },
-];
+
 
 const Sidebar = () => {
+
+  const { restaurent } = useSelector((state: RootState) => state.restaurent);
+const isBranch = restaurent?.role === "branch";
+const menuItems = [
+  { name: "Dashboard", key: "dashboard", icon: <Home size={20} />, path: "/restaurent/dashboard" },
+  { name: "Bookings", key: "booking", icon: <Calendar size={20} />, path: "/restaurent/booking" },
+  ...(!isBranch ? [
+    { name: "AddBranch", key: "branch", icon: <Tag size={20} />, path: "/restaurent/addbranch" }
+  ] : []),
+...(!isBranch?[ { name: "Profile", key: "profile", icon: <User size={20} />, path: "/restaurent/profile" }]:[])
+ ,
+ ...(!isBranch?[ { name: "Branches", key: "branches", icon: <User size={20} />, path: "/restaurent/branches" }]:[])
+ ,
+
+
+  ...(!isBranch ? [
+    { name: "Messages", key: "messages", icon: <Mail size={20} />, path: "/restaurent/messages" }
+  ] : [])
+];
+
   const [activeSection, setActiveSection] = useState("dashboard");
   const navigate = useNavigate(); // Get the navigate function
   const dispatch = useDispatch();
