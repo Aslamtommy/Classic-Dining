@@ -47,32 +47,21 @@ export class RestaurentController {
   }
 
  
-public async loginRestaurent(req: Request, res: Response): Promise<void> {
-  try {
-    const { email, password } = req.body;
-    const result = await this.restaurentService.loginRestaurent(email, password);
-    CookieManager.setAuthCookies(res, result)
-    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {...result.restaurent, role:result. role});
-  } catch (error: any) {
-    let status = HttpStatus.InternalServerError;
-    let message = 'Login failed';
-
+  public async loginRestaurent(req: Request, res: Response): Promise<void> {
     try {
-      const errorData = JSON.parse(error.message);
-      if (errorData.code === MessageConstants.RESTAURENT_BLOCKED) {
-        status = HttpStatus.Forbidden;
-        message = `${errorData.message}: ${errorData.reason}`;
-      }
-    } catch {
-      if (error.message === MessageConstants.LOGIN_FAILED) {
-        status = HttpStatus.Unauthorized;
-        message = MessageConstants.LOGIN_FAILED;
-      }
+      const { email, password } = req.body;
+      const result = await this.restaurentService.loginRestaurent(email, password);
+      CookieManager.setAuthCookies(res, result);
+      sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
+        ...result.restaurent,
+        role: result.role,
+      });
+    } catch (error: any) {
+      // Forward the error message from the service without extra conditionals.
+      sendError(res, HttpStatus.InternalServerError, error.message);
     }
-
-    sendError(res, status, message);
   }
-}
+  
 
   public async getProfile(req: Request, res: Response): Promise<void> {
     try {

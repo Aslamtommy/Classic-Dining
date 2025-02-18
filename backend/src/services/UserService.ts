@@ -74,7 +74,7 @@ export class UserService implements IUserService {
 
     if (!isPassword) {
       console.log('Login: Invalid password for email:', email);
-      throw new Error(MessageConstants.INVALID_CREDENTIALS);
+      throw new Error(MessageConstants.INVALID_PASSWORD );
     }
 
     // Updated token generation: Pass an object payload
@@ -249,6 +249,14 @@ export class UserService implements IUserService {
       console.log(`No user found with email: ${email}`);
       return { success: false, message: MessageConstants.USER_NOT_FOUND };
     }
+
+    // Check if the new password is the same as the old one.
+    const isSamePassword = user.password ? await bcrypt.compare(newPassword, user.password) : false;
+
+  if (isSamePassword) {
+    console.log(`New password provided is the same as the current password for email: ${email}`);
+    return { success: false, message: "New password must be different from the old password." };
+  }
 
     console.log(`User found: ${user.email}. Proceeding to hash the new password.`);
 

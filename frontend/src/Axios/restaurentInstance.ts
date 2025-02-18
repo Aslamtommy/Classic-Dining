@@ -36,24 +36,26 @@ const logout = (): void => {
 
 // Add a response interceptor to handle token expiration and auto-refresh
 restaurentApi.interceptors.response.use(
-  (response) => {
-    return response; // Successful response
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Skip interceptor logic for login requests
+    if (originalRequest.url === "/login") {
+      return Promise.reject(error);
+    }
 
     if (error.response) {
       const { status } = error.response;
 
       if (status === 403) {
-        // Handle 403 Forbidden - Restaurent might be blocked
         toast.error("Your account has been blocked by the admin.");
         setTimeout(() => logout(), 5000);
         return Promise.reject(error);
       }
 
       if (status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true; // Mark the request as retried to avoid an infinite loop
+        originalRequest._retry = true;
 
         try {
           const refreshResponse = await axios.post<TokenResponse>(
@@ -63,8 +65,6 @@ restaurentApi.interceptors.response.use(
           );
 
           const { accessToken } = refreshResponse.data.tokens;
-
-          // Retry the original request with the new access token
           originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
           return restaurentApi(originalRequest);
         } catch (refreshError) {

@@ -10,6 +10,7 @@ export interface IBranch extends Document {
   image?: string;
   isBranch: boolean;
   parentRestaurant: mongoose.Types.ObjectId; // Reference to the main restaurant
+  tableTypes: mongoose.Types.ObjectId[]
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ const BranchSchema: Schema = new Schema<IBranch>(
       ref: "Restaurent", 
       required: true 
     },
+    tableTypes: [{ type: Schema.Types.ObjectId, ref: 'TableType' }],
   },
   { timestamps: true }
 );

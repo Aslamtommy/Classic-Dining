@@ -40,6 +40,10 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+// Skip interceptor logic for login requests
+if (originalRequest.url === '/login') {
+  return Promise.reject(error);
+}
 
     if (error.response) {
       const { status } = error.response;

@@ -8,6 +8,7 @@ import { RestaurentRepository } from '../repositories/RestaurentRepository';
 import { OtpRepository } from '../repositories/otpRepository';
 import { BranchService } from '../services/BranchService';
 import { BranchController } from '../controllers/BranchController'
+import { TableTypeController } from '../controllers/TableController';
 
 
 const otpRepository=new OtpRepository()
@@ -19,7 +20,7 @@ const branchController=new BranchController()
 const restaurentService=new  RestaurentServices (restaurentRepository,otpRepository,branchService,branchRepository ) 
  const restaurentController=new RestaurentController(restaurentService)
  
-
+const tabletypeController=new TableTypeController( )
  
 
  
@@ -54,9 +55,19 @@ restaurentRoute.post('/branches',upload.single('image'),(req,res)=>{
    branchController.createBranch(req,res)
 })
 
-restaurentRoute.get('/allbranches',authenticateToken('restaurent'),(req,res)=>{
+restaurentRoute.get('/allbranches', (req,res)=>{
    branchController.getBranches(req,res)
 })
+restaurentRoute.get('/branches/:branchId', authenticateToken('restaurent'), (req, res) => {
+   branchController.getBranchDetails(req, res)
+});
+
+restaurentRoute.post('/branches/:branchId/tables',(req,res)=>tabletypeController.createTableType(req,res))
+restaurentRoute.get('/branches/:branchId/tables',(req,res)=>tabletypeController.getTableTypesByBranch(req,res))
+restaurentRoute.put('/tables/:tableTypeId/quantity',(req,res)=>tabletypeController.updateTableTypeQuantity(req,res))
+restaurentRoute.delete('/tables/:tableTypeId',(req,res)=>tabletypeController.deleteTableType(req,res))
+
  export default restaurentRoute
 
+ 
  

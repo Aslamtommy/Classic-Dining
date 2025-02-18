@@ -36,15 +36,15 @@ const LoginForm = () => {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [message, setMessage] = useState("")
+  
   const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setMessage("")
+  
 
     if (!email || !password) {
-      setMessage("Email and password are required.")
+      toast.error("Email and password are required.")
       return
     }
 
@@ -57,13 +57,14 @@ console.log(response)
       toast.success('Login successfil')
    
       navigate("/")
-    } catch (error: any) {
-      console.error(error)
-      const errorMessage = error.response?.data?.message || "An unexpected error occurred. Please try again."
-      setMessage(errorMessage)
-      dispatch(setError("Login failed."))
+    }   catch (error: any) {
+      console.error(error);
+      const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
+   
+      dispatch(setError(errorMessage));
+      toast.error(errorMessage); // Add toast notification
     }
-  }
+}
 
   const handleGoogleSignIn = async () => {
     const auth = getAuth(App)
@@ -85,7 +86,7 @@ console.log(user)
     } catch (error: any) {
       console.error(error)
       const errorMessage = error.response?.data?.message || "Google Sign-In failed. Please try again."
-      setMessage(errorMessage)
+   
       dispatch(setError(errorMessage))
     }
   }
@@ -109,7 +110,7 @@ console.log(user)
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 bg-sepia-50 border-2 border-sepia-300 rounded-none focus:outline-none focus:ring-2 focus:ring-sepia-500 text-sepia-900 font-serif"
-              required
+            
             />
           </div>
           <div>
@@ -119,7 +120,7 @@ console.log(user)
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 bg-sepia-50 border-2 border-sepia-300 rounded-none focus:outline-none focus:ring-2 focus:ring-sepia-500 text-sepia-900 font-serif"
-              required
+               
             />
           </div>
           <button
@@ -151,7 +152,7 @@ console.log(user)
 
         <ForgotPasswordModal show={showForgotPassword} onClose={() => setShowForgotPassword(false)} role={"user"} />
 
-        {message && <p className="mt-4 text-center text-sm font-serif font-medium text-sepia-700">{message}</p>}
+        
       </div>
     </div>
   )

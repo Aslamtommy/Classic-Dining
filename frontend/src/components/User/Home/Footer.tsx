@@ -1,68 +1,71 @@
-import React from 'react';
+"use client"
+
+import type React from "react"
+import { motion } from "framer-motion"
 
 const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear()
+
   return (
-    <footer className="bg-[#2c2420] text-[#faf7f2] py-12">
+    <footer className="bg-[#2c2420] text-[#faf7f2] py-16">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="font-playfair text-xl mb-4">Classic Dining</h3>
-            <p className="text-sm text-[#faf7f2]/80">
-              Serving exquisite cuisine since 1940. Experience the finest in
-              American dining.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <h3 className="font-playfair text-2xl mb-4">Classic Dining</h3>
+            <p className="text-sm text-[#faf7f2]/80 leading-relaxed">
+              Serving exquisite cuisine since 1940. Experience the finest in Indian dining, where tradition meets
+              innovation.
             </p>
-          </div>
-          <div>
-            <h4 className="font-playfair text-lg mb-4">Contact</h4>
-            <address className="text-sm text-[#faf7f2]/80 not-italic">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <h4 className="font-playfair text-xl mb-4">Contact</h4>
+            <address className="text-sm text-[#faf7f2]/80 not-italic leading-relaxed">
               123 Gourmet Avenue
               <br />
-              New York, NY 10001
+              Mumbai, MH 400001
               <br />
-              Tel: (555) 123-4567
+              Tel: (022) 1234-5678
               <br />
               Email: info@classicdining.com
             </address>
-          </div>
-          <div>
-            <h4 className="font-playfair text-lg mb-4">Quick Links</h4>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <h4 className="font-playfair text-xl mb-4">Quick Links</h4>
             <nav className="flex flex-col space-y-2">
-              <a
-                href="/about"
-                className="text-sm hover:text-[#8b5d3b] transition-colors"
-              >
-                About Us
-              </a>
-              <a
-                href="/menu"
-                className="text-sm hover:text-[#8b5d3b] transition-colors"
-              >
-                Our Menu
-              </a>
-              <a
-                href="/reservations"
-                className="text-sm hover:text-[#8b5d3b] transition-colors"
-              >
-                Reservations
-              </a>
-              <a
-                href="/events"
-                className="text-sm hover:text-[#8b5d3b] transition-colors"
-              >
-                Private Events
-              </a>
+              {["About Us", "Our Menu", "Reservations", "Private Events"].map((item, index) => (
+                <motion.a
+                  key={item}
+                  href={`/${item.toLowerCase().replace(" ", "-")}`}
+                  className="text-sm hover:text-[#8b5d3b] transition-colors"
+                  whileHover={{ x: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  {item}
+                </motion.a>
+              ))}
             </nav>
-          </div>
+          </motion.div>
         </div>
-        <div className="mt-8 pt-8 border-t border-[#faf7f2]/20 text-center text-sm text-[#faf7f2]/60">
-          <p>
-            &copy; {new Date().getFullYear()} Classic Dining. All rights
-            reserved.
-          </p>
-        </div>
+        <motion.div
+          className="mt-12 pt-8 border-t border-[#faf7f2]/20 text-center text-sm text-[#faf7f2]/60"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <p>&copy; {currentYear} Classic Dining. All rights reserved.</p>
+        </motion.div>
       </div>
     </footer>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer
+

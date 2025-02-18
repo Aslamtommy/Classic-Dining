@@ -1,61 +1,58 @@
 import React, { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import api from '../../../Axios/userInstance';
-import  restaurentApi from '../../../Axios/restaurentInstance';
+import restaurentApi from '../../../Axios/restaurentInstance';
+
 interface NewPasswordModalProps {
-  show: boolean; // Whether the modal is visible
-  email: string; // Email of the user resetting the password
-  onClose: () => void; // Callback to close the modal
-  role:string
+  show: boolean;
+  email: string;
+  onClose: () => void;
+  role: string;
 }
 
-const NewPasswordModal: React.FC<NewPasswordModalProps> = ({ show, email, onClose,role }) => {
+const NewPasswordModal: React.FC<NewPasswordModalProps> = ({ show, email, onClose, role }) => {
   const [newPassword, setNewPassword] = useState<string>('');  
   const [confirmPassword, setConfirmPassword] = useState<string>('');  
-  const [message, setMessage] = useState<string>('');  
-  const apiInstance = role === 'restaurent' ?  restaurentApi : api;
+  const apiInstance = role === 'restaurent' ? restaurentApi : api;
 
   const handleNewPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
-    setMessage('');  
+    e.preventDefault();
 
     // Validation for empty fields
     if (!newPassword || !confirmPassword) {
-      setMessage('Both fields are required.');
+      toast.error('Both fields are required.');
       return;
     }
 
     // Validation for matching passwords
     if (newPassword !== confirmPassword) {
-      
+      toast.error('Passwords do not match.');
       return;
     }
-          
-
-     
 
     try {
       // API call to reset the password
-
-      
       const response = await apiInstance.post<{ success: boolean; message?: string }>('/reset-password', {
         email,
         password: newPassword,
       });
 
       if (response.data.success) {
-        setMessage('Password reset successfully! You can now log in.');
+        toast.success('Password reset successfully! You can now log in.');
         setTimeout(() => {
           onClose(); // Close the modal after a short delay
         }, 2000);
       } else {
-        setMessage(response.data.message || 'Failed to reset password.');
+        toast.error(response.data.message || 'Failed to reset password.');
       }
-    } catch (error) {
-      setMessage('An error occurred. Please try again.');
+    } catch (error: any) {
+      
+        // Capture custom backend errors (like same password issue)
+        toast.error(error.response.data.message || 'Invalid request.');
+      
     }
   };
 
-  // Don't render the modal if `show` is false
   if (!show) return null;
 
   return (
@@ -102,17 +99,6 @@ const NewPasswordModal: React.FC<NewPasswordModalProps> = ({ show, email, onClos
             Reset Password
           </button>
         </form>
-        {message && (
-          <p
-            className={`mt-4 text-sm font-medium text-center ${
-              message.toLowerCase().includes('success')
-                ? 'text-green-600'
-                : 'text-red-600'
-            }`}
-          >
-            {message}
-          </p>
-        )}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"

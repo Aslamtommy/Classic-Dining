@@ -6,7 +6,7 @@ import { CookieManager } from "../utils/cookiemanager";
 import { IUserService } from "../interfaces/user/UserServiceInterface";
 import { MessageConstants } from "../constants/MessageConstants";
 import { sendResponse, sendError } from "../utils/responseUtils"; // Import utility functions
-
+import { BranchRepository } from "../repositories/BranchRepository";
 declare global {
   namespace Express {
     export interface Request {
@@ -20,7 +20,7 @@ declare global {
 }
 
 export class Usercontroller {
-  constructor(private userService: IUserService) {}
+  constructor(private userService: IUserService,private branchRepository: BranchRepository) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
@@ -65,7 +65,7 @@ export class Usercontroller {
         case MessageConstants.USER_NOT_FOUND:
           sendError(res, HttpStatus.NotFound, error.message);
           break;
-        case MessageConstants.INVALID_CREDENTIALS:
+        case MessageConstants.INVALID_PASSWORD: 
           sendError(res, HttpStatus.Unauthorized, error.message);
           break;
         default:
@@ -136,7 +136,7 @@ export class Usercontroller {
 
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?.userId;
+      const userId = req.data?. id;
       if (!userId) {
         sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
         return;
@@ -176,17 +176,22 @@ export class Usercontroller {
   async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      await this.userService.resetPassword(email, password);
-
+      const result = await this.userService.resetPassword(email, password);
+  
+      if (!result.success) {
+        sendError(res, HttpStatus.BadRequest , result.message, result.message);
+        return;
+      }
+      
       sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
-
+  
   async uploadProfilePicture(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?.userId;
+      const userId = req.data?.id
       if (!userId) {
         sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
         return;
@@ -221,7 +226,7 @@ export class Usercontroller {
 
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?.userId; // Extracted from authentication middleware
+      const userId = req.data?.id; // Extracted from authentication middleware
       if (!userId) {
         sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
         return;
@@ -251,6 +256,13 @@ console.log('reqbody',req.body)
       sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
- 
+  async getAllBranches(req: Request, res: Response): Promise<void> {
+    try {
+      const branches = await this.branchRepository.findAll();
+      sendResponse(res, HttpStatus.OK, "Branches fetched successfully", branches);
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, error.message);
+    }
+  }
 
 }

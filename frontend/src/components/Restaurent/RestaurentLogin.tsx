@@ -21,22 +21,21 @@ const RestaurentLogin: React.FC = () => {
     setErrorState("");
     dispatch(setLoading());
     setLoadingState(true);
-
+  
     try {
       const response: any = await restaurentApi.post("/login", { email, password });
-
+  
       if (response.data.success) {
-        // Dispatch the restaurant/branch data to Redux
         dispatch(setRestaurent(response.data.data));
         console.log("Updated Redux State:", response.data.data);
+  
         // Redirect based on role
         if (response.data.data.role === "branch") {
           navigate("/restaurent/home", { replace: true });
         } else {
-          
           navigate("/restaurent/home", { replace: true });
         }
-
+  
         toast.success("Login successful!");
       } else {
         const errorMsg = response.data.message || "Login failed. Please try again.";
@@ -45,15 +44,17 @@ const RestaurentLogin: React.FC = () => {
       }
     } catch (err: any) {
       let errorMsg = "Something went wrong.";
-
+  
       // Handle blocked account error
       if (err.response?.data?.message?.includes("Account Not Approved")) {
         const errorData = JSON.parse(err.response.data.message);
         errorMsg = `${errorData.message}: ${errorData.reason}`;
-      } else {
-        errorMsg = err.response?.data?.message || "Something went wrong.";
       }
-
+      // Handle invalid credentials
+      else if (err.response?.data?.message ==='Wrong Password.') {
+        errorMsg = "Invalid email or password.";
+      }
+  
       setErrorState(errorMsg);
       dispatch(setError(errorMsg));
       toast.error(errorMsg);

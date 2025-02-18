@@ -50,15 +50,11 @@ export class  RestaurentServices implements  IRestaurentService {
   
     // Check in restaurants first
     let user = await this.restaurentRepository.findByEmail(email);
-    console.log("User found in restaurentRepository:", user);
-  
     let role = "restaurent";
   
-    // If not found in restaurants, check in branches using branchService
+    // If not found in restaurants, check in branches
     if (!user) {
-      console.log("User not found in restaurentRepository, trying branchService...");
       user = await this.branchRepository.findByEmail(email);
-      console.log("User found in branchService:", user);
       role = "branch";
       if (!user) {
         console.error("User not found in branchService either");
@@ -66,47 +62,45 @@ export class  RestaurentServices implements  IRestaurentService {
       }
     }
   
+    // Check if the account is blocked
     if (user.isBlocked) {
       console.error("User account is blocked:", user);
-      throw new Error(JSON.stringify({
-        code: MessageConstants.RESTAURENT_BLOCKED,
-        message: "Account Not Approved",
-        reason: user.blockReason || "Contact support for details"
-      }));
+      throw new Error(
+        JSON.stringify({
+          code: MessageConstants.RESTAURENT_BLOCKED,
+          message: "Account Not Approved",
+          reason: user.blockReason || "Contact support for details",
+        })
+      );
     }
   
-    console.log("Verifying password for user:", email);
+    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log("Password verification result:", isPasswordValid);
     if (!isPasswordValid) {
       console.error("Invalid password provided for user:", email);
-      throw new Error(MessageConstants.LOGIN_FAILED);
+      throw new Error(MessageConstants.INVALID_PASSWORD);
     }
   
+    // Generate tokens
     const tokenPayload: any = {
       id: user._id.toString(),
       role,
     };
-    console.log("Initial token payload:", tokenPayload);
   
     if (role === "branch") {
-      // Type assertion if necessary; ideally update branch user type to include parentRestaurant.
       tokenPayload.parentRestaurantId = (user as any).parentRestaurant.toString();
-      console.log("Updated token payload for branch:", tokenPayload);
     }
   
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
-    console.log("Generated tokens:", { accessToken, refreshToken });
   
     return {
       restaurent: user,
       accessToken,
       refreshToken,
-      role, // Make sure ILoginResponse includes this field.
+      role,
     };
   }
-  
 
   async getRestaurentProfile(restaurentId: string): Promise<IRestaurent | null> {
     return this.restaurentRepository.findById(restaurentId);

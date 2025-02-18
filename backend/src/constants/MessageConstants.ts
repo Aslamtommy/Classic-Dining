@@ -29,6 +29,7 @@ export const MessageConstants = {
     INVALID_CREDENTIALS: "Invalid credentials.",
     PROFILE_UPDATED_SUCCESS: 'Profile updated successfully',
 EMAIL_ALREADY_EXISTS: 'Email already in use',
-OTP_SENT:'OTP sent successfully'
+OTP_SENT:'OTP sent successfully',
+INVALID_PASSWORD: "Wrong Password.",
   };
   

@@ -4,11 +4,13 @@ import { BranchService } from "../services/BranchService";
 import { sendResponse, sendError } from "../utils/responseUtils";
 import { HttpStatus } from "../constants/HttpStatus";
 import { CloudinaryService } from "../utils/cloudinary.service";
+import { BranchRepository } from "../repositories/BranchRepository";
 export class BranchController {
   private branchService: BranchService;
-
+private branchRepository:BranchRepository
   constructor() {
     this.branchService = new BranchService();
+    this.branchRepository=new BranchRepository()
   }
 
   // Create a new branch
@@ -59,5 +61,19 @@ async createBranch(req: Request, res: Response) {
       sendError(res, HttpStatus.InternalServerError, error.message);
     }
   }
- 
+  async getBranchDetails(req: Request, res: Response) {
+    try {
+      const { branchId } = req.params;
+
+      // Fetch branch details
+      const branch = await this.branchRepository.findById(branchId);
+      if (!branch) {
+        throw new Error('Branch not found');
+      }
+
+      sendResponse(res, HttpStatus.OK, 'Branch details fetched successfully', branch);
+    } catch (error: any) {
+      sendError(res, HttpStatus.NotFound, error.message);
+    }
+  }
 }
