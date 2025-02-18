@@ -40,6 +40,7 @@ export class CloudinaryService {
   static async deleteFile(publicId: string): Promise<string> {
     try {
       const result = await cloudinary.uploader.destroy(publicId);
+      console.log('result',result)
       if (result.result === "ok") {
         return "File deleted successfully";
       } else {

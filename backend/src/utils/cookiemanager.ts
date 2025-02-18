@@ -23,7 +23,7 @@ export class CookieManager {
       httpOnly: true,
       secure,
       sameSite: options?.sameSite ?? "strict",
-      maxAge: options?.accessTokenMaxAge ?? 10 * 60 * 1000, // default: 10 minutes
+      maxAge: options?.accessTokenMaxAge ?? 30 * 60 * 1000, // default: 10 minutes
     });
     res.cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,

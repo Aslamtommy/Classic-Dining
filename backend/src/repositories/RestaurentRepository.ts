@@ -78,6 +78,14 @@ async countAll(filter: any): Promise<number> {
       { new: true }
     );
   }
+    // Remove branch from restaurant
+    async removeBranchFromRestaurant(restaurantId: string, branchId: string): Promise<IRestaurent | null> {
+      return RestaurentModel.findByIdAndUpdate(
+        restaurantId,
+        { $pull: { branches: branchId } }, // Remove branch ID from branches array
+        { new: true }
+      );
+    }
 
 }
  

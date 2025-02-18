@@ -43,4 +43,8 @@ export class BranchRepository {
     ): Promise<IBranch | null> {
         return BranchModel.findByIdAndUpdate(branchId, updateData, { new: true });
     }
+
+    async deleteBranch(branchId: string): Promise<void> {
+        await BranchModel.findByIdAndDelete(branchId);
+      }
 }

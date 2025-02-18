@@ -61,6 +61,13 @@ restaurentRoute.get('/allbranches', (req,res)=>{
 restaurentRoute.get('/branches/:branchId', authenticateToken('restaurent'), (req, res) => {
    branchController.getBranchDetails(req, res)
 });
+restaurentRoute.put('/branches/:branchId', authenticateToken('restaurent'),upload.single('image'), (req, res) => {
+   branchController.updateBranch(req, res)
+});
+restaurentRoute.delete('/branches/:branchId', authenticateToken('restaurent'),  (req, res) => {
+   branchController.deleteBranch(req, res)
+});
+
 
 restaurentRoute.post('/branches/:branchId/tables',(req,res)=>tabletypeController.createTableType(req,res))
 restaurentRoute.get('/branches/:branchId/tables',(req,res)=>tabletypeController.getTableTypesByBranch(req,res))

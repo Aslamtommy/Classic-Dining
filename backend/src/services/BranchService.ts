@@ -2,7 +2,7 @@
 import { IBranch } from "../models/Restaurent/Branch/BranchModel";
 import { BranchRepository } from "../repositories/BranchRepository";
 import { RestaurentRepository } from "../repositories/RestaurentRepository";
-
+import { CloudinaryService } from "../utils/cloudinary.service";
 import bcrypt from "bcrypt";
 
 export class BranchService {
@@ -56,5 +56,56 @@ export class BranchService {
     async getBranchesByParent(parentId: string): Promise<IBranch[]> {
         return this.branchRepository.findBranchesByParent(parentId);
       }
+
+      async handleImageUpload(file: any, branchId: string): Promise<string | undefined> {
+        const branch = await this.branchRepository.findById(branchId);
+        if (!branch) throw new Error("Branch not found");
+    
+        if (branch.image) {
+          const oldPublicId = branch.image.split('/').pop()?.split('.')[0];
+          
+          if (oldPublicId) {
+            await CloudinaryService.deleteFile(`branch_images/${oldPublicId}`);
+          }
+        }
+    
+        return await CloudinaryService.uploadFile(file.path, "branch_images", `branch_${branch.email}`);
+      }
+      async hashPassword(password: string): Promise<string> {
+        return await bcrypt.hash(password, 10);
+      }
+
+      async updateBranch(branchId: string, updateData: any): Promise<IBranch | null> {
+        const branch = await this.branchRepository.findById(branchId);
+        if (!branch) throw new Error("Branch not found");
+    
+        return await this.branchRepository.findByIdAndUpdate(branchId, updateData);
+      }
+
+      async deleteBranch(branchId: string): Promise<void> {
+        const branch = await this.branchRepository.findById(branchId);
+        if (!branch) throw new Error("Branch not found");
+      
+        if (branch.image) {
+            const publicId = branch.image.split('/upload/')[1]?.split('/').slice(1).join('/').replace(/\.[^/.]+$/, '');
+            if (!publicId) {
+              throw new Error('Failed to extract public ID');
+            }
+            const decodedPublicId = decodeURIComponent(publicId);
+
+            console.log('Final decoded public ID:', decodedPublicId); // Debugging
+            await CloudinaryService.deleteFile(decodedPublicId);
+        }
+      
+        // Remove the branch from the parent restaurant
+        await this.restaurentRepository.removeBranchFromRestaurant(
+          branch.parentRestaurant.toString(),
+          branchId
+        );
+      
+        // Delete the branch
+        await this.branchRepository.deleteBranch(branchId);
+      }
+      
   }
   

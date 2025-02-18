@@ -20,6 +20,7 @@ import UserProtected from './components/User/UserProtected';
  import Branches from './components/BranchManagement/Branches';
  import BranchDetails from './components/BranchManagement/BranchDetails';
  import Layout from './components/Restaurent/Home/Layout';
+ import EditBranch from './components/BranchManagement/EditBranch';
 const App = () => {
   return (
     <div>
@@ -46,6 +47,7 @@ const App = () => {
           <Route path='/restaurent/addbranch' element={<AddBranch/>}/>
           <Route path='/restaurent/branches' element={<Branches/>}/>
           <Route path='/restaurent/branches/:branchId' element={<BranchDetails/>}/>
+          <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
           </Route>
         </Route>
         <Route >

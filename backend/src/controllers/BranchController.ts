@@ -76,4 +76,38 @@ async createBranch(req: Request, res: Response) {
       sendError(res, HttpStatus.NotFound, error.message);
     }
   }
+
+
+  // Update Branch Method
+  async updateBranch(req: Request, res: Response): Promise<void> {
+    try {
+      const { branchId } = req.params;
+      const updateData = req.body;
+      const imageUrl = req.file ? await this.branchService.handleImageUpload(req.file, branchId) : undefined;
+      
+      if (imageUrl) {
+        updateData.image = imageUrl;
+      }
+
+      if (updateData.password) {
+        updateData.password = await this.branchService.hashPassword(updateData.password);
+      }
+
+      const updatedBranch = await this.branchService.updateBranch(branchId, updateData);
+      sendResponse(res, HttpStatus.OK, "Branch updated successfully", updatedBranch);
+    } catch (error: any) {
+      sendError(res, HttpStatus.BadRequest, error.message);
+    }
+  }
+
+  // Delete Branch Method
+  async deleteBranch(req: Request, res: Response): Promise<void> {
+    try {
+      const { branchId } = req.params;
+      await this.branchService.deleteBranch(branchId);
+      sendResponse(res, HttpStatus.OK, "Branch deleted successfully");
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, error.message);
+    }
+  }
 }

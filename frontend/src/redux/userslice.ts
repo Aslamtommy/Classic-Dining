@@ -26,17 +26,23 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setLoading: (state) => {
+      console.log("Current state before setting loading:", state);
+      if (!state) return; 
       state.loading = true;
     },
+    
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.loading = false;
       state.error = null;  
     },
     setError: (state, action: PayloadAction<string>) => {
+      console.log("Error setting state:", state);
+      if (!state) return; 
       state.error = action.payload;
       state.loading = false;
     },
+    
     logoutUser: (state) => {
       state.user = null;
       state.loading = false;
