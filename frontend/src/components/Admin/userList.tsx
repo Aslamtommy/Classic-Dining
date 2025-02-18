@@ -3,17 +3,20 @@ import { fetchUsers, blockUser } from '../../Api/adminApi';
 import useFetchData from '../../hooks/useFetchData';
 import DataTable from './DataTable';
 import TableActions from './TableActions';
-import Loader from './Loader';
+ import Loader from './Loader';
 import Pagination from '../../Pagination/Pagination';
 
 const UserList: React.FC = () => {
   const [page, setPage] = useState<number>(1);
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [isBlockedFilter, setIsBlockedFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isBlockedFilter, setIsBlockedFilter] = useState<string>('all');
   const limit = 2;
 
-  // Memoize the fetch function so it only changes when page or limit changes.
-  const fetchUsersCallback = useCallback(() => fetchUsers(page, limit,searchTerm,isBlockedFilter), [page, limit, searchTerm, isBlockedFilter]);
+  // Memoize the fetch function so it only changes when page, limit, searchTerm, or filter changes.
+  const fetchUsersCallback = useCallback(
+    () => fetchUsers(page, limit, searchTerm, isBlockedFilter),
+    [page, limit, searchTerm, isBlockedFilter]
+  );
 
   const { data, loading, error, refetch } = useFetchData(fetchUsersCallback);
 
@@ -29,12 +32,12 @@ const UserList: React.FC = () => {
       console.error('Error blocking/unblocking user:', err);
     }
   };
-  
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.trimStart();
-      setSearchTerm(value);
-      setPage(1);
-    };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.trimStart();
+    setSearchTerm(value);
+    setPage(1);
+  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -43,55 +46,60 @@ const UserList: React.FC = () => {
   };
 
   if (loading) return <Loader />;
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div className="text-red-500 text-center mt-8">Error: {error}</div>;
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Users</h2>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">Users</h2>
 
-      
-       {/* Search and Filter Controls */}
-       <div className="flex gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search by name or email"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="border p-2 rounded w-64"
-        />
-        <select
-          value={isBlockedFilter}
-          onChange={(e) => {
-            setIsBlockedFilter(e.target.value);
-            setPage(1); // Reset page on filter change
-          }}
-          className="border p-2 rounded"
-        >
-         <option value="">All</option>
-        <option value="active">Active</option>
-        <option value="blocked">Blocked</option>
-        </select>
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Search by name or email"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-grow"
+          />
+          <select
+            value={isBlockedFilter}
+            onChange={(e) => {
+              setIsBlockedFilter(e.target.value);
+              setPage(1); // Reset page on filter change
+            }}
+            className="border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
+
+        {/* DataTable */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <DataTable
+            columns={['name', 'email']}
+            data={users}
+            actions={(user) => (
+              <TableActions
+                onBlock={() => handleBlockUser(user._id, !user.isBlocked)}
+                isBlocked={user.isBlocked}
+              />
+            )}
+          />
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-6 flex justify-center">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
-      <DataTable
-  columns={['name', 'email']}
-  data={users}
-  actions={(user) => {
-    console.log('Current isBlocked status:', user.isBlocked); // Log before calling function
-    return (
-      <TableActions
-        onBlock={() => {
-          console.log(`Toggling block status for user ${user._id}. Current status:`, user.isBlocked);
-          handleBlockUser(user._id, !user.isBlocked);
-        }}
-        isBlocked={user.isBlocked}
-      />
-    );
-  }}
-/>
-
-
-      {/* Reusable Pagination Component */}
-      <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
     </div>
   );
 };

@@ -48,12 +48,9 @@ restaurentApi.interceptors.response.use(
     if (error.response) {
       const { status } = error.response;
 
-      if (status === 403) {
-        toast.error("Your account has been blocked by the admin.");
-        setTimeout(() => logout(), 5000);
-        return Promise.reject(error);
-      }
+       
 
+      // Handle token expiration
       if (status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
@@ -79,5 +76,4 @@ restaurentApi.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 export default restaurentApi;

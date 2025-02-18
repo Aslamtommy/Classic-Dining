@@ -10,7 +10,11 @@ const TableActions: React.FC<TableActionsProps> = ({ onBlock, isBlocked }) => {
     <div className="flex gap-2">
       <button
         onClick={onBlock}
-        className={`px-2 py-1 text-white rounded ${isBlocked ? 'bg-red-500' : 'bg-green-500'}`}
+        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
+          isBlocked
+            ? 'bg-green-500 hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
+            : 'bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
+        } text-white shadow-sm`}
       >
         {isBlocked ? 'Unblock' : 'Block'}
       </button>

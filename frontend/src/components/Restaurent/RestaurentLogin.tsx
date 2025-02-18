@@ -24,37 +24,52 @@ const RestaurentLogin: React.FC = () => {
   
     try {
       const response: any = await restaurentApi.post("/login", { email, password });
+      console.log("Login response:", response.data);
   
       if (response.data.success) {
         dispatch(setRestaurent(response.data.data));
-        console.log("Updated Redux State:", response.data.data);
   
-        // Redirect based on role
+        // Handle branch role
         if (response.data.data.role === "branch") {
           navigate("/restaurent/home", { replace: true });
-        } else {
-          navigate("/restaurent/home", { replace: true });
+          toast.success("Branch login successful!");
+          return;
         }
   
+        // Handle restaurant approval status
+        if (response.data.data.isBlocked) {
+          navigate("/restaurent/pending-approval", { 
+            state: { blockReason: response.data.data.blockReason },
+            replace: true 
+          });
+          return;
+        }
+  
+        navigate("/restaurent/home", { replace: true });
         toast.success("Login successful!");
-      } else {
-        const errorMsg = response.data.message || "Login failed. Please try again.";
-        setErrorState(errorMsg);
-        toast.error(errorMsg);
       }
     } catch (err: any) {
+      console.log("Full error object:", err);
+      console.log("Error response data:", err.response?.data);
+  
       let errorMsg = "Something went wrong.";
   
       // Handle blocked account error
-      if (err.response?.data?.message?.includes("Account Not Approved")) {
-        const errorData = JSON.parse(err.response.data.message);
-        errorMsg = `${errorData.message}: ${errorData.reason}`;
+      if (err.response?.status === 403) {
+        const blockReason = err.response?.data?.data?.reason  
+        navigate("/restaurent/pending-approval", {
+          state: { blockReason },
+          replace: true
+        });
+        return; // Exit early after handling block
       }
+  
       // Handle invalid credentials
-      else if (err.response?.data?.message ==='Wrong Password.') {
+      if (err.response?.data?.message === "Wrong Password.") {
         errorMsg = "Invalid email or password.";
       }
   
+      // Set error state only if not already handled
       setErrorState(errorMsg);
       dispatch(setError(errorMsg));
       toast.error(errorMsg);
@@ -62,7 +77,6 @@ const RestaurentLogin: React.FC = () => {
       setLoadingState(false);
     }
   };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded shadow-md">

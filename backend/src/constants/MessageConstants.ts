@@ -31,5 +31,7 @@ export const MessageConstants = {
 EMAIL_ALREADY_EXISTS: 'Email already in use',
 OTP_SENT:'OTP sent successfully',
 INVALID_PASSWORD: "Wrong Password.",
+RESTAURENT_APPROVAL_REQUIRED : "Your account requires administrator approval to perform this action",
+
   };
   

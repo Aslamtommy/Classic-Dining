@@ -62,14 +62,14 @@ export class  RestaurentServices implements  IRestaurentService {
       }
     }
   
-    // Check if the account is blocked
+    // Handle blocked account
     if (user.isBlocked) {
-      console.error("User account is blocked:", user);
+      console.log("Blocked user detected:", user.email);
       throw new Error(
         JSON.stringify({
           code: MessageConstants.RESTAURENT_BLOCKED,
-          message: "Account Not Approved",
-          reason: user.blockReason || "Contact support for details",
+          message: "Account Blocked",
+          reason: user.blockReason || undefined,
         })
       );
     }
@@ -85,6 +85,7 @@ export class  RestaurentServices implements  IRestaurentService {
     const tokenPayload: any = {
       id: user._id.toString(),
       role,
+      email: user.email,
     };
   
     if (role === "branch") {
@@ -101,7 +102,6 @@ export class  RestaurentServices implements  IRestaurentService {
       role,
     };
   }
-
   async getRestaurentProfile(restaurentId: string): Promise<IRestaurent | null> {
     return this.restaurentRepository.findById(restaurentId);
   }
@@ -139,12 +139,25 @@ console.log('OTP',otp)
   }
 
   async resetPassword(email: string, newPassword: string): Promise<IResetPasswordResponse> {
+    console.log(`resetPassword called for email: ${email}`);
+    
     const user = await this.restaurentRepository.findByEmail(email);
-    if (!user) return { success: false, message: MessageConstants.USER_NOT_FOUND };
-
+    if (!user) {
+      console.log(`No user found for email: ${email}`);
+      return { success: false, message: MessageConstants.USER_NOT_FOUND };
+    }
+    
+    console.log('User found:', user);
+    
     // Update password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.restaurentRepository.updatePassword(user.id, hashedPassword);
+    console.log('New password has been hashed successfully.');
+    
+   
+    await this.restaurentRepository.updatePassword(user._id.toString(), hashedPassword);
+    console.log(`Password updated successfully for user id: ${user.id}`);
+    
     return { success: true, message: MessageConstants.PASSWORD_RESET_SUCCESS };
   }
+  
 }

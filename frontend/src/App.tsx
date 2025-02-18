@@ -21,6 +21,8 @@ import UserProtected from './components/User/UserProtected';
  import BranchDetails from './components/BranchManagement/BranchDetails';
  import Layout from './components/Restaurent/Home/Layout';
  import EditBranch from './components/BranchManagement/EditBranch';
+ import { AdminLayout } from './components/Admin/Home/AdminLayout';
+import PendingApproval from './components/Restaurent/PendingApproval';
 const App = () => {
   return (
     <div>
@@ -38,7 +40,7 @@ const App = () => {
 
           <Route path="/restaurent/signup" element={<RestaurentSignup />} />
           <Route path="/restaurent/login" element={<RestaurentLogin/>} />
-   
+          <Route path='/restaurent/pending-approval' element={<PendingApproval/>}/>
        <Route element={< RestaurentProtected />}>
        
           <Route path="/restaurent/home" element={<RestaurentDashboard />} />
@@ -48,16 +50,20 @@ const App = () => {
           <Route path='/restaurent/branches' element={<Branches/>}/>
           <Route path='/restaurent/branches/:branchId' element={<BranchDetails/>}/>
           <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
+       
           </Route>
         </Route>
         <Route >
         <Route path="/admin/login" element={<AdminLogin />} />
           <Route element={<AdminProtected/>}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route element={<AdminLayout/>}>
+        
         
           <Route path="/admin/approvals" element={<ApproveRestaurents/>} />
           <Route path="/admin/restaurents" element={<RestaurentList />} />
           <Route path="/admin/users" element={<UserList />} />
+          </Route>  
           </Route>
           </Route>
         </Routes>

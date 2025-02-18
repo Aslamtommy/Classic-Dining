@@ -47,21 +47,29 @@ export class RestaurentController {
   }
 
  
-  public async loginRestaurent(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password } = req.body;
-      const result = await this.restaurentService.loginRestaurent(email, password);
-      CookieManager.setAuthCookies(res, result);
-      sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
-        ...result.restaurent,
-        role: result.role,
+ // In your controller
+ public async loginRestaurent(req: Request, res: Response): Promise<void> {
+  try {
+    const { email, password } = req.body;
+    const result = await this.restaurentService.loginRestaurent(email, password);
+    CookieManager.setAuthCookies(res, result);
+    sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
+      ...result.restaurent,
+      role: result.role,
+    });
+  } catch (error: any) {
+    // Handle blocked account error
+    if (error.message.includes("Account Blocked")) {
+      const errorData = JSON.parse(error.message);
+      sendError(res, HttpStatus.Forbidden, errorData.message, {
+        reason: errorData.reason, // Include block reason in response
       });
-    } catch (error: any) {
-      // Forward the error message from the service without extra conditionals.
+    } else {
+      // Forward other errors
       sendError(res, HttpStatus.InternalServerError, error.message);
     }
   }
-  
+}
 
   public async getProfile(req: Request, res: Response): Promise<void> {
     try {
@@ -119,12 +127,14 @@ export class RestaurentController {
   async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
+      console.log(email,password)
       if (!email || !password) {
         sendError(res, HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
         return;
       }
 
       const response = await this.restaurentService.resetPassword(email, password);
+      console.log(response)
       if (response.success) {
         sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
       } else {

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { fetchBranches } from "../../Api/userApi";
 import { Button } from "@mui/material";
 import restaurentApi from "../../Axios/restaurentInstance";
 import ConfirmationDialog from "../CommonComponents/ConfirmationDialog";
@@ -12,17 +11,25 @@ const Branches = () => {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const getBranches = async () => {
-      try {
-        const response: any = await fetchBranches();
-        setBranches(response.data);
-      } catch (error: any) {
+// src/components/Restaurent/Branches.tsx
+useEffect(() => {
+  const getBranches = async () => {
+    try {
+      const response :any= await restaurentApi.get('/allbranches');
+      if (response.data.success) {
+        setBranches(response.data.data);
+      }
+    } catch (error: any) {
+      // Handle 403 error specifically
+      if (error.response?.status === 403) {
+        toast.error(error.response.data.message);
+      } else {
         toast.error(error.response?.data?.message || "Failed to fetch branches");
       }
-    };
-    getBranches();
-  }, []);
+    }
+  };
+  getBranches();
+}, []);
 
   const handleDeleteClick = (branchId: string) => {
     setSelectedBranchId(branchId);

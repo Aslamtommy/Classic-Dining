@@ -9,7 +9,7 @@ import { OtpRepository } from '../repositories/otpRepository';
 import { BranchService } from '../services/BranchService';
 import { BranchController } from '../controllers/BranchController'
 import { TableTypeController } from '../controllers/TableController';
-
+import { checkApproved } from '../middlewares/checkApproved';
 
 const otpRepository=new OtpRepository()
 const branchRepository=new BranchRepository()
@@ -51,22 +51,23 @@ restaurentRoute.post('/logout',(req,res)=>restaurentController.logout(req,res))
 
 
 
-restaurentRoute.post('/branches',upload.single('image'),(req,res)=>{
+restaurentRoute.post('/branches',authenticateToken('restaurent'),checkApproved,upload.single('image'),(req,res)=>{
    branchController.createBranch(req,res)
 })
 
-restaurentRoute.get('/allbranches', (req,res)=>{
+restaurentRoute.get('/allbranches',authenticateToken('restaurent'),checkApproved, (req,res)=>{
    branchController.getBranches(req,res)
 })
+
 restaurentRoute.get('/branches/:branchId', authenticateToken('restaurent'), (req, res) => {
    branchController.getBranchDetails(req, res)
-});
+}) 
 restaurentRoute.put('/branches/:branchId', authenticateToken('restaurent'),upload.single('image'), (req, res) => {
    branchController.updateBranch(req, res)
-});
+}) 
 restaurentRoute.delete('/branches/:branchId', authenticateToken('restaurent'),  (req, res) => {
    branchController.deleteBranch(req, res)
-});
+}) 
 
 
 restaurentRoute.post('/branches/:branchId/tables',(req,res)=>tabletypeController.createTableType(req,res))

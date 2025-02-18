@@ -38,14 +38,22 @@ export function sendResponse(res: Response, statusCode: number, message: string,
 }
 
 // Utility function for sending error responses
-export function sendError(res: Response, statusCode: number, message: string, error?: any): void {
-  const errorMessage = error instanceof Error ? error.message : error || "No additional details";
+export function sendError(
+  res: Response,
+  statusCode: number,
+  message: string,
+  additionalData?: any // Add this parameter
+): void {
+  const errorResponse: any = {
+    success: false,
+    message: message,
+  };
 
-  const errorResponse = new ErrorResponse(message, errorMessage);
+  if (additionalData) {
+    errorResponse.data = additionalData; // Store additional data in 'data' field
+  }
 
-  // Log detailed error
-  logger.error(`Error Response - Status: ${statusCode}, Message: ${message}, Error: ${errorMessage}`);
-
+  logger.error(`Error Response - Status: ${statusCode}, Message: ${message}`);
   res.status(statusCode).json(errorResponse);
 }
 
