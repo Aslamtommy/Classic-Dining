@@ -62,11 +62,13 @@ export class BranchService {
         if (!branch) throw new Error("Branch not found");
     
         if (branch.image) {
-          const oldPublicId = branch.image.split('/').pop()?.split('.')[0];
+          const oldPublicId = branch.image.split('/upload/')[1]?.split('/').slice(1).join('/').replace(/\.[^/.]+$/, '');
           
           if (oldPublicId) {
-            await CloudinaryService.deleteFile(`branch_images/${oldPublicId}`);
+            const decodedPublicId = decodeURIComponent(oldPublicId);
+            await CloudinaryService.deleteFile(decodedPublicId);
           }
+   
         }
     
         return await CloudinaryService.uploadFile(file.path, "branch_images", `branch_${branch.email}`);

@@ -29,7 +29,7 @@ export function AdminSiderbar({ className }: SidebarProps) {
       badge: "12",
     },
     {
-      name: "Restaurents",
+      name: "Restaurants",
       icon: UserCog,
       path: "/admin/restaurents",
       badge: "3",
