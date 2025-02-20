@@ -10,7 +10,7 @@ const UserList: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isBlockedFilter, setIsBlockedFilter] = useState<string>('all');
-  const limit = 2;
+  const limit = 4;
 
   // Memoize the fetch function so it only changes when page, limit, searchTerm, or filter changes.
   const fetchUsersCallback = useCallback(

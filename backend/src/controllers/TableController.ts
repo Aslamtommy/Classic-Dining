@@ -1,4 +1,4 @@
-// src/controllers/TableTypeController.ts
+ 
 import { Request, Response } from 'express';
 import { TableTypeService } from '../services/TableServices';
 import { sendResponse, sendError } from '../utils/responseUtils';

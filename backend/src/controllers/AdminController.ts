@@ -19,14 +19,29 @@ class AdminController {
         }
     }
 
-    async getPendingRestaurent(req: Request, res: Response): Promise<void> {
-        try {
-            const pendingRestaurent = await this.adminService.getPendingRestaurents();
-            sendResponse(res, HttpStatus.OK, "Pending restaurent retrieved successfully", { restaurents: pendingRestaurent });
-        } catch (error: any) {
-            sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
-        }
+   // Update getPendingRestaurent controller
+async getPendingRestaurent(req: Request, res: Response): Promise<void> {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const searchTerm = req.query.searchTerm as string || '';
+        
+        const { restaurents, total } = await this.adminService.getPendingRestaurents(
+            page,
+            limit,
+            searchTerm
+        );
+
+        sendResponse(res, HttpStatus.OK, "Pending restaurants retrieved successfully", { 
+            restaurents, 
+            total, 
+            page, 
+            limit 
+        });
+    } catch (error: any) {
+        sendError(res, HttpStatus.InternalServerError, error.message || MessageConstants.INTERNAL_SERVER_ERROR);
     }
+}
 
 // Controller
 async updateRestaurentStatus(req: Request, res: Response): Promise<void> {

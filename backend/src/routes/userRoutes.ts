@@ -45,7 +45,7 @@ userRoute.post('/refresh-token', (req: Request, res: Response) => {
 
 
 // User profile (using middleware for authentication)
-userRoute.get('/profile', blockedUserMiddleware,authenticateToken('user'), (req: Request, res: Response) => {
+userRoute.get('/profile', authenticateToken('user'),blockedUserMiddleware, (req: Request, res: Response) => {
   userController.getProfile(req, res);
 });
 

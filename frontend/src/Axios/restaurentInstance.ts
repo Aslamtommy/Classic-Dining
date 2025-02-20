@@ -16,7 +16,7 @@ const restaurentApi = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Send cookies with each request
+  withCredentials: true,  
 });
 
 // Logout function

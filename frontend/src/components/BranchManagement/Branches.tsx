@@ -19,7 +19,7 @@ const Branches = () => {
           setBranches(response.data.data);
         }
       } catch (error: any) {
-        // Handle 403 error specifically
+       
         if (error.response?.status === 403) {
           toast.error(error.response.data.message);
         } else {

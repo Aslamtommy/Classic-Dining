@@ -64,10 +64,10 @@ if (originalRequest.url === '/login') {
           const refreshResponse = await axios.post<TokenResponse>(
             'http://localhost:5000/users/refresh-token',
             {},
-            { withCredentials: true } // Send cookies along with the request
+            { withCredentials: true } 
           );
 
-          const { accessToken } = refreshResponse.data.tokens; // Retrieve the new access token
+          const { accessToken } = refreshResponse.data.tokens;  
 
           // Retry the original request with the new access token in the Authorization header
           originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;

@@ -63,7 +63,7 @@ export class BranchService {
     
         if (branch.image) {
           const oldPublicId = branch.image.split('/upload/')[1]?.split('/').slice(1).join('/').replace(/\.[^/.]+$/, '');
-          
+          console.log('old',oldPublicId)
           if (oldPublicId) {
             const decodedPublicId = decodeURIComponent(oldPublicId);
             await CloudinaryService.deleteFile(decodedPublicId);

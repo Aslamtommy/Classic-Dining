@@ -78,7 +78,7 @@ export class UserService implements IUserService {
     }
 
     // Updated token generation: Pass an object payload
-    const accessToken = generateAccessToken({ id: user._id.toString(), role: 'user' });
+    const accessToken = generateAccessToken({ id: user._id.toString(), role: 'user' ,email: user.email});
     const refreshToken = generateRefreshToken({ id: user._id.toString(), role: 'user' });
 
     return { user, accessToken, refreshToken };

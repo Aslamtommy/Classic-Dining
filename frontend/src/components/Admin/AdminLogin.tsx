@@ -4,6 +4,7 @@ import { RootState, AppDispatch } from '../../redux/store';
 import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../../redux/adminSlice';
 import adminApi from '../../Axios/adminInstance';
+import toast from 'react-hot-toast';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -28,6 +29,7 @@ const AdminLogin: React.FC = () => {
 
       dispatch(adminLogin({ email: response.data.data.email })); // Dispatch the login action
       navigate('/admin/dashboard');
+      toast.success('login success')
     } catch (error: any) {
       console.error('Login error:', error);
 

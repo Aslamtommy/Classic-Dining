@@ -8,7 +8,7 @@ const blockedUserMiddleware = async (
 ): Promise<void> => {
   try {
     const   email = req.body.email || req.query.email;
-
+ 
     console.log('emial in blocked middleware',email)
     const user = await User.findOne({ email });
  

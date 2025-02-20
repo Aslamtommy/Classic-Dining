@@ -1,29 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { fetchBranches } from "../../../Api/userApi"
-import { motion } from "framer-motion"
+import type React from "react";
+import { useEffect, useState } from "react";
+import { fetchBranches } from "../../../Api/userApi";
+import { motion } from "framer-motion";
 
 export const Gallery: React.FC = () => {
-  const [branches, setBranches] = useState([])
+  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     const loadBranches = async () => {
       try {
-        const response: any = await fetchBranches()
-        setBranches(response.data)
+        const response: any = await fetchBranches();
+        setBranches(response.data);
       } catch (error) {
-        console.error("Error loading branches:", error)
+        console.error("Error loading branches:", error);
       }
-    }
-    loadBranches()
-  }, [])
+    };
+    loadBranches();
+  }, []);
 
   return (
     <section className="px-6 py-24 bg-[#faf7f2]">
       <div className="max-w-6xl mx-auto">
-        <h2 className="font-playfair text-4xl text-center mb-12 text-[#2c2420]">Restaurants</h2>
+        <h2 className="font-playfair text-5xl text-center mb-16 text-[#2c2420] font-bold">
+          Discover Our Restaurants
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {branches.map((branch: any, index: number) => (
             <motion.div
@@ -42,7 +44,9 @@ export const Gallery: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
               <div className="p-6 bg-white rounded-b-lg shadow-lg transform -translate-y-8 transition-transform duration-300 group-hover:-translate-y-12">
-                <h3 className="text-2xl font-playfair font-semibold text-[#2c2420] mb-2">{branch.name}</h3>
+                <h3 className="text-2xl font-playfair font-semibold text-[#2c2420] mb-2">
+                  {branch.name}
+                </h3>
                 <p className="text-[#8b5d3b] mb-1">{branch.email}</p>
                 <p className="text-[#8b5d3b]">{branch.phone}</p>
               </div>
@@ -51,8 +55,7 @@ export const Gallery: React.FC = () => {
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default Gallery
-
+export default Gallery;

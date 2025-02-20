@@ -14,9 +14,7 @@ export class RestaurentRepository implements IRestaurentRepository {
     return RestaurentModel.create(restaurentData);
   }
 
-  async findAllPending(): Promise<IRestaurent[]> {
-    return RestaurentModel.find({ isBlocked: true });
-  }
+  
 
   // Update restaurent 's approval status
   async updateRestaurentStatus(
@@ -44,7 +42,7 @@ async findById(restaurentId:string):Promise<any>{
 async save(restaurent: IRestaurent): Promise<IRestaurent> {
   return await restaurent.save();   
 }
-// repositories/restaurent Repository.ts
+ 
 async findAll(filter: any, skip: number, limit: number): Promise<any[]> {
   return await RestaurentModel.find(filter)
     .skip(skip)
@@ -86,6 +84,17 @@ async countAll(filter: any): Promise<number> {
         { new: true }
       );
     }
+    // Add these repository methods
+async findAllPending(filter: any, skip: number, limit: number): Promise<any> {
+  return RestaurentModel.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+}
+
+async countAllPending(filter: any): Promise<number> {
+  return RestaurentModel.countDocuments(filter);
+}
 
 }
  

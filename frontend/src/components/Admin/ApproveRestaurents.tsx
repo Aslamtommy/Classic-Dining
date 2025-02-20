@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import adminApi from '../../Axios/adminInstance';
-
+import Pagination from '../../Pagination/Pagination';
+import toast from 'react-hot-toast';
 interface Restaurent {
   _id: string;
   name: string;
@@ -15,6 +16,9 @@ interface PendingRestaurentsResponse {
   message: string;
   data: {
     restaurents: Restaurent[];
+    total: number;
+    page: number;
+    limit: number;
   };
 }
 
@@ -24,18 +28,38 @@ const ApproveRestaurents: React.FC = () => {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [selectedRestaurent, setSelectedRestaurent] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState('');
+  const [page, setPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [total, setTotal] = useState<number>(0);
+  const limit = 5;
 
   useEffect(() => {
     fetchPendingRestaurents();
-  }, []);
+  }, [page, searchTerm]);
 
   const fetchPendingRestaurents = async () => {
     try {
-      const response = await adminApi.get<PendingRestaurentsResponse>('/pending');
+      const response = await adminApi.get<PendingRestaurentsResponse>('/pending', {
+        params: { page, limit, searchTerm }
+      });
       setPendingRestaurents(response.data.data.restaurents || []);
+      setTotal(response.data.data.total || 0);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch pending restaurents.');
     }
+  };
+  const totalPages = Math.ceil(total / limit);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.trimStart();
+    setSearchTerm(value);
+    setPage(1);
   };
 
   const handleBlockClick = (restaurentId: string) => {
@@ -51,7 +75,7 @@ const ApproveRestaurents: React.FC = () => {
         blockReason: isBlocked ? blockReason : undefined,
       });
 
-      alert(`Restaurent ${isBlocked ? 'blocked' : 'approved'} successfully!`);
+    toast.success(`Restaurent ${isBlocked ? 'blocked' : 'approved'} successfully!`);
       setPendingRestaurents((prev) => prev.filter((restaurent) => restaurent._id !== restaurentId));
       setShowBlockModal(false);
       setBlockReason('');
@@ -64,6 +88,18 @@ const ApproveRestaurents: React.FC = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold text-gray-800 mb-6">Approve Restaurants</h2>
+
+
+   {/* Search Input */}
+   <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Search by name or email"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full max-w-md"
+          />
+        </div>
 
         {/* Block Reason Modal */}
         {showBlockModal && (
@@ -151,6 +187,18 @@ const ApproveRestaurents: React.FC = () => {
           </div>
         ) : (
           <p className="text-gray-600">No pending restaurants to approve.</p>
+        )}
+
+        
+        {/* Pagination */}
+        {total > 0 && (
+          <div className="mt-6 flex justify-center">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         )}
       </div>
     </div>

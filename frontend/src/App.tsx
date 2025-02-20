@@ -23,19 +23,25 @@ import UserProtected from './components/User/UserProtected';
  import EditBranch from './components/BranchManagement/EditBranch';
  import { AdminLayout } from './components/Admin/Home/AdminLayout';
 import PendingApproval from './components/Restaurent/PendingApproval';
+import WalletPage from './components/User/Wallet';
+  import UserLayout from './components/User/Home/UserLayout';
+
 const App = () => {
   return (
     <div>
       <Router>
         <Routes>
           <Route element={<UserProtected/>}>
+          <Route element={<UserLayout />}>
           <Route path="/Profile" element={<UserProfile />} />
-          <Route path="/" element={<UserHomePage />} />
+          <Route path="/wallet" element={<WalletPage/>} />
           </Route>
+          <Route path="/" element={<UserHomePage />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
        
-
+          </Route> 
+ 
 
 
           <Route path="/restaurent/signup" element={<RestaurentSignup />} />

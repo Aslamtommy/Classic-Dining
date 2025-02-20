@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 import { adminLogout } from '../redux/adminSlice';
-import toast from 'react-hot-toast'; // Import the toast function
+import toast from 'react-hot-toast'; 
 
 interface TokenResponse {
   tokens: {
@@ -12,11 +12,11 @@ interface TokenResponse {
 
 // Set up Axios instance for admin
 const adminApi = axios.create({
-  baseURL: 'http://localhost:5000/admin', // Admin API base URL
+  baseURL: 'http://localhost:5000/admin',  
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Send cookies with each request
+  withCredentials: true, 
 });
 
 // Logout function
@@ -34,7 +34,7 @@ const logout = (): void => {
 
 adminApi.interceptors.response.use(
   (response) => {
-    // Successful response
+    
     console.log('Response received successfully:', response);
     return response;
   },
@@ -48,8 +48,8 @@ adminApi.interceptors.response.use(
       // Check if the error is due to invalid credentials (e.g., fake email)
       if (error.response.data.message === 'Login failed. Please check your credentials.') {
         console.log('Invalid credentials. Do not attempt token refresh.');
-        toast.error('Login failed. Please check your credentials.'); // Display error toast
-        return Promise.reject(error); // Reject the error and let the component handle it
+        toast.error('Login failed. Please check your credentials.'); 
+        return Promise.reject(error);  
       }
 
       // If the error is not due to invalid credentials, attempt token refresh
@@ -68,7 +68,7 @@ adminApi.interceptors.response.use(
 
           // Check if the response has the expected structure
           if (refreshResponse.data && refreshResponse.data.tokens) {
-            const { accessToken } = refreshResponse.data.tokens; // Retrieve the new access token
+            const { accessToken } = refreshResponse.data.tokens; 
             console.log('New access token received:', accessToken);
 
             // Retry the original request with the new access token in the Authorization header
@@ -93,7 +93,7 @@ adminApi.interceptors.response.use(
 
     // For all other errors, reject the promise
     console.error('Unhandled error in interceptor:', error);
-    toast.error('An unexpected error occurred. Please try again.'); // Display error toast
+    toast.error('An unexpected error occurred. Please try again.');  
     return Promise.reject(error);
   }
 );

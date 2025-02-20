@@ -1,4 +1,4 @@
-// src/repositories/TableTypeRepository.ts
+ 
 import { ITableType } from '../models/Restaurent/TableModel';
 import TableModel from '../models/Restaurent/TableModel';
 

@@ -6,7 +6,8 @@ import toast from 'react-hot-toast';
 import OtpModal from '../CommonComponents/Modals/OtpModal';
 import sendOtp from '../../utils/sentotp';
 import NewPasswordModal from '../CommonComponents/Modals/NewPaawordModal';
-
+import { motion } from 'framer-motion';
+import Footer from './Home/Footer';
 const UserProfile: React.FC = () => {
   const dispatch = useDispatch();
   const profile = useSelector((state: any) => state.user.user);
@@ -18,8 +19,6 @@ const UserProfile: React.FC = () => {
   const [editedMobile, setEditedMobile] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [tempEmail, setTempEmail] = useState('');
-
-  // State for change password
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
@@ -117,172 +116,188 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sepia-100 flex flex-col justify-center items-center p-4">
-      <div className="bg-sepia-50 border-2 border-sepia-300 shadow-xl rounded-none p-12 max-w-2xl w-full relative overflow-hidden">
-        {/* Decorative corner elements */}
-        <div className="absolute top-0 left-0 w-16 h-16 border-l-2 border-t-2 border-sepia-300"></div>
-        <div className="absolute top-0 right-0 w-16 h-16 border-r-2 border-t-2 border-sepia-300"></div>
-        <div className="absolute bottom-0 left-0 w-16 h-16 border-l-2 border-b-2 border-sepia-300"></div>
-        <div className="absolute bottom-0 right-0 w-16 h-16 border-r-2 border-b-2 border-sepia-300"></div>
 
-        {profile ? (
-          <div className="relative z-10">
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-playfair font-bold text-sepia-900 mb-2">
-                Profile
-              </h1>
-              <div className="w-24 h-1 bg-sepia-300 mx-auto"></div>
-            </div>
+    
+    <div className="bg-[#faf7f2] min-h-screen pt-24">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Profile Header */}
+        <div className="text-center mb-16">
+          <motion.h1
+            className="font-playfair text-5xl text-[#2c2420] font-bold mb-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            Your Profile
+          </motion.h1>
+          <div className="flex items-center justify-center">
+            <div className="h-px w-16 bg-[#8b5d3b]"></div>
+            <p className="mx-4 text-lg text-[#2c2420]/80">Personal Details</p>
+            <div className="h-px w-16 bg-[#8b5d3b]"></div>
+          </div>
+        </div>
 
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-              <div className="w-40 flex-shrink-0">
-                {profile.profilePicture || preview ? (
-                  <img
-                    src={preview || profile.profilePicture}
-                    alt="Profile"
-                    className="w-40 h-40 rounded-full object-cover border-4 border-sepia-300 shadow-lg"
-                  />
-                ) : (
-                  <div className="w-40 h-40 rounded-full bg-sepia-200 flex items-center justify-center border-4 border-sepia-300 shadow-lg">
-                    <span className="text-sepia-500 text-xl font-playfair">No Image</span>
-                  </div>
-                )}
-                <div className="mt-4">
-                  <label htmlFor="file-upload" className="cursor-pointer bg-sepia-700 text-sepia-100 px-4 py-2 rounded-full hover:bg-sepia-800 transition-colors duration-300 text-sm uppercase tracking-wide inline-block">
-                    Select New Picture
-                  </label>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
+        {/* Profile Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Profile Picture Section */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg p-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="flex flex-col items-center">
+              {profile.profilePicture || preview ? (
+                <img
+                  src={preview || profile.profilePicture}
+                  alt="Profile"
+                  className="w-48 h-48 rounded-full object-cover border-4 border-[#e8e2d9] shadow-lg"
+                />
+              ) : (
+                <div className="w-48 h-48 rounded-full bg-[#e8e2d9] flex items-center justify-center border-4 border-[#e8e2d9] shadow-lg">
+                  <span className="text-[#8b5d3b] text-xl font-playfair">No Image</span>
                 </div>
+              )}
+              <div className="mt-6 space-y-4">
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity text-sm uppercase tracking-wide inline-block"
+                >
+                  Change Picture
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 {selectedFile && (
                   <button
                     onClick={handleUpload}
-                    className="mt-2 bg-sepia-800 text-sepia-100 px-4 py-2 rounded-full hover:bg-sepia-900 transition-colors duration-300 text-sm uppercase tracking-wide block w-full"
+                    className="bg-gradient-to-r from-[#2c2420] to-[#8b5d3b] text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity text-sm uppercase tracking-wide block w-full"
                   >
                     Upload Picture
                   </button>
                 )}
               </div>
+            </div>
+          </motion.div>
 
-              <div className="flex-grow">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sepia-700 text-sm font-bold mb-2" htmlFor="name">
-                      Name
-                    </label>
-                    <input
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-sepia-900 leading-tight focus:outline-none focus:shadow-outline bg-sepia-100"
-                      id="name"
-                      type="text"
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sepia-700 text-sm font-bold mb-2" htmlFor="email">
-                      Email
-                    </label>
-                    <input
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-sepia-900 leading-tight focus:outline-none focus:shadow-outline bg-sepia-100"
-                      id="email"
-                      type="email"
-                      value={editedEmail}
-                      onChange={(e) => setEditedEmail(e.target.value)}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sepia-700 text-sm font-bold mb-2" htmlFor="phone">
-                      Phone
-                    </label>
-                    <input
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-sepia-900 leading-tight focus:outline-none focus:shadow-outline bg-sepia-100"
-                      id="phone"
-                      type="tel"
-                      value={editedMobile}
-                      onChange={(e) => setEditedMobile(e.target.value)}
-                      readOnly={!isEditing}
-                    />
-                  </div>
-                </div>
+          {/* Profile Details Section */}
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg p-8"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="space-y-6">
+              <div>
+                <label className="block text-[#2c2420] text-sm font-bold mb-2" htmlFor="name">
+                  Name
+                </label>
+                <input
+                  className="w-full px-4 py-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2]"
+                  id="name"
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  readOnly={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="block text-[#2c2420] text-sm font-bold mb-2" htmlFor="email">
+                  Email
+                </label>
+                <input
+                  className="w-full px-4 py-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2]"
+                  id="email"
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  readOnly={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="block text-[#2c2420] text-sm font-bold mb-2" htmlFor="phone">
+                  Phone
+                </label>
+                <input
+                  className="w-full px-4 py-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2]"
+                  id="phone"
+                  type="tel"
+                  value={editedMobile}
+                  onChange={(e) => setEditedMobile(e.target.value)}
+                  readOnly={!isEditing}
+                />
+              </div>
 
-                {/* Edit/Save Buttons */}
-                <div className="mt-8 flex gap-4 justify-end">
-                  {!isEditing ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="bg-sepia-700 text-sepia-100 px-6 py-2 rounded-full hover:bg-sepia-800 transition-colors"
-                    >
-                      Edit Profile
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={handleSave}
-                        className="bg-sepia-700 text-sepia-100 px-6 py-2 rounded-full hover:bg-sepia-800 transition-colors"
-                      >
-                        Save Changes
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditing(false);
-                          setEditedName(profile.name);
-                          setEditedEmail(profile.email);
-                          setEditedMobile(profile.mobile_no);
-                        }}
-                        className="bg-sepia-300 text-sepia-700 px-6 py-2 rounded-full hover:bg-sepia-400 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Change Password Button */}
-                <div className="mt-4">
+              {/* Edit/Save Buttons */}
+              <div className="mt-8 flex gap-4 justify-end">
+                {!isEditing ? (
                   <button
-                    onClick={() => setShowPasswordModal(true)}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
+                    onClick={() => setIsEditing(true)}
+                    className="bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity"
                   >
-                    Change Password
+                    Edit Profile
                   </button>
-                </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      className="bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditedName(profile.name);
+                        setEditedEmail(profile.email);
+                        setEditedMobile(profile.mobile_no);
+                      }}
+                      className="bg-[#e8e2d9] text-[#2c2420] px-6 py-2 rounded-full hover:bg-[#d4ccc2] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Change Password Button */}
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity w-full"
+                >
+                  Change Password
+                </button>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-sepia-300 border-t-sepia-800 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-sepia-700 font-lora">Loading your profile...</p>
-          </div>
+          </motion.div>
+        </div>
+
+        {/* OTP Modal */}
+        {showOtpModal && (
+          <OtpModal
+            show={showOtpModal}
+            email={tempEmail}
+            onClose={() => setShowOtpModal(false)}
+            onSuccess={handleOtpSuccess}
+          />
         )}
+
+        {/* Change Password Modal */}
+        {showPasswordModal && (
+          <NewPasswordModal
+            show={showPasswordModal}
+            email={profile.email}
+            onClose={() => setShowPasswordModal(false)}
+            role="user"
+          />
+        )}
+ 
       </div>
-
-      {/* OTP Modal */}
-      {showOtpModal && (
-        <OtpModal
-          show={showOtpModal}
-          email={tempEmail}
-          onClose={() => setShowOtpModal(false)}
-          onSuccess={handleOtpSuccess}
-        />
-      )}
-
-      {/* Change Password Modal */}
-      {showPasswordModal && (
-        <NewPasswordModal
-          show={showPasswordModal}
-          email={profile.email}
-          onClose={() => setShowPasswordModal(false)}
-          role="user" // Assuming the role is 'user' for this profile
-        />
-      )}
     </div>
   );
 };

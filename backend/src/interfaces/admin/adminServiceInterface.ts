@@ -1,9 +1,11 @@
 export interface IAdminService {
   adminLogin(email: string, password: string): Promise<{ admin: any; accessToken: string; refreshToken: string }>;
   refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }>;
-  getPendingRestaurents(): Promise<any>;
+  getPendingRestaurents( page: number,
+    limit: number,
+    searchTerm: string): Promise<{ restaurents: any[]; total: number }>;
   updateRestaurentStatus(restaurentId: string, isBlocked: boolean,  blockReason?: string) : Promise<any>;
-  // Updated getAllRestaurents to support search and filter parameters.
+ 
   getAllRestaurents(
     page: number,
     limit: number,

@@ -1,4 +1,4 @@
-// src/controllers/BranchController.ts
+ 
 import { Request, Response } from "express";
 import { BranchService } from "../services/BranchService";
 import { sendResponse, sendError } from "../utils/responseUtils";
@@ -14,7 +14,7 @@ private branchRepository:BranchRepository
   }
 
   // Create a new branch
-// src/controllers/BranchController.ts
+ 
 async createBranch(req: Request, res: Response) {
     let imageUrl = "";
     try {
@@ -99,6 +99,8 @@ async createBranch(req: Request, res: Response) {
       sendError(res, HttpStatus.BadRequest, error.message);
     }
   }
+
+ 
 
   // Delete Branch Method
   async deleteBranch(req: Request, res: Response): Promise<void> {

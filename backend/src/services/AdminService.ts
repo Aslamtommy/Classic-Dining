@@ -52,9 +52,29 @@ class AdminService implements IAdminService {
     }
   }
 
-  async getPendingRestaurents(): Promise<any> {
-    return await this.restaurentRepository.findAllPending();
-  }
+ // Update service method
+async getPendingRestaurents(
+  page: number,
+  limit: number,
+  searchTerm: string
+): Promise<{ restaurents: any[]; total: number }> {
+  const skip = (page - 1) * limit;
+  
+  const filter: any = { 
+      isBlocked: true,
+      $or: [
+          { name: { $regex: searchTerm, $options: 'i' } },
+          { email: { $regex: searchTerm, $options: 'i' } }
+      ]
+  };
+
+  const [restaurents, total] = await Promise.all([
+      this.restaurentRepository.findAllPending(filter, skip, limit),
+      this.restaurentRepository.countAllPending(filter),
+  ]);
+
+  return { restaurents, total };
+}
 
   async updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<any> {
     return await this.restaurentRepository.updateRestaurentStatus(restaurentId, isBlocked, blockReason);
