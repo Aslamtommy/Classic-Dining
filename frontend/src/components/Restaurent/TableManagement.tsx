@@ -2,12 +2,14 @@ import   { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { tableTypeApi } from '../../Api/restaurentApi';
+import { FaRupeeSign } from "react-icons/fa";
 
 interface TableType {
   _id: string;
   name: string;
   capacity: number;
   quantity: number;
+  price:number;
   description?: string;
 }
 
@@ -25,7 +27,9 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
     quantity: Yup.number()
       .min(1, 'Quantity must be at least 1')
       .required('Quantity is required'),
+      price:Yup.number().min(0,'Price must be at leaset 0'),
     description: Yup.string().optional(),
+
   });
 
   // Formik Initialization
@@ -34,6 +38,7 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
       name: '',
       capacity: 2,
       quantity: 1,
+      price:0,
       description: '',
     },
     validationSchema,
@@ -159,7 +164,22 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
             ) : null}
           </div>
         </div>
-
+        <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">Price</label>
+      <input
+        type="number"
+        name="price"
+        min="0"
+        value={formik.values.price}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+      />
+      {formik.touched.price && formik.errors.price ? (
+        <div className="text-red-500 text-sm mt-1">{formik.errors.price}</div>
+      ) : null}
+    </div>
+   
         {/* Description */}
         <div className="mt-6 space-y-2">
           <label className="block text-sm font-medium text-gray-700">Description</label>
@@ -212,6 +232,14 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
                         {table.quantity}
                       </span>
                     </p>
+
+                    <p className="text-gray-600 flex items-center gap-2">
+                <span className="font-medium">Price:</span>
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center">
+    <FaRupeeSign className="mr-1" /> {table.price}
+</span>
+              </p>
+
                     {table.description && (
                       <p className="text-gray-600 text-sm mt-2">{table.description}</p>
                     )}

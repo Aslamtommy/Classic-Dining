@@ -50,10 +50,10 @@ const LoginForm = () => {
 
     dispatch(setLoading())
     try {
-      const response = await api.post<LoginResponse>("/login", { email, password }, { withCredentials: true })
+      const response:any = await api.post ("/login", { email, password }, { withCredentials: true })
 console.log(response)
       const { user } = response.data.data
-      dispatch(setUser({ name: user.name, email: user.email }))
+      dispatch(setUser({ name: user.name, email: user.email,mobile:user.mobile }))
       toast.success('Login successfil')
    
       navigate("/")

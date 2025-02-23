@@ -14,7 +14,7 @@ import { UserRepositoryInterface } from '../interfaces/user/UserRepositoryInterf
 import { OtpRepository } from '../repositories/otpRepository';
 import cloudinary from "../config/cloudinary";
 import { MessageConstants } from '../constants/MessageConstants';
-
+import { BranchRepository } from '../repositories/BranchRepository';
 export interface ForgotPasswordResponse {
   success: boolean;
   message: string;
@@ -23,9 +23,12 @@ export interface ForgotPasswordResponse {
 }
 
 export class UserService implements IUserService {
+ 
   constructor(
     private userRepository: UserRepositoryInterface,
-    private otpRepository: OtpRepository
+    private otpRepository: OtpRepository,
+    private branchRepository:any
+    
   ) {}
 
   // Register a new user
@@ -287,5 +290,13 @@ export class UserService implements IUserService {
       mobile_no: updatedUser.mobile_no,
       profilePicture: updatedUser.profilePicture || '',
     };
+  }
+
+  async getBranchDetails(branchId: string) {
+    const branch = await this.branchRepository.findByIdUser(branchId);
+    if (!branch) {
+      throw new Error('Branch not found');
+    }
+    return branch;
   }
 }

@@ -20,7 +20,7 @@ const Hero: React.FC = () => {
         <div className="h-px w-16 bg-[#8b5d3b]"></div>
         <p className="mx-4 text-lg text-white/80">Est. 1940</p>
         <div className="h-px w-16 bg-[#8b5d3b]"></div>
-      </div>
+      </div> 
     </div>
   </section>
   );

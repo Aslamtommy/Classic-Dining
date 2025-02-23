@@ -7,7 +7,7 @@ import OtpModal from '../CommonComponents/Modals/OtpModal';
 import sendOtp from '../../utils/sentotp';
 import NewPasswordModal from '../CommonComponents/Modals/NewPaawordModal';
 import { motion } from 'framer-motion';
-import Footer from './Home/Footer';
+ 
 const UserProfile: React.FC = () => {
   const dispatch = useDispatch();
   const profile = useSelector((state: any) => state.user.user);

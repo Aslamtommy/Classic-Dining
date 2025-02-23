@@ -1,13 +1,15 @@
-"use client";
+ 
 
 import type React from "react";
 import { useEffect, useState } from "react";
 import { fetchBranches } from "../../../Api/userApi";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export const Gallery: React.FC = () => {
   const [branches, setBranches] = useState([]);
 
+  const navigate=useNavigate()
   useEffect(() => {
     const loadBranches = async () => {
       try {
@@ -34,6 +36,8 @@ export const Gallery: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
+
+              onClick={() => navigate(`/book/${branch._id}`)}
             >
               <div className="aspect-[4/5] relative overflow-hidden bg-[#e8e2d9] rounded-lg shadow-lg">
                 <img

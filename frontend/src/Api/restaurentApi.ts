@@ -77,4 +77,9 @@ export const tableTypeApi = {
       throw new Error('Failed to delete table type');
     }
   },
+    updateTableType :async (tableTypeId: string, data: any) => {
+    const response = await restaurentApi.put(`/edittables/${tableTypeId}`, data);
+    return response; // Ensure the response is returned
+  },
+
 };

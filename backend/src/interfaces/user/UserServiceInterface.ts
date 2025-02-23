@@ -44,5 +44,7 @@ export interface IUserService {
  
     updateUserProfile( userId: string,
       updateData: { name: string; email: string; mobile_no: string }
-    ): Promise<any>
+    ): Promise<any>;
+
+    getBranchDetails(branchId: string):any
 }

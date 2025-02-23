@@ -11,7 +11,7 @@ export interface IRestaurent extends Document {
     isBlocked: boolean;
     isBranch: boolean;
     branches?: mongoose.Types.ObjectId[];
-    blockReason?: string; // Add this field
+    blockReason?: string;  
     createdAt: Date;
     updatedAt: Date;
   }

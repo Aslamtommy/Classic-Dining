@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path'; // Import path for static file handling
 import adminRoute from './routes/adminRoutes';
 import restaurentRoute from './routes/restaurentRoutes';
- 
+ import { startCronJobs } from './cronJobs';
 
 const app: Application = express();
 
@@ -19,6 +19,9 @@ app.use(express.json());
 // Database connection
 connectDB();
  
+// Start cron jobs
+startCronJobs();
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
  
 

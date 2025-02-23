@@ -4,6 +4,7 @@ interface User {
   
   name: string;
   email: string;
+  mobile:string;
   profilePicture?: string | null; 
   accessToken?: string;
 }

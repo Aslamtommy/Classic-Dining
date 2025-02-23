@@ -2,6 +2,7 @@
 import { ITableType } from '../models/Restaurent/TableModel';
 import TableModel from '../models/Restaurent/TableModel';
 
+
 export class TableTypeRepository {
   async create(tableTypeData: Partial<ITableType>): Promise<ITableType> {
     return await  TableModel.create(tableTypeData);
@@ -23,7 +24,17 @@ export class TableTypeRepository {
     );
   }
 
+  async update(tableTypeId:any,updateData :any ):Promise<ITableType| null> {
+    return await TableModel.findByIdAndUpdate(
+      tableTypeId,{$set:updateData},{new:true}
+    )
+  }
+
   async delete(tableTypeId: string): Promise<void> {
     await  TableModel.findByIdAndDelete(tableTypeId);
+  }
+
+  async findAllByBranch(branchId: string): Promise<ITableType[]> {
+    return TableModel.find({ branch: branchId }).exec();
   }
 }

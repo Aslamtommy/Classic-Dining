@@ -47,4 +47,10 @@ export class BranchRepository {
     async deleteBranch(branchId: string): Promise<void> {
         await BranchModel.findByIdAndDelete(branchId);
       }
+      async findByIdUser(branchId: string): Promise<IBranch | null> {
+        return BranchModel.findById(branchId)
+          .populate('parentRestaurant')
+          .populate('tableTypes')
+          .exec();
+      }
 }

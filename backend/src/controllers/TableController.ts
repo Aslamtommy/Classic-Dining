@@ -56,4 +56,6 @@ export class TableTypeController {
       sendError(res, HttpStatus.BadRequest, error.message);
     }
   }
+  
+ 
 }

@@ -58,7 +58,7 @@ export class Usercontroller {
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
   
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
-        user: { id: user._id, name: user.name, email: user.email }
+        user: { id: user._id, name: user.name, email: user.email ,mobile:user.mobile_no}
       });
     } catch (error: any) {
       switch (error.message) {
@@ -260,6 +260,20 @@ console.log('reqbody',req.body)
     try {
       const branches = await this.branchRepository.findAll();
       sendResponse(res, HttpStatus.OK, "Branches fetched successfully", branches);
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, error.message);
+    }
+  }
+
+  async getBranchDetails(req: Request, res: Response) {
+    try {
+      const branchId = req.params.branchId;
+      console.log('branchid',branchId)
+      const branch = await this.userService.getBranchDetails(branchId);
+      if (!branch) {
+        return sendError(res, HttpStatus.NotFound, 'Branch not found');
+      }
+      sendResponse(res, HttpStatus.OK, 'Branch details fetched successfully', branch);
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, error.message);
     }

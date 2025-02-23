@@ -11,7 +11,7 @@ import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
  
-
+ 
 interface SignupFormInputs {
   name: string;
   email: string;
@@ -100,13 +100,14 @@ const SignupForm: React.FC = () => {
   
     try {
       dispatch(setLoading());
-      const response  = await api.post<{ message: string }>('/register', {
+      const response :any = await api.post ('/register', {
         name: data.name,
         email: data.email,
         password: data.password,
         mobile_no: data.mobileNo,
       });
-  
+      console.log('signupsuccess response',response)
+      dispatch(setUser(response.data.user));
       setMessage(response.data.message || 'User registered successfully!');
       navigate('/login');
     } catch (error: any) {
@@ -132,7 +133,7 @@ const SignupForm: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
 
-      const response = await api.post<GoogleSignInResponse>('/google', {
+      const response:any = await api.post<GoogleSignInResponse>('/google', {
         idToken,
       });
       

@@ -73,6 +73,7 @@ restaurentRoute.delete('/branches/:branchId', authenticateToken('restaurent'),  
 restaurentRoute.post('/branches/:branchId/tables',(req,res)=>tabletypeController.createTableType(req,res))
 restaurentRoute.get('/branches/:branchId/tables',(req,res)=>tabletypeController.getTableTypesByBranch(req,res))
 restaurentRoute.put('/tables/:tableTypeId/quantity',(req,res)=>tabletypeController.updateTableTypeQuantity(req,res))
+ 
 restaurentRoute.delete('/tables/:tableTypeId',(req,res)=>tabletypeController.deleteTableType(req,res))
 
  export default restaurentRoute

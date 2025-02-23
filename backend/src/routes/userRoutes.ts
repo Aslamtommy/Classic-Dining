@@ -7,13 +7,14 @@ import { UserService } from '../services/UserService';
 import { OtpRepository } from '../repositories/otpRepository';
 import blockedUserMiddleware from '../middlewares/blockedUserMiddleware';
 import { BranchRepository } from '../repositories/BranchRepository';
-
-
+ 
+  import { ReservationController } from '../controllers/ReservationController';
 const userRoute: Router = express.Router();
 const branchRepository=new BranchRepository()
 const userRepository=new UserRepository()
 const otpRepository=new OtpRepository()
-const userService=new UserService(userRepository,otpRepository)
+const reservationController = new ReservationController()
+const userService=new UserService(userRepository,otpRepository,branchRepository)
 
 const userController = new Usercontroller(userService,branchRepository );
 
@@ -66,4 +67,24 @@ userRoute.post('/logout',(req,res)=>userController.logout(req,res))
 userRoute.put('/updateProfile',authenticateToken('user'),(req,res)=>userController.updateProfile(req,res))
 
 userRoute.get('/branches',(req,res)=>userController.getAllBranches(req,res))
+ 
+ userRoute.get('/branches/:branchId',(req,res)=>userController.getBranchDetails(req,res))
+ 
+
+
+ 
+
+ 
+
+
+
+userRoute.post('/reservations', authenticateToken('user'), (req, res) => reservationController.createReservation(req, res));
+userRoute.get('/reservations/:id', authenticateToken('user'), (req, res) => reservationController.getReservation(req, res));
+userRoute.put('/reservations/:id/cancel', authenticateToken('user'), (req, res) => reservationController.cancelReservation(req, res));
+userRoute.put('/reservations/:id/confirm', authenticateToken('user'), (req, res) => reservationController.confirmReservation(req, res));
+userRoute.put('/reservations/:id/fail', authenticateToken('user'), (req, res) => reservationController.failReservation(req, res));
+userRoute.get('/available-tables', authenticateToken('user'), (req, res) => reservationController.getAvailableTables(req, res));
+userRoute.post('/payments/create-order', authenticateToken('user'), (req, res) => reservationController.createPaymentOrder(req, res));
+
 export default userRoute;
+

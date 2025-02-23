@@ -43,6 +43,10 @@ export class TableTypeService {
   async updateTableTypeQuantity(tableTypeId: string, quantity: number) {
     return await this.tableTypeRepository.updateQuantity(tableTypeId, quantity);
   }
+ // TableTypeService.ts
+async updateTableType(tableTypeId: string, updateData: Partial<ITableType>) {
+  return await this.tableTypeRepository.update(tableTypeId, updateData);
+}
 
   async deleteTableType(tableTypeId: string) {
     await this.tableTypeRepository.delete(tableTypeId);

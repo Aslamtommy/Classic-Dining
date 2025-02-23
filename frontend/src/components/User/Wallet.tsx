@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSelector } from "react-redux"
+// import { useSelector } from "react-redux"
 import api from "../../Axios/userInstance"
 import { toast } from "react-hot-toast"
 import { Wallet, CreditCard, DollarSign, PlusCircle } from "lucide-react"
 import { motion } from "framer-motion"
 
 const WalletPage: React.FC = () => {
-  const user = useSelector((state: any) => state.user.user)
+//   const user = useSelector((state: any) => state.user.user)
   const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState([])
   const [amount, setAmount] = useState("")

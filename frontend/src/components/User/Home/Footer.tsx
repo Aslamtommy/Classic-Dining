@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
           >
             <h4 className="font-playfair text-xl mb-4">Quick Links</h4>
             <nav className="flex flex-col space-y-2">
-              {["About Us", "Our Menu", "Reservations", "Private Events"].map((item, index) => (
+              {["About Us", "Our Menu", "Reservations", "Private Events"].map((item,  ) => (
                 <motion.a
                   key={item}
                   href={`/${item.toLowerCase().replace(" ", "-")}`}
