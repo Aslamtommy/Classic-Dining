@@ -21,7 +21,7 @@ const BookingPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const user = useSelector((state: any) => state.user.user);
-
+console.log(user)
   useEffect(() => {
     const loadBranch = async () => {
       try {
@@ -91,9 +91,11 @@ const BookingPage: React.FC = () => {
         },
       };
 
+      console.log(reservationData)
+
       const response: any = await createReservation(reservationData);
       const reservationId = response.data._id;
-
+console.log(response)
       const reservationDetails = {
         reservationId,
         branch: branch.name,

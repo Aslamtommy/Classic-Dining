@@ -53,6 +53,10 @@ export class ReservationController {
   async cancelReservation(req: Request, res: Response) {
     try {
       const reservation = await this.reservationService.cancelReservation(req.params.id);
+      if(!reservation){
+        return sendError(res,404,'Reservation not found')
+      }
+      console.log(`Reservation ${req.params.id} cancelled${reservation.status === 'confirmed' ? ', amount credited to wallet' : ''}`);
       sendResponse(res, 200, 'Reservation cancelled successfully', reservation);
     } catch (error: any) {
       console.error('Reservation cancellation error:', error.message, error.stack);

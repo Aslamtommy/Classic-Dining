@@ -37,7 +37,7 @@ console.log(profile)
         <nav className="space-y-3 flex-1">
           {[
             { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Profile' },
-            { to: '/booking', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
+            { to: '/bookings', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
             { to: '/wallet', icon: <Wallet className="w-5 h-5" />, text: 'Wallet' },
             { to: '/settings', icon: <Settings className="w-5 h-5" />, text: 'Settings' },
           ].map((link, index) => (

@@ -7,10 +7,11 @@ export class ReservationRepository {
     return Reservation.create(reservationData);
   }
 
-  async findById(id: string): Promise<IReservation | null> {
+  async findById(id: string,session?:any): Promise<IReservation | null> {
     return Reservation.findById(id)
       .populate('branch')
       .populate('tableType')
+      
       .exec();
   }
 

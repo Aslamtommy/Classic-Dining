@@ -3,6 +3,8 @@ import { BranchRepository } from '../repositories/BranchRepository';
 import { TableTypeRepository } from '../repositories/TableRepository';
 import { ReservationStatus } from '../models/User/Reservation';
 import { WalletRepository } from '../repositories/WalletRepository';
+import { IReservation } from '../models/User/Reservation';
+import mongoose from 'mongoose';
 export class ReservationService {
   constructor(
     private reservationRepo: ReservationRepository,
@@ -48,11 +50,50 @@ export class ReservationService {
   }
 
   async cancelReservation(id: string) {
-    const reservation = await this.reservationRepo.findById(id);
-    if (!reservation) {
-      throw new Error('Reservation not found');
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const reservation = await this.reservationRepo.findById(id, session);
+      if (!reservation) {
+        throw new Error('Reservation not found');
+      }
+      if (reservation.status === ReservationStatus.CANCELLED) {
+        throw new Error('Reservation is already cancelled');
+      }
+
+      let updatedReservation: IReservation | null = null;
+
+      // If reservation is confirmed, credit the wallet
+      if (reservation.status === ReservationStatus.CONFIRMED) {
+        const tableTypeId = typeof reservation.tableType === 'object' && reservation.tableType !== null
+          ? reservation.tableType._id.toString()
+          : reservation.tableType;
+        const tableType = await this.tableTypeRepo.findById(tableTypeId,  );
+        if (!tableType) throw new Error('Table type not found');
+
+        const amount = tableType.price || 0;
+        if (amount > 0) {
+          await this.walletRepo.updateWalletBalance(reservation.userId.toString(), amount, );
+          await this.walletRepo.createTransaction({
+            userId: reservation.userId,
+            type: 'credit',
+            amount,
+            description: `Refund for cancelled reservation  `,
+            date: new Date(),
+          },  );
+        }
+      }
+
+      updatedReservation = await this.reservationRepo.updateStatus(id, ReservationStatus.CANCELLED );
+      await session.commitTransaction();
+      return updatedReservation;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
-    return this.reservationRepo.updateStatus(id, ReservationStatus.CANCELLED);
   }
 
   async confirmReservation(id: string, paymentId: string) {

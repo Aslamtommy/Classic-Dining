@@ -20,7 +20,7 @@ const user=await userModel.findByIdAndUpdate(
 if (!user) throw new Error('User not found');
       }
 
-      async createTransaction(transactionData: Partial<ITransaction>): Promise<ITransaction> {
+      async createTransaction(transactionData: any): Promise<ITransaction> {
         return await Transaction.create(transactionData);
       }
 

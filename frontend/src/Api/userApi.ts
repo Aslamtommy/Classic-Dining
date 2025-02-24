@@ -75,3 +75,45 @@ export const failReservation = async (reservationId: string, paymentId: string) 
     throw new Error(error.response?.data?.message || error.message || 'Failed to mark reservation as payment failed');
   }
 };
+
+// Fetch all user reservations
+export const fetchUserReservations = async () => {
+  try {
+    const response:any = await api.get('/reservations');
+    return response.data.data; // Assuming response structure: { success, message, data }
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch reservations');
+  }
+};
+
+// Fetch a single reservation by ID
+export const fetchReservation = async (reservationId: string) => {
+  try {
+    const response :any= await api.get(`/reservations/${reservationId}`);
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch reservation');
+  }
+};
+
+
+export const cancelReservation = async (reservationId: string) => {
+  try {
+    const response:any = await api.put(`/reservations/${reservationId}/cancel`);
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to cancel reservation');
+  }
+};
+
+export const fetchWalletData = async () => {
+  try {
+    const response:any = await api.get('/wallet');
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch wallet data');
+    }
+    return response.data.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || error.message || 'Failed to fetch wallet data');
+  }
+};

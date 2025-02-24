@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '../../Axios/userInstance';
-import { confirmReservation, failReservation } from '../../Api/userApi';
+import { confirmReservation, failReservation, fetchReservation, fetchWalletData } from '../../Api/userApi';
 
 interface ReservationDetails {
   reservationId: string;
-  branch: string;
-  tableType: string;
-  reservationDate: Date;
+  branch: string | { name: string };
+  tableType: string | { name: string; price: number };
+  reservationDate: Date | string;
   timeSlot: string;
   partySize: number;
   user: {
@@ -19,6 +19,7 @@ interface ReservationDetails {
   };
   price: number;
   specialRequests?: string;
+  status?: string;
 }
 
 interface PaymentResponse {
@@ -41,24 +42,67 @@ interface PaymentResponse {
 }
 
 const ConfirmationPage: React.FC = () => {
+  const { reservationId } = useParams<{ reservationId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const [reservation, setReservation] = useState<ReservationDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
+  // Load reservation details
   useEffect(() => {
-    if (location.state?.reservation) {
-      setReservation(location.state.reservation);
-      setLoading(false);
-    } else {
-      navigate('/');
-    }
-  }, [location, navigate]);
+    const loadReservation = async () => {
+      try {
+        setLoading(true);
+        if (reservationId) {
+          const data = await fetchReservation(reservationId);
+          setReservation({
+            reservationId: data._id,
+            branch: data.branch.name,
+            tableType: { name: data.tableType.name, price: data.tableType.price },
+            reservationDate: data.reservationDate,
+            timeSlot: data.timeSlot,
+            partySize: data.partySize,
+            user: data.user,
+            price: data.tableType.price,
+            specialRequests: data.specialRequests,
+            status: data.status,
+          });
+        } else if (location.state?.reservation) {
+          setReservation(location.state.reservation);
+        } else {
+          navigate('/');
+        }
+      } catch (error: any) {
+        toast.error(error.message, { duration: 4000, position: 'top-center' });
+        navigate('/booking');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadReservation();
+  }, [reservationId, location, navigate]);
 
-  const handlePayment = async () => {
-    if (!reservation || isProcessing) return;
+  // Fetch wallet balance when reservation is loaded
+  useEffect(() => {
+    if (reservation) {
+      const loadWalletData = async () => {
+        try {
+          const walletData = await fetchWalletData();
+          setWalletBalance(walletData.balance);
+        } catch (error: any) {
+          toast.error(error.message, { duration: 4000, position: 'top-center' });
+        }
+      };
+      loadWalletData();
+    }
+  }, [reservation]);
+
+  // Handle Razorpay payment (renamed from handlePayment)
+  const handleRazorpayPayment = async () => {
+    if (!reservation || isProcessing || reservation.status === 'confirmed') return;
 
     setIsProcessing(true);
 
@@ -99,10 +143,10 @@ const ConfirmationPage: React.FC = () => {
               state: {
                 paymentId: response.razorpay_payment_id,
                 amount: reservation.price,
+                paymentMethod: 'razorpay',
               },
             });
           } catch (error: any) {
-            console.error('Failed to confirm reservation:', error);
             toast.error('Failed to confirm reservation. Please contact support.', {
               duration: 4000,
               position: 'top-center',
@@ -113,7 +157,7 @@ const ConfirmationPage: React.FC = () => {
         },
         modal: {
           ondismiss: async function () {
-            if (paymentSuccess) return; // Do nothing if payment was successful
+            if (paymentSuccess) return;
             try {
               await failReservation(reservation.reservationId, '');
               toast.error('Payment cancelled. Reservation marked as payment failed.', {
@@ -122,38 +166,7 @@ const ConfirmationPage: React.FC = () => {
               });
               navigate('/booking');
             } catch (error: any) {
-              console.error('Failed to mark reservation as payment failed:', error);
-              const errorMessage = error.message || 'Failed to update reservation status.';
-              if (errorMessage.includes('current status: confirmed')) {
-                toast('Your reservation is already confirmed.', {
-                  duration: 4000,
-                  position: 'top-center',
-                  style: {
-                    background: '#e6f4ff',
-                    color: '#1d39c4',
-                  },
-                });
-              } else if (errorMessage.includes('current status: cancelled')) {
-                toast('Your reservation is already cancelled.', {
-                  duration: 4000,
-                  position: 'top-center',
-                  style: {
-                    background: '#e6f4ff',
-                    color: '#1d39c4',
-                  },
-                });
-              } else if (errorMessage.includes('current status: payment_failed')) {
-                toast('Reservation payment has already failed.', {
-                  duration: 4000,
-                  position: 'top-center',
-                  style: {
-                    background: '#e6f4ff',
-                    color: '#1d39c4',
-                  },
-                });
-              } else {
-                toast.error(errorMessage, { duration: 4000, position: 'top-center' });
-              }
+              toast.error(error.message, { duration: 4000, position: 'top-center' });
             } finally {
               setIsProcessing(false);
             }
@@ -172,45 +185,17 @@ const ConfirmationPage: React.FC = () => {
       const razorpay = new (window as any).Razorpay(options);
       razorpay.on('payment.failed', async function (response: any) {
         try {
-          await failReservation(reservation.reservationId, response.error.metadata.payment_id || '');
+          await failReservation(
+            reservation.reservationId,
+            response.error.metadata.payment_id || ''
+          );
           toast.error('Payment failed. Reservation marked as payment failed.', {
             duration: 4000,
             position: 'top-center',
           });
           navigate('/booking');
         } catch (error: any) {
-          console.error('Failed to mark reservation as payment failed:', error);
-          const errorMessage = error.message || 'Failed to update reservation status.';
-          if (errorMessage.includes('current status: confirmed')) {
-            toast('Your reservation is already confirmed.', {
-              duration: 4000,
-              position: 'top-center',
-              style: {
-                background: '#e6f4ff',
-                color: '#1d39c4',
-              },
-            });
-          } else if (errorMessage.includes('current status: cancelled')) {
-            toast('Your reservation is already cancelled.', {
-              duration: 4000,
-              position: 'top-center',
-              style: {
-                background: '#e6f4ff',
-                color: '#1d39c4',
-              },
-            });
-          } else if (errorMessage.includes('current status: payment_failed')) {
-            toast('Reservation payment has already failed.', {
-              duration: 4000,
-              position: 'top-center',
-              style: {
-                background: '#e6f4ff',
-                color: '#1d39c4',
-              },
-            });
-          } else {
-            toast.error(errorMessage, { duration: 4000, position: 'top-center' });
-          }
+          toast.error(error.message, { duration: 4000, position: 'top-center' });
         } finally {
           setIsProcessing(false);
         }
@@ -218,11 +203,39 @@ const ConfirmationPage: React.FC = () => {
 
       razorpay.open();
     } catch (error: any) {
-      console.error('Payment initialization error:', error);
       toast.error('Payment initialization failed. Please try again.', {
         duration: 4000,
         position: 'top-center',
       });
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle wallet payment
+  const handleWalletPayment = async () => {
+    if (!reservation || isProcessing) return;
+
+    setIsProcessing(true);
+
+    try {
+      await api.post(`/reservations/${reservation.reservationId}/confirm-wallet`);
+      setPaymentSuccess(true);
+      toast.success('Payment successful! Reservation confirmed.', {
+        duration: 4000,
+        position: 'top-center',
+      });
+      navigate('/success', {
+        state: {
+          paymentMethod: 'wallet',
+          amount: reservation.price,
+        },
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to confirm reservation with wallet.', {
+        duration: 4000,
+        position: 'top-center',
+      });
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -245,12 +258,16 @@ const ConfirmationPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="font-playfair text-3xl text-[#2c2420] font-bold mb-6">Confirm Your Reservation</h1>
+          <h1 className="font-playfair text-3xl text-[#2c2420] font-bold mb-6">
+            Confirm Your Reservation
+          </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Branch</h3>
-                <p className="text-[#8b5d3b]">{reservation.branch}</p>
+                <p className="text-[#8b5d3b]">
+                  {typeof reservation.branch === 'string' ? reservation.branch : reservation.branch.name}
+                </p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Date & Time</h3>
@@ -266,7 +283,11 @@ const ConfirmationPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Selected Table</h3>
-                <p className="text-[#8b5d3b]">{reservation.tableType}</p>
+                <p className="text-[#8b5d3b]">
+                  {typeof reservation.tableType === 'string'
+                    ? reservation.tableType
+                    : reservation.tableType.name}
+                </p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Special Requests</h3>
@@ -276,17 +297,45 @@ const ConfirmationPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-[#2c2420]">Total Amount</h3>
                 <p className="text-2xl text-[#8b5d3b] font-bold">₹{reservation.price}</p>
               </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#2c2420]">Wallet Balance</h3>
+                <p className="text-2xl text-[#8b5d3b] font-bold">
+                  {walletBalance !== null ? `₹${walletBalance}` : 'Loading...'}
+                </p>
+              </div>
             </div>
           </div>
-          <button
-            onClick={handlePayment}
-            disabled={isProcessing}
-            className={`w-full mt-6 px-6 py-3 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-opacity text-lg font-medium ${
-              isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {isProcessing ? 'Processing...' : 'Secure Payment'}
-          </button>
+          {reservation.status === 'confirmed' ? (
+            <p className="text-green-600 font-medium">This reservation is already confirmed.</p>
+          ) : (
+            <div className="mt-6 space-y-4">
+              <button
+                onClick={handleWalletPayment}
+                disabled={isProcessing || walletBalance === null || walletBalance < reservation.price}
+                className={`w-full px-6 py-3 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-opacity text-lg font-medium ${
+                  isProcessing || walletBalance === null || walletBalance < reservation.price
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                {isProcessing ? 'Processing...' : 'Pay with Wallet'}
+              </button>
+              {walletBalance !== null && walletBalance < reservation.price && (
+                <p className="text-red-600 text-sm">
+                  Insufficient wallet balance. Please add money or use another payment method.
+                </p>
+              )}
+              <button
+                onClick={handleRazorpayPayment}
+                disabled={isProcessing || reservation.status === 'cancelled'}
+                className={`w-full px-6 py-3 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-opacity text-lg font-medium ${
+                  isProcessing || reservation.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isProcessing ? 'Processing...' : 'Pay with Razorpay'}
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

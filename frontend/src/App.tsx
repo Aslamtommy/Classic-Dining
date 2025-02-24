@@ -26,8 +26,10 @@ import PendingApproval from './components/Restaurent/PendingApproval';
 import WalletPage from './components/User/Wallet';
   import UserLayout from './components/User/Home/UserLayout';
   import ConfirmationPage from './components/User/ConfirmationPage';
- 
+  
 import BookingPage from './components/User/BookingPage';
+import Bookings from './components/User/Bookings';
+import SuccessPage from './components/User/SuccessPage';
 const App = () => {
   return (
     <div>
@@ -37,14 +39,16 @@ const App = () => {
           <Route element={<UserLayout />}>
           <Route path="/Profile" element={<UserProfile />} />
           <Route path="/wallet" element={<WalletPage/>} />
-          
+          <Route path="/bookings" element={<Bookings />} />
           </Route>
-          <Route path="/confirmation" element={<ConfirmationPage/>} />
+          <Route path="/confirmation" element={<ConfirmationPage />} /> {/* For new reservations */}
+          <Route path="/confirmation/:reservationId" element={<ConfirmationPage/>} />
           <Route path="/book/:branchId" element={<BookingPage/>} />
+          <Route path="/success" element={<SuccessPage/>} />
           <Route path="/" element={<UserHomePage />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/login" element={<LoginForm />} />
-          
+         
        
           </Route> 
  
