@@ -95,4 +95,9 @@ export class ReservationService {
     const availableTables = (await Promise.all(availabilityPromises)).filter((table) => table !== null);
     return availableTables;
   }
+
+  async getUserReservations(userId:string){
+    const reservations=await this.reservationRepo.findByUserId(userId)
+    return reservations
+  }
 }

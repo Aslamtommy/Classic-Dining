@@ -25,7 +25,9 @@ export class ReservationController {
 
   async createReservation(req: Request, res: Response) {
     try {
-      const reservation = await this.reservationService.createReservation(req.body);
+      const userId=req.data?.id
+   const    reservationData={...req.body,userId}
+      const reservation = await this.reservationService.createReservation(reservationData);
       sendResponse(res, 201, 'Reservation created successfully', reservation);
     } catch (error: any) {
       console.error('Reservation creation error:', error.message, error.stack);
@@ -116,5 +118,22 @@ export class ReservationController {
       console.error('Payment order error:', error);
       sendError(res, 500, 'Failed to create payment order');
     }
+    
+  }
+
+ 
+async getUserReservations(req: Request, res: Response) {
+  try {
+    const userId = req.data?.id; // Get user ID from authenticated request
+    if (!userId) {
+      return sendError(res, 401, 'User not authenticated');
+    }
+    const reservations = await this.reservationService.getUserReservations(userId);
+    sendResponse(res, 200, 'Reservations fetched successfully', reservations);
+  } catch (error: any) {
+    console.error('Error fetching user reservations:', error.message, error.stack);
+    sendError(res, 500, error.message || 'Failed to fetch reservations');
   }
 }
+  }
+  

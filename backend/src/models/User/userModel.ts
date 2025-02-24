@@ -10,6 +10,7 @@ export interface IUser extends Document {
    isBlocked: boolean;
   google_id?: string;  
   profilePicture?: string;
+  walletBalance?: number;
 }
 
 const userSchema: Schema = new Schema(
@@ -22,6 +23,7 @@ const userSchema: Schema = new Schema(
     is_verified: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     profilePicture: { type: String },
+    walletBalance:{type:Number,default:0},
   },
   { timestamps: true },
 );

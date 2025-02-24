@@ -9,6 +9,7 @@ import blockedUserMiddleware from '../middlewares/blockedUserMiddleware';
 import { BranchRepository } from '../repositories/BranchRepository';
  
   import { ReservationController } from '../controllers/ReservationController';
+  import { WalletController } from '../controllers/WalletController';
 const userRoute: Router = express.Router();
 const branchRepository=new BranchRepository()
 const userRepository=new UserRepository()
@@ -17,7 +18,7 @@ const reservationController = new ReservationController()
 const userService=new UserService(userRepository,otpRepository,branchRepository)
 
 const userController = new Usercontroller(userService,branchRepository );
-
+const walletController=new WalletController()
  
 // Register user
 userRoute.post('/register', (req: Request, res: Response) => {
@@ -86,5 +87,10 @@ userRoute.put('/reservations/:id/fail', authenticateToken('user'), (req, res) =>
 userRoute.get('/available-tables', authenticateToken('user'), (req, res) => reservationController.getAvailableTables(req, res));
 userRoute.post('/payments/create-order', authenticateToken('user'), (req, res) => reservationController.createPaymentOrder(req, res));
 
+
+userRoute.get('/reservations',authenticateToken('user'),(req,res)=>reservationController.getUserReservations(req,res))
+
+userRoute.get('/wallet',authenticateToken('user'),(req,res)=>walletController.getWalletData(req,res))
+userRoute.post('/wallet/add',authenticateToken('user'),(req,res)=>walletController.addMoney(req,res))
 export default userRoute;
 

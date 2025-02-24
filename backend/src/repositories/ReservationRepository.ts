@@ -74,5 +74,13 @@ async findExpiredPendingReservations(timeoutMinutes: number):Promise<IReservatio
     createdAt:{$lt:timeoutDate},
   }).exec()
 }
-  
+
+ 
+async findByUserId(userId: string): Promise<IReservation[]> {
+  return Reservation.find({ userId })
+    .populate('branch', 'name') // Populate branch name
+    .populate('tableType', 'name capacity price') // Populate table details
+    .sort({ reservationDate: -1 }) // Sort by date, newest first
+    .exec();
+}
 }

@@ -11,6 +11,7 @@ export enum ReservationStatus {
 }
 
 export interface IReservation extends Document {
+  userId: Types.ObjectId;
   user: {
     name: string;
     email: string;
@@ -29,6 +30,8 @@ export interface IReservation extends Document {
 }
 
 const ReservationSchema: Schema = new Schema({
+
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   user: {
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -37,7 +40,7 @@ const ReservationSchema: Schema = new Schema({
   branch: { type: Schema.Types.ObjectId, ref: 'Branch', required: true },
   tableType: { type: Schema.Types.ObjectId, ref: 'TableType', required: true },
   reservationDate: { type: Date, required: true },
-  timeSlot: { type: String, required: true },
+  timeSlot: { type: String, required: true   },
   partySize: { type: Number, required: true },
   status: {
     type: String,
