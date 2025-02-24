@@ -2,12 +2,13 @@ import { ReservationRepository } from '../repositories/ReservationRepository';
 import { BranchRepository } from '../repositories/BranchRepository';
 import { TableTypeRepository } from '../repositories/TableRepository';
 import { ReservationStatus } from '../models/User/Reservation';
-
+import { WalletRepository } from '../repositories/WalletRepository';
 export class ReservationService {
   constructor(
     private reservationRepo: ReservationRepository,
     private branchRepo: BranchRepository,
-    private tableTypeRepo: TableTypeRepository
+    private tableTypeRepo: TableTypeRepository,
+    private walletRepo: WalletRepository
   ) {}
 
   async createReservation(reservationData: any) {
@@ -99,5 +100,34 @@ export class ReservationService {
   async getUserReservations(userId:string){
     const reservations=await this.reservationRepo.findByUserId(userId)
     return reservations
+  }
+
+
+  async confirmWithWallet(reservationId: string, userId: string): Promise<any> {
+    const reservation = await this.reservationRepo.findById(reservationId);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+    if (reservation.userId.toString() !== userId) {
+      throw new Error('Unauthorized');
+    }
+    if (reservation.status !== ReservationStatus.PENDING) {
+      throw new Error(`Reservation cannot be confirmed in current status: ${reservation.status}`);
+    }
+
+    // Extract tableType ID correctly whether populated or not
+    const tableTypeId = typeof reservation.tableType === 'object' && reservation.tableType !== null
+      ? reservation.tableType._id.toString()
+      : reservation.tableType 
+
+    const tableType = await this.tableTypeRepo.findById(tableTypeId);
+    if (!tableType) throw new Error('Table type not found');
+
+    const amount = tableType.price || 0;
+    await this.walletRepo.payWithWallet(userId, amount, reservationId);
+    return this.reservationRepo.update(reservationId, {
+      status: ReservationStatus.CONFIRMED,
+      paymentMethod: 'wallet',
+    });
   }
 }

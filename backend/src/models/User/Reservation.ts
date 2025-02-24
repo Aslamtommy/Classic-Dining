@@ -24,6 +24,7 @@ export interface IReservation extends Document {
   partySize: number;
   status:ReservationStatus
   paymentId?: string;
+  paymentMethod?: 'razorpay' | 'wallet';
   specialRequests?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +49,7 @@ const ReservationSchema: Schema = new Schema({
     default: ReservationStatus.PENDING,
   },
   paymentId: { type: String },
+  paymentMethod: { type: String, enum: ['razorpay', 'wallet'] },
   specialRequests: { type: String },
 }, { timestamps: true });
 
