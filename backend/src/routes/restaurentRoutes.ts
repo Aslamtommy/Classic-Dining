@@ -10,11 +10,12 @@ import { BranchService } from '../services/BranchService';
 import { BranchController } from '../controllers/BranchController'
 import { TableTypeController } from '../controllers/TableController';
 import { checkApproved } from '../middlewares/checkApproved';
+import { ReservationController } from '../controllers/ReservationController';
 
 const otpRepository=new OtpRepository()
 const branchRepository=new BranchRepository()
 const restaurentRepository=new  RestaurentRepository()
-
+const reservationController=new ReservationController()
 const branchService=new BranchService()
 const branchController=new BranchController()
 const restaurentService=new  RestaurentServices (restaurentRepository,otpRepository,branchService,branchRepository ) 
@@ -76,6 +77,9 @@ restaurentRoute.put('/tables/:tableTypeId/quantity',(req,res)=>tabletypeControll
  
 restaurentRoute.delete('/tables/:tableTypeId',(req,res)=>tabletypeController.deleteTableType(req,res))
 
+
+//Routes for branchside
+restaurentRoute.get('/branches/:branchId/reservations',authenticateToken('branch'),(req,res)=>reservationController.getBranchReservations(req,res))
  export default restaurentRoute
 
  

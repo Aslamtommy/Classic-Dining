@@ -10,14 +10,17 @@ import { BranchRepository } from '../repositories/BranchRepository';
  
   import { ReservationController } from '../controllers/ReservationController';
   import { WalletController } from '../controllers/WalletController';
+  import { CoupenService  } from '../services/CouponService';
+  import { CouponRepository } from '../repositories/CouponRepository';
 const userRoute: Router = express.Router();
 const branchRepository=new BranchRepository()
 const userRepository=new UserRepository()
 const otpRepository=new OtpRepository()
 const reservationController = new ReservationController()
+const couponRepository=new CouponRepository()
 const userService=new UserService(userRepository,otpRepository,branchRepository)
-
-const userController = new Usercontroller(userService,branchRepository );
+const coupenService=new CoupenService(couponRepository)
+const userController = new Usercontroller(userService,branchRepository,coupenService );
 const walletController=new WalletController()
  
 // Register user
@@ -97,5 +100,7 @@ userRoute.get('/wallet',authenticateToken('user'),(req,res)=>walletController.ge
 // userRoute.post('/wallet/add',authenticateToken('user'),(req,res)=>walletController.addMoney(req,res))
 userRoute.post('/wallet/create-order',authenticateToken('user'),(req,res)=>walletController.createAddMoneyOrder(req,res))
 userRoute.post('/wallet/confirm-add',authenticateToken('user'),(req,res)=>walletController.confirmAddMoney(req,res))
+
+userRoute.get('/coupons', authenticateToken('user'), (req, res) => userController.getAvailableCoupons(req, res))
 export default userRoute;
 

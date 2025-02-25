@@ -7,6 +7,7 @@ import { IUserService } from "../interfaces/user/UserServiceInterface";
 import { MessageConstants } from "../constants/MessageConstants";
 import { sendResponse, sendError } from "../utils/responseUtils"; // Import utility functions
 import { BranchRepository } from "../repositories/BranchRepository";
+import { CoupenService } from "../services/CouponService";
 declare global {
   namespace Express {
     export interface Request {
@@ -20,7 +21,7 @@ declare global {
 }
 
 export class Usercontroller {
-  constructor(private userService: IUserService,private branchRepository: BranchRepository) {}
+  constructor(private userService: IUserService,private branchRepository: BranchRepository,private couponService: CoupenService ) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
@@ -274,6 +275,15 @@ console.log('reqbody',req.body)
         return sendError(res, HttpStatus.NotFound, 'Branch not found');
       }
       sendResponse(res, HttpStatus.OK, 'Branch details fetched successfully', branch);
+    } catch (error: any) {
+      sendError(res, HttpStatus.InternalServerError, error.message);
+    }
+  }
+
+  async getAvailableCoupons(req: Request, res: Response): Promise<void> {
+    try {
+      const coupons = await this.couponService.getAvailableCoupons();
+      sendResponse(res, HttpStatus.OK, 'Available coupons retrieved successfully', coupons);
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, error.message);
     }

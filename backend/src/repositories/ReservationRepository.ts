@@ -84,4 +84,12 @@ async findByUserId(userId: string): Promise<IReservation[]> {
     .sort({ reservationDate: -1 }) // Sort by date, newest first
     .exec();
 }
+
+async findByBranchId(branchId:string):Promise<IReservation[]>{
+  return Reservation.find({branch:branchId})
+  .populate('userId','name email phone')
+  .populate('tableType','name capacity price')
+  .sort({reservationDate:-1})
+  .exec()
+}
 }

@@ -6,8 +6,9 @@ import AdminController from '../controllers/AdminController';
  import { AdminRepository } from '../repositories/AdminRepository';
 import { RestaurentRepository } from '../repositories/RestaurentRepository';
 import { UserRepository } from '../repositories/UserRepository';
-
-
+import { CoupenService } from '../services/CouponService';
+import { CouponController } from '../controllers/CouponController';
+import { CouponRepository } from '../repositories/CouponRepository';
 const adminRoute:Router=express.Router();
 
 const restaurentRepository=new RestaurentRepository()
@@ -15,7 +16,9 @@ const userRepository=new UserRepository()
 const adminRepository=new AdminRepository()
 const adminService=new AdminService(adminRepository,restaurentRepository,userRepository)
 const adminController=new AdminController(adminService)
- 
+const couponRepository = new CouponRepository();
+const couponService = new CoupenService(couponRepository);
+const couponController = new CouponController(couponService );
 adminRoute.post('/login',(req:Request,res:Response)=>{
     adminController.login(req,res)
 })
@@ -29,4 +32,10 @@ adminRoute.post('/block',(req,res)=>adminController.blockRestaurent(req,res))
 adminRoute.post('/block-user', (req, res) => adminController.blockUser(req, res));
 
 
+// New coupon routes
+adminRoute.post('/coupons', authenticateToken('admin'), (req, res) => couponController.createCoupon(req, res));
+adminRoute.get('/coupons', authenticateToken('admin'), (req, res) => couponController.getAllCoupons(req, res));
+adminRoute.get('/coupons/:id', authenticateToken('admin'), (req, res) => couponController.getCouponById(req, res));
+adminRoute.put('/coupons/:id', authenticateToken('admin'), (req, res) => couponController.updateCoupon(req, res));
+adminRoute.delete('/coupons/:id', authenticateToken('admin'), (req, res) => couponController.deleteCoupon(req, res));
 export default adminRoute

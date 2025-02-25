@@ -6,6 +6,7 @@ import { BranchRepository } from '../repositories/BranchRepository';
 import { TableTypeRepository } from '../repositories/TableRepository';
 import { sendResponse, sendError } from '../utils/responseUtils';
 import { WalletRepository } from '../repositories/WalletRepository';
+import { CouponRepository } from '../repositories/CouponRepository';
 import Razorpay from 'razorpay';
 
 const razorpay = new Razorpay({
@@ -21,7 +22,8 @@ export class ReservationController {
       new ReservationRepository(),
       new BranchRepository(),
       new TableTypeRepository(),
-      new WalletRepository()
+      new WalletRepository(),
+      new CouponRepository()
     );
   }
 
@@ -153,6 +155,17 @@ async confirmWithWallet(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Wallet payment error:', error.message, error.stack);
     sendError(res, 400, error.message || 'Failed to confirm with wallet');
+  }
+}
+
+async getBranchReservations(req:Request,res:Response){
+  try {
+    const {branchId}=req.params
+    const reservations=await this.reservationService. getBranchReservations(branchId)
+    sendResponse(res,200,'Branch reservations fetched successfully',reservations)
+  } catch (error:any) {
+    console.error('Error fetching branch reservations:', error.message, error.stack);
+    sendError(res,500,error.message || 'Failed to fetch branch reservations');
   }
 }
   }

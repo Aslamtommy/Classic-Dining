@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-
+import { ITableType } from '../Restaurent/TableModel';
 
 export enum ReservationStatus {
   PENDING = 'pending',
@@ -18,7 +18,7 @@ export interface IReservation extends Document {
     phone: string;
   };
   branch: Types.ObjectId;
-  tableType: Types.ObjectId;
+  tableType: Types.ObjectId | ITableType
   reservationDate: Date;
   timeSlot: string;
   partySize: number;
@@ -26,6 +26,9 @@ export interface IReservation extends Document {
   paymentId?: string;
   paymentMethod?: 'razorpay' | 'wallet';
   specialRequests?: string;
+  couponCode?: string;          
+  discountApplied?: number;    
+  finalAmount?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +54,9 @@ const ReservationSchema: Schema = new Schema({
   paymentId: { type: String },
   paymentMethod: { type: String, enum: ['razorpay', 'wallet'] },
   specialRequests: { type: String },
+  couponCode: { type: String },                
+  discountApplied: { type: Number, default: 0 }, 
+  finalAmount: { type: Number },
 }, { timestamps: true });
 
 export default mongoose.model<IReservation>('Reservation', ReservationSchema);
