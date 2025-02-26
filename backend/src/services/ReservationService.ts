@@ -210,9 +210,79 @@ export class ReservationService {
 
 
   //Branchside management
-  async getBranchReservations(branchId: string): Promise<IReservation[]> {
+  async getBranchReservations(branchId: string,page:number=1,limit:number=10,status?:ReservationStatus): Promise<{ reservations: IReservation[]; total: number }> {
  const branch=await this.branchRepo.findById(branchId)
      if (!branch) throw new Error('Branch not found');
-     return this.reservationRepo.findByBranchId(branchId)
+
+     const skip=(page-1)* limit
+ 
+     const [reservations,total]=await Promise.all([
+      this.reservationRepo.findByBranchIdWithPagination(branchId, skip, limit, status),
+      this.reservationRepo.countByBranchId(branchId, status),
+     ])
+     return { reservations, total };
   }
+
+ // New method for branch-side status update
+ async updateBranchReservationStatus(
+  reservationId: string,
+  status: 'completed' | 'cancelled', 
+  branchId: string
+): Promise<IReservation | null> {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const reservation = await this.reservationRepo.findById(reservationId);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+ 
+    if (reservation.branch._id.toString() !== branchId) {
+      throw new Error('You do not have permission to update this reservation');
+    }
+
+  
+    if (reservation.status !== ReservationStatus.CONFIRMED) {
+      throw new Error('Only confirmed reservations can be updated to completed or cancelled');
+    }
+
+     
+    let updatedReservation: IReservation | null = null;
+
+    // If cancelled, credit the wallet
+ 
+    if (status === 'cancelled') {
+      const tableType = typeof reservation.tableType === 'object' && reservation.tableType !== null
+        ? reservation.tableType
+        : await this.tableTypeRepo.findById(reservation.tableType);
+
+      if (!tableType) throw new Error('Table type not found');
+
+      const amount = reservation.finalAmount !== undefined
+        ? reservation.finalAmount
+        : (tableType as any).price || 0;
+
+      if (amount > 0) {
+        await this.walletRepo.updateWalletBalance(reservation.userId.toString(), amount);
+        await this.walletRepo.createTransaction({
+          userId: reservation.userId,
+          type: 'credit',
+          amount,
+          description: `Refund for cancelled reservation ${reservationId} by branch`,
+          date: new Date(),
+        });
+      }
+    }
+
+    updatedReservation = await this.reservationRepo.update(reservationId, { status });
+    await session.commitTransaction();
+    return updatedReservation;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+}
 }

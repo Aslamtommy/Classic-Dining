@@ -7,7 +7,8 @@ export enum ReservationStatus {
   PAYMENT_FAILED = 'payment_failed',
   CANCELLED = 'cancelled',
   PAYMENT_PENDING = 'payment_pending',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
+  COMPLETED = 'completed',
 }
 
 export interface IReservation extends Document {

@@ -80,7 +80,9 @@ restaurentRoute.delete('/tables/:tableTypeId',(req,res)=>tabletypeController.del
 
 //Routes for branchside
 restaurentRoute.get('/branches/:branchId/reservations',authenticateToken('branch'),(req,res)=>reservationController.getBranchReservations(req,res))
+restaurentRoute.put('/reservations/:reservationId/status',authenticateToken('branch'),(req,res)=>reservationController.updateBranchReservationStatus(req,res))
  export default restaurentRoute
 
+ 
  
  

@@ -7,6 +7,7 @@ import { TableTypeRepository } from '../repositories/TableRepository';
 import { sendResponse, sendError } from '../utils/responseUtils';
 import { WalletRepository } from '../repositories/WalletRepository';
 import { CouponRepository } from '../repositories/CouponRepository';
+import { ReservationStatus } from '../models/User/Reservation';
 import Razorpay from 'razorpay';
 
 const razorpay = new Razorpay({
@@ -158,15 +159,56 @@ async confirmWithWallet(req: Request, res: Response) {
   }
 }
 
-async getBranchReservations(req:Request,res:Response){
+ async getBranchReservations(req: Request, res: Response) {
   try {
-    const {branchId}=req.params
-    const reservations=await this.reservationService. getBranchReservations(branchId)
-    sendResponse(res,200,'Branch reservations fetched successfully',reservations)
-  } catch (error:any) {
+    const { branchId } = req.params;
+    const authenticatedBranchId = req.data?.id;
+    if (branchId !== authenticatedBranchId) {
+      return sendError(res, 403, 'You can only access your own branch reservations');
+    }
+
+    const { page = '1', limit = '10', status } = req.query;
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+
+    const result = await this.reservationService.getBranchReservations(
+      branchId,
+      pageNum,
+      limitNum,
+      status as ReservationStatus | undefined
+    );
+
+    sendResponse(res, 200, 'Branch reservations fetched successfully', {
+      reservations: result.reservations,
+      total: result.total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(result.total / limitNum),
+    });
+  } catch (error: any) {
     console.error('Error fetching branch reservations:', error.message, error.stack);
-    sendError(res,500,error.message || 'Failed to fetch branch reservations');
+    sendError(res, 500, error.message || 'Failed to fetch branch reservations');
   }
 }
-  }
+
+
+async updateBranchReservationStatus(req:Request,res:Response){
   
+  try {
+    const {reservationId}=req.params
+    const {status}=req.body
+    const branchId=req.data?.id
+
+    if(!branchId){
+      return sendError(res,401,'Unauthorized')
+    }
+    const reservation=await this.reservationService.updateBranchReservationStatus(
+      reservationId,status,branchId
+    )
+    sendResponse(res, 200, `Reservation updated to ${status} successfully`, reservation);
+  } catch (error:any) {
+    console.error('Error updating reservation status:', error.message, error.stack);
+    sendError(res, 500, error.message || 'Failed to update reservation status');
+  }
+}
+}

@@ -23,7 +23,7 @@ export class ReservationRepository {
     ).exec();
   }
 
-  async update(id: string, updateData: Partial<IReservation>): Promise<IReservation | null> {
+  async update(id: string, updateData: any): Promise<IReservation | null> {
     return Reservation.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
 
@@ -85,11 +85,26 @@ async findByUserId(userId: string): Promise<IReservation[]> {
     .exec();
 }
 
-async findByBranchId(branchId:string):Promise<IReservation[]>{
-  return Reservation.find({branch:branchId})
-  .populate('userId','name email phone')
-  .populate('tableType','name capacity price')
-  .sort({reservationDate:-1})
-  .exec()
+async findByBranchIdWithPagination(
+  branchId: string,
+  skip: number,
+  limit: number,
+  status?: ReservationStatus
+): Promise<IReservation[]> {
+  const query = { branch: branchId, ...(status && { status }) };
+  return Reservation.find(query)
+    .populate('userId', 'name email phone')
+    .populate('tableType', 'name capacity price')
+    .sort({ reservationDate: -1 })
+    .skip(skip)
+    .limit(limit)
+    .exec();
 }
+
+//method to count reservations by branch with optional status filter
+
+  async countByBranchId(branchId: string, status?: ReservationStatus): Promise<number> {
+    const query = { branch: branchId, ...(status && { status }) };
+    return Reservation.countDocuments(query);
+  }
 }
