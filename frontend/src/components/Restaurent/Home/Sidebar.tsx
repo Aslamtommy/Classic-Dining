@@ -11,24 +11,22 @@ const Sidebar = () => {
   const isBranch = restaurent?.role === "branch";
   const branchId = restaurent?._id; // Branch ID from Redux store
 
-  const menuItems = [
-    { name: "Dashboard", key: "dashboard", icon: <Home size={20} />, path: "/restaurent/dashboard" },
-    {
-      name: "Bookings",
-      key: "bookings",
-      icon: <Calendar size={20} />,
-      path: isBranch ? `/restaurent/branches/${branchId}/bookings` : "/restaurent/bookings",
-    },
-    // Restaurant-only items
-    ...(!isBranch
-      ? [
-          { name: "Add Branch", key: "addbranch", icon: <Tag size={20} />, path: "/restaurent/addbranch" },
-          { name: "Profile", key: "profile", icon: <User size={20} />, path: "/restaurent/profile" },
-          { name: "Branches", key: "branches", icon: <User size={20} />, path: "/restaurent/branches" },
-          { name: "Messages", key: "messages", icon: <Mail size={20} />, path: "/restaurent/messages" },
-        ]
-      : []),
+  // Restaurant-specific menu items
+  const restaurantMenuItems = [
+    { name: "Dashboard", key: "dashboard", icon: <Home size={24} />, path: "/restaurent/dashboard" },
+    { name: "Profile", key: "profile", icon: <User size={24} />, path: "/restaurent/profile" },
+    { name: "Add Branch", key: "addbranch", icon: <Tag size={24} />, path: "/restaurent/addbranch" },
+    { name: "Branches", key: "branches", icon: <User size={24} />, path: "/restaurent/branches" },
   ];
+
+  // Branch-specific menu items
+  const branchMenuItems = [
+    { name: "Dashboard", key: "dashboard", icon: <Home size={24} />, path: "/branches/dashboard" },
+    { name: "Bookings", key: "bookings", icon: <Calendar size={24} />, path: `/branches/${branchId}/bookings` },
+    { name: "Messages", key: "messages", icon: <Mail size={24} />, path: "/branches/messages" },
+  ];
+
+  const menuItems = isBranch ? branchMenuItems : restaurantMenuItems;
 
   const [activeSection, setActiveSection] = useState("dashboard");
   const navigate = useNavigate();
@@ -50,31 +48,40 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-72 h-screen bg-white border-r shadow-md flex flex-col justify-between">
-      <div className="p-6 border-b">
-        <h1 className="text-xl font-bold tracking-wide">Classic Dining</h1>
+    <aside className="w-72 h-screen bg-white border-r border-[#e8e2d9] shadow-md flex flex-col justify-between">
+      {/* Header */}
+      <div className="p-6 border-b border-[#e8e2d9]">
+        <h1 className="text-2xl font-serif font-semibold text-[#2c2420] tracking-tight">
+          Classic Dining
+        </h1>
       </div>
-      <nav className="flex-1 p-4">
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => (
           <button
             key={item.key}
             onClick={() => handleNavigation(item.path, item.key)}
-            className={`flex items-center gap-3 w-full p-3 rounded-lg transition text-gray-700 font-medium ${
-              activeSection === item.key ? "bg-orange-600 text-white" : "hover:bg-gray-200"
+            className={`flex items-center gap-4 w-full p-3 rounded-lg transition-all duration-300 text-[#8b5d3b] hover:bg-[#f4ede8] ${
+              activeSection === item.key
+                ? "bg-[#d4a373] text-white hover:bg-[#d4a373]"
+                : "hover:text-[#2c2420]"
             }`}
           >
             {item.icon}
-            {item.name}
+            <span className="text-sm font-medium">{item.name}</span>
           </button>
         ))}
       </nav>
-      <div className="p-4 border-t">
+
+      {/* Logout */}
+      <div className="p-4 border-t border-[#e8e2d9]">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full p-3 text-red-600 hover:bg-gray-100 rounded-lg transition"
+          className="flex items-center gap-4 w-full p-3 text-[#e63946] hover:bg-[#f4ede8] hover:text-[#f17c85] rounded-lg transition-all duration-300"
         >
-          <LogOut size={20} />
-          Logout
+          <LogOut size={24} />
+          <span className="text-sm font-medium">Logout</span>
         </button>
       </div>
     </aside>

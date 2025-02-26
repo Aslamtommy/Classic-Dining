@@ -107,4 +107,32 @@ async findByBranchIdWithPagination(
     const query = { branch: branchId, ...(status && { status }) };
     return Reservation.countDocuments(query);
   }
+
+
+
+  async findByUserIdWithPagination(
+    userId: string,
+    skip: number,
+    limit: number,
+    status?: ReservationStatus
+  ): Promise<IReservation[]> {
+    const query: any = { userId };
+    if (status) {
+      query.status = status;
+    }
+    return Reservation.find(query)
+      .populate('branch')
+      .populate('tableType')
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  }
+
+  async countByUserId(userId: string, status?: ReservationStatus): Promise<number> {
+    const query: any = { userId };
+    if (status) {
+      query.status = status;
+    }
+    return Reservation.countDocuments(query).exec();
+  }
 }

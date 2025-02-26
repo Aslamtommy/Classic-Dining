@@ -4,23 +4,26 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useEffect } from "react";
 
-const RestaurentProtected: React.FC = () => {
+const BranchProtected: React.FC = () => {
   const { restaurent } = useSelector((state: RootState) => state.restaurent);
   const navigate = useNavigate();
 
-  const isRestaurant = restaurent?.role === "restaurent";
+  // Check if the user is a branch
+  const isBranch = restaurent?.role === "branch";
 
   useEffect(() => {
-    if (!restaurent) return; // Skip if already logged out
-    if (!isRestaurant) {
+     if (!restaurent) return; 
+    if (!isBranch) {
       toast.error("You don't have permission to access this page.", {
  
       });
-      navigate(-1 as any, { replace: true });
+      // Redirect to the previous page
+      navigate(-1 as any, { replace: true });  
     }
-  }, [isRestaurant, navigate, restaurent]);
+  }, [isBranch, navigate]);
 
-  return isRestaurant ? <Outlet /> : null;
+ 
+  return isBranch ? <Outlet /> : null;
 };
 
-export default RestaurentProtected;
+export default BranchProtected;

@@ -131,20 +131,35 @@ export class ReservationController {
   }
 
  
-async getUserReservations(req: Request, res: Response) {
-  try {
-    const userId = req.data?.id; // Get user ID from authenticated request
-    if (!userId) {
-      return sendError(res, 401, 'User not authenticated');
+  async getUserReservations(req: Request, res: Response) {
+    try {
+      const userId = req.data?.id; // From auth middleware
+      if (!userId) {
+        return sendError(res, 401, 'User not authenticated');
+      }
+      const { page = '1', limit = '10', status } = req.query;
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+  
+      const result = await this.reservationService.getUserReservationsWithPagination(
+        userId,
+        pageNum,
+        limitNum,
+        status as ReservationStatus | undefined
+      );
+  
+      sendResponse(res, 200, 'Reservations fetched successfully', {
+        reservations: result.reservations,
+        total: result.total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(result.total / limitNum),
+      });
+    } catch (error: any) {
+      console.error('Error fetching user reservations:', error.message, error.stack);
+      sendError(res, 500, error.message || 'Failed to fetch reservations');
     }
-    const reservations = await this.reservationService.getUserReservations(userId);
-    sendResponse(res, 200, 'Reservations fetched successfully', reservations);
-  } catch (error: any) {
-    console.error('Error fetching user reservations:', error.message, error.stack);
-    sendError(res, 500, error.message || 'Failed to fetch reservations');
   }
-}
-
 async confirmWithWallet(req: Request, res: Response) {
   try {
     const userId = req.data?.id; // Assuming req.data.id comes from auth middleware

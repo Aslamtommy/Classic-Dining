@@ -1,4 +1,3 @@
-// src/components/BookingsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserReservations, cancelReservation } from '../../Api/userApi';
@@ -7,21 +6,25 @@ import { motion } from 'framer-motion';
 
 interface Reservation {
   _id: string;
-  branch: { name: string };
-  tableType: { name: string; price: number };
+  branch: { name: string } | null;
+  tableType: { name: string; price: number } | null;
   reservationDate: string;
   timeSlot: string;
   partySize: number;
   status: string;
   paymentId?: string;
-  couponCode?: string;  
-  discountApplied?: number; 
+  couponCode?: string;
+  discountApplied?: number;
   finalAmount?: number;
 }
 
 const Bookings: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(10); // Fixed limit, can be made configurable
+  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -29,8 +32,9 @@ const Bookings: React.FC = () => {
     const loadReservations = async () => {
       try {
         setLoading(true);
-        const data = await fetchUserReservations();
-        setReservations(data);
+        const data = await fetchUserReservations(page, limit, status);
+        setReservations(data.reservations);
+        setTotal(data.total);
       } catch (error: any) {
         setError(error.message);
         toast.error(error.message, { duration: 4000, position: 'top-center' });
@@ -39,22 +43,20 @@ const Bookings: React.FC = () => {
       }
     };
     loadReservations();
-  }, []);
+  }, [page, status]);
 
   const handlePayNow = (reservationId: string) => {
     navigate(`/confirmation/${reservationId}`);
   };
-  
 
   const handleCancel = async (reservationId: string) => {
     if (window.confirm('Are you sure you want to cancel this reservation?')) {
       try {
         await cancelReservation(reservationId);
-        setReservations((prev) =>
-          prev.map((res) =>
-            res._id === reservationId ? { ...res, status: 'cancelled' } : res
-          )
-        );
+        // Refetch current page to reflect changes
+        const data = await fetchUserReservations(page, limit, status);
+        setReservations(data.reservations);
+        setTotal(data.total);
         toast.success('Reservation cancelled successfully', {
           duration: 4000,
           position: 'top-center',
@@ -94,8 +96,35 @@ const Bookings: React.FC = () => {
           Your Reservations
         </motion.h1>
 
+        {/* Status Filter Dropdown */}
+        <div className="mb-4">
+          <label htmlFor="status-filter" className="mr-2 text-[#2c2420]">
+            Filter by Status:
+          </label>
+          <select
+            id="status-filter"
+            value={status || 'all'}
+            onChange={(e) => {
+              const newStatus = e.target.value === 'all' ? undefined : e.target.value;
+              setStatus(newStatus);
+              setPage(1); // Reset to page 1 when status changes
+            }}
+            className="p-2 border rounded text-[#8b5d3b]"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="payment_failed">Payment Failed</option>
+            {/* Add more statuses if defined in ReservationStatus */}
+          </select>
+        </div>
+
+        {/* Reservations List */}
         {reservations.length === 0 ? (
-          <p className="text-[#8b5d3b] text-center">No reservations found.</p>
+          <p className="text-[#8b5d3b] text-center">
+            No reservations found for the selected status.
+          </p>
         ) : (
           <div className="space-y-4">
             {reservations.map((res) => (
@@ -107,28 +136,39 @@ const Bookings: React.FC = () => {
                 transition={{ duration: 0.6 }}
               >
                 <div>
-                  <h2 className="text-lg font-semibold text-[#2c2420]">{res.branch.name}</h2>
+                  <h2 className="text-lg font-semibold text-[#2c2420]">
+                    {res.branch?.name || 'Branch Name Not Available'}
+                  </h2>
                   <p className="text-[#8b5d3b] text-sm">
                     {new Date(res.reservationDate).toLocaleDateString()} at {res.timeSlot}
                   </p>
-                  <p className="text-[#8b5d3b] text-sm">Table: {res.tableType.name}</p>
+                  <p className="text-[#8b5d3b] text-sm">
+                    Table: {res.tableType?.name || 'Table Type Not Available'}
+                  </p>
                   <p className="text-[#8b5d3b] text-sm">Party Size: {res.partySize}</p>
                   <div>
                     {res.couponCode ? (
                       <>
                         <p className="text-[#2c2420]/80 text-base">
-                          Original Price: <span className="text-[#8b5d3b] font-medium">₹{res.tableType.price}</span>
+                          Original Price:{' '}
+                          <span className="text-[#8b5d3b] font-medium">
+                            ₹{res.tableType?.price || 'N/A'}
+                          </span>
                         </p>
                         <p className="text-[#2c2420]/80 text-base">
-                          Coupon: <span className="text-[#8b5d3b] font-medium">{res.couponCode}</span> (-₹{res.discountApplied})
+                          Coupon:{' '}
+                          <span className="text-[#8b5d3b] font-medium">{res.couponCode}</span> (-₹
+                          {res.discountApplied})
                         </p>
                         <p className="text-[#2c2420] text-lg font-bold">
-                          Final Amount: <span className="text-[#8b5d3b]">₹{res.finalAmount}</span>
+                          Final Amount:{' '}
+                          <span className="text-[#8b5d3b]">₹{res.finalAmount || 'N/A'}</span>
                         </p>
                       </>
                     ) : (
                       <p className="text-[#2c2420] text-lg font-bold">
-                        Price: <span className="text-[#8b5d3b]">₹{res.tableType.price}</span>
+                        Price:{' '}
+                        <span className="text-[#8b5d3b]">₹{res.tableType?.price || 'N/A'}</span>
                       </p>
                     )}
                   </div>
@@ -164,6 +204,29 @@ const Bookings: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {reservations.length > 0 && (
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-[#2c2420]">
+              Page {page} of {Math.ceil(total / limit)}
+            </span>
+            <button
+              onClick={() => setPage((prev) => (total > page * limit ? prev + 1 : prev))}
+              disabled={page * limit >= total}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

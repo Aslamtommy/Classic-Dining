@@ -1,17 +1,6 @@
 import api from "../Axios/userInstance";
 
-// export const fetchBranches = async () => {
-//   try {
-//     const response:any = await api.get("/branches");
-//     if (!response.data.success) {
-//       throw new Error(response.data.message || 'Failed to fetch branches');
-//     }
-//     return response.data 
-//   } catch (error: any) {
-//     throw new Error(error.response?.data?.message || error.message || 'Failed to fetch branches');
-//   }
-// };
-
+ 
  
 
 export const fetchBranchDetails = async (branchId: string) => {
@@ -77,15 +66,25 @@ export const failReservation = async (reservationId: string, paymentId: string) 
 };
 
 // Fetch all user reservations
-export const fetchUserReservations = async () => {
+export const fetchUserReservations = async (
+  page: number = 1,
+  limit: number = 10,
+  status?: string
+) => {
   try {
-    const response:any = await api.get('/reservations');
-    return response.data.data; // Assuming response structure: { success, message, data }
+    const params: any = { page, limit };
+    if (status) {
+      params.status = status;
+    }
+    const response: any = await api.get('/reservations', { params });
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch reservations');
+    }
+    return response.data.data; // Returns { reservations, total, page, limit, totalPages }
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Failed to fetch reservations');
   }
 };
-
 // Fetch a single reservation by ID
 export const fetchReservation = async (reservationId: string) => {
   try {

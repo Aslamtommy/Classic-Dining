@@ -175,10 +175,20 @@ export class ReservationService {
     return availableTables;
   }
 
-  async getUserReservations(userId: string) {
-    const reservations = await this.reservationRepo.findByUserId(userId);
-    return reservations;
-  }
+// services/ReservationService.ts
+async getUserReservationsWithPagination(
+  userId: string,
+  page: number = 1,
+  limit: number = 10,
+  status?: ReservationStatus
+): Promise<{ reservations: IReservation[]; total: number }> {
+  const skip = (page - 1) * limit;
+  const [reservations, total] = await Promise.all([
+    this.reservationRepo.findByUserIdWithPagination(userId, skip, limit, status),
+    this.reservationRepo.countByUserId(userId, status),
+  ]);
+  return { reservations, total };
+}
 
   async confirmWithWallet(reservationId: string, userId: string): Promise<any> {
     const reservation = await this.reservationRepo.findById(reservationId);
