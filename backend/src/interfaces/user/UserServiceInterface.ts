@@ -36,15 +36,18 @@ export interface IUserService {
     id: string;
     name: string;
     email: string;
-    mobile_no: string;
+    mobile: string;
     profilePicture: string;
   } | null>;
  
     uploadProfilePicture(userId: string, filePath: string): Promise<{ success: boolean; message: string; profilePicture?: string }>;
  
     updateUserProfile( userId: string,
-      updateData: { name: string; email: string; mobile_no: string }
+      updateData: { name: string; email: string; mobile: string }
     ): Promise<any>;
 
-    getBranchDetails(branchId: string):any
+    getBranchDetails(branchId: string):any;
+
+    
+    getAllBranches(search: string , page: number  , limit: number ):any
 }

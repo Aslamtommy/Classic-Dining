@@ -53,4 +53,42 @@ export class BranchRepository {
           .populate('tableTypes')
           .exec();
       }
+
+     // method to search branches with filtering
+ 
+ 
+  async searchBranches(query: string, skip: number = 0, limit: number = 10): Promise<IBranch[]> {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      return BranchModel.find()
+        .skip(skip)
+        .limit(limit)
+        .lean(); // Return all branches if no search term
+    }
+    const searchRegex = new RegExp(trimmedQuery, 'i');
+    return BranchModel.find({
+      $or: [
+        { name: searchRegex },
+        { email: searchRegex },
+      ],
+    })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Simple search on branch name and email
+  }
+
+  async countBranches(query: string): Promise<number> {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      return BranchModel.countDocuments(); // Count all branches if no search term
+    }
+    const searchRegex = new RegExp(trimmedQuery, 'i');
+    return BranchModel.countDocuments({
+      $or: [
+        { name: searchRegex },
+        { email: searchRegex },
+      ],
+    });
+  }
+
 }

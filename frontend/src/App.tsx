@@ -27,9 +27,12 @@ import WalletPage from './components/User/Wallet';
   import UserLayout from './components/User/Home/UserLayout';
   import ConfirmationPage from './components/User/ConfirmationPage';
   
-import BookingPage from './components/User/BookingPage';
+import BookingPage from './components/User/Booking/BookingPage';
 import Bookings from './components/User/Bookings';
 import SuccessPage from './components/User/SuccessPage';
+import CouponManagement from './components/Admin/CouponManagement';
+import BranchBookings from './components/BranchManagement/BranchBookings';
+ import RestaurantListPage from './components/User/RestaurantListPage';
 const App = () => {
   return (
     <div>
@@ -44,6 +47,7 @@ const App = () => {
           <Route path="/confirmation" element={<ConfirmationPage />} /> {/* For new reservations */}
           <Route path="/confirmation/:reservationId" element={<ConfirmationPage/>} />
           <Route path="/book/:branchId" element={<BookingPage/>} />
+          <Route path='RestaurentList' element={<RestaurantListPage/>} />
           <Route path="/success" element={<SuccessPage/>} />
           <Route path="/" element={<UserHomePage />} />
           <Route path="/signup" element={<SignupForm />} />
@@ -65,6 +69,7 @@ const App = () => {
           <Route path='/restaurent/addbranch' element={<AddBranch/>}/>
           <Route path='/restaurent/branches' element={<Branches/>}/>
           <Route path='/restaurent/branches/:branchId' element={<BranchDetails/>}/>
+          <Route path='/restaurent/branches/:branchId/bookings' element={<BranchBookings/>}/>
           <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
        
           </Route>
@@ -79,6 +84,7 @@ const App = () => {
           <Route path="/admin/approvals" element={<ApproveRestaurents/>} />
           <Route path="/admin/restaurents" element={<RestaurentList />} />
           <Route path="/admin/users" element={<UserList />} />
+          <Route path="/admin/coupons" element={<CouponManagement/>}/>
           </Route>  
           </Route>
           </Route>

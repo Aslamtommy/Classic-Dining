@@ -38,7 +38,7 @@ export class Usercontroller {
           id: newUser._id,
           name: newUser.name,
           email: newUser.email,
-          mobile_no: newUser.mobile_no,
+          mobile_no: newUser.mobile,
         },
       };
       sendResponse(res, HttpStatus.Created, MessageConstants.USER_REGISTER_SUCCESS, responseData);
@@ -59,7 +59,7 @@ export class Usercontroller {
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
   
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
-        user: { id: user._id, name: user.name, email: user.email ,mobile:user.mobile_no}
+        user: { id: user._id, name: user.name, email: user.email ,mobile:user.mobile}
       });
     } catch (error: any) {
       switch (error.message) {
@@ -233,7 +233,7 @@ export class Usercontroller {
         return;
       }
 
-      const { name, email, mobile_no } = req.body;
+      const { name, email, mobile} = req.body;
 console.log('reqbody',req.body)
       // Validate required fields
       
@@ -244,7 +244,7 @@ console.log('reqbody',req.body)
       const updatedUser = await this.userService.updateUserProfile(userId, {
         name,
         email,
-        mobile_no,
+        mobile,
       });
 
       if (!updatedUser) {
@@ -257,12 +257,16 @@ console.log('reqbody',req.body)
       sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
     }
   }
+  
   async getAllBranches(req: Request, res: Response): Promise<void> {
     try {
-      const branches = await this.branchRepository.findAll();
-      sendResponse(res, HttpStatus.OK, "Branches fetched successfully", branches);
+      const search = req.query.search as string || '';
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10; // Accept limit from frontend
+      const result = await this.userService.getAllBranches(search, page, limit);
+      sendResponse(res, HttpStatus.OK, "Branches fetched successfully", result);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, error.message);
+      sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches", error.message);
     }
   }
 
@@ -288,5 +292,8 @@ console.log('reqbody',req.body)
       sendError(res, HttpStatus.InternalServerError, error.message);
     }
   }
+
+
+  
 
 }

@@ -97,8 +97,7 @@ userRoute.post('/reservations/:id/confirm-wallet',authenticateToken('user'),(req
 userRoute.get('/reservations',authenticateToken('user'),(req,res)=>reservationController.getUserReservations(req,res))
 
 userRoute.get('/wallet',authenticateToken('user'),(req,res)=>walletController.getWalletData(req,res))
-// userRoute.post('/wallet/add',authenticateToken('user'),(req,res)=>walletController.addMoney(req,res))
-userRoute.post('/wallet/create-order',authenticateToken('user'),(req,res)=>walletController.createAddMoneyOrder(req,res))
+ userRoute.post('/wallet/create-order',authenticateToken('user'),(req,res)=>walletController.createAddMoneyOrder(req,res))
 userRoute.post('/wallet/confirm-add',authenticateToken('user'),(req,res)=>walletController.confirmAddMoney(req,res))
 
 userRoute.get('/coupons', authenticateToken('user'), (req, res) => userController.getAvailableCoupons(req, res))

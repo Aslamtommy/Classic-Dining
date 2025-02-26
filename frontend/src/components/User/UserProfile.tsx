@@ -29,7 +29,7 @@ const UserProfile: React.FC = () => {
     if (profile) {
       setEditedName(profile.name);
       setEditedEmail(profile.email);
-      setEditedMobile(profile.mobile_no);
+      setEditedMobile(profile.mobile);
     }
   }, [profile]);
 
@@ -61,7 +61,7 @@ const UserProfile: React.FC = () => {
       const updatedData = {
         name: editedName,
         email: editedEmail,
-        mobile_no: editedMobile,
+        mobile: editedMobile,
       };
 
       const response: any = await api.put('/updateProfile', updatedData);
@@ -254,7 +254,7 @@ const UserProfile: React.FC = () => {
                         setIsEditing(false);
                         setEditedName(profile.name);
                         setEditedEmail(profile.email);
-                        setEditedMobile(profile.mobile_no);
+                        setEditedMobile(profile.mobile);
                       }}
                       className="bg-[#e8e2d9] text-[#2c2420] px-6 py-2 rounded-full hover:bg-[#d4ccc2] transition-colors"
                     >

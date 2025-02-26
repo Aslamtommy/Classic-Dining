@@ -113,7 +113,7 @@ export class UserService implements IUserService {
     const newUser = await this.userRepository.create({
       email: userData.email,
       name: userData.name || 'Unknown',
-      mobile_no: '',
+      mobile: '',
       google_id: userData.uid,
       is_verified: true,
     });
@@ -196,7 +196,7 @@ export class UserService implements IUserService {
     id: string;
     name: string;
     email: string;
-    mobile_no: string;
+    mobile: string;
     profilePicture: string;
   } | null> {
     console.log("UserService: Fetching profile for userId:", userId);
@@ -211,7 +211,7 @@ export class UserService implements IUserService {
       id: user._id.toString(),
       name: user.name ?? "Unknown",
       email: user.email ?? "No Email",
-      mobile_no: user.mobile_no ?? "No Mobile",
+      mobile: user.mobile ?? "No Mobile",
       profilePicture: user.profilePicture ?? "",
     };
   }
@@ -278,7 +278,7 @@ export class UserService implements IUserService {
 
   public async updateUserProfile(
     userId: string,
-    updateData: { name: string; email: string; mobile_no: string }
+    updateData: { name: string; email: string; mobile: string }
   ): Promise<any> {
     const updatedUser = await this.userRepository.update(userId, updateData);
     if (!updatedUser) return null;
@@ -298,5 +298,17 @@ export class UserService implements IUserService {
       throw new Error('Branch not found');
     }
     return branch;
+  }
+
+  async getAllBranches(search: string = '', page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const branches = await this.branchRepository.searchBranches(search, skip, limit); // Simplified to use searchBranches
+    const total = await this.branchRepository.countBranches(search); // Simplified count
+    return {
+      branches,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
   }
 }

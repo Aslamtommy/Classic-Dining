@@ -20,6 +20,9 @@ interface ReservationDetails {
   price: number;
   specialRequests?: string;
   status?: string;
+  couponCode?: string;
+  discountApplied?: number;
+  finalAmount?: number;
 }
 
 interface PaymentResponse {
@@ -69,6 +72,9 @@ const ConfirmationPage: React.FC = () => {
             price: data.tableType.price,
             specialRequests: data.specialRequests,
             status: data.status,
+            couponCode: data.couponCode,
+            discountApplied: data.discountApplied,
+            finalAmount: data.finalAmount,
           });
         } else if (location.state?.reservation) {
           setReservation(location.state.reservation);
@@ -76,7 +82,7 @@ const ConfirmationPage: React.FC = () => {
           navigate('/');
         }
       } catch (error: any) {
-        toast.error(error.message, { duration: 4000, position: 'top-center' });
+        toast.error(error.message || 'Failed to load reservation details', { duration: 4000, position: 'top-center' });
         navigate('/booking');
       } finally {
         setLoading(false);
@@ -93,14 +99,14 @@ const ConfirmationPage: React.FC = () => {
           const walletData = await fetchWalletData();
           setWalletBalance(walletData.balance);
         } catch (error: any) {
-          toast.error(error.message, { duration: 4000, position: 'top-center' });
+          toast.error(error.message || 'Failed to load wallet balance', { duration: 4000, position: 'top-center' });
         }
       };
       loadWalletData();
     }
   }, [reservation]);
 
-  // Handle Razorpay payment (renamed from handlePayment)
+  // Handle Razorpay payment
   const handleRazorpayPayment = async () => {
     if (!reservation || isProcessing || reservation.status === 'confirmed') return;
 
@@ -116,8 +122,9 @@ const ConfirmationPage: React.FC = () => {
         script.onload = () => resolve();
       });
 
+      const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.price;
       const response = await api.post<PaymentResponse>('/payments/create-order', {
-        amount: reservation.price * 100,
+        amount: paymentAmount * 100, // Convert to paise
         currency: 'INR',
       });
 
@@ -142,7 +149,7 @@ const ConfirmationPage: React.FC = () => {
             navigate('/success', {
               state: {
                 paymentId: response.razorpay_payment_id,
-                amount: reservation.price,
+                amount: paymentAmount,
                 paymentMethod: 'razorpay',
               },
             });
@@ -166,7 +173,7 @@ const ConfirmationPage: React.FC = () => {
               });
               navigate('/booking');
             } catch (error: any) {
-              toast.error(error.message, { duration: 4000, position: 'top-center' });
+              toast.error(error.message || 'Failed to update reservation status', { duration: 4000, position: 'top-center' });
             } finally {
               setIsProcessing(false);
             }
@@ -195,7 +202,7 @@ const ConfirmationPage: React.FC = () => {
           });
           navigate('/booking');
         } catch (error: any) {
-          toast.error(error.message, { duration: 4000, position: 'top-center' });
+          toast.error(error.message || 'Failed to update reservation status', { duration: 4000, position: 'top-center' });
         } finally {
           setIsProcessing(false);
         }
@@ -218,6 +225,7 @@ const ConfirmationPage: React.FC = () => {
     setIsProcessing(true);
 
     try {
+      const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.price;
       await api.post(`/reservations/${reservation.reservationId}/confirm-wallet`);
       setPaymentSuccess(true);
       toast.success('Payment successful! Reservation confirmed.', {
@@ -227,7 +235,7 @@ const ConfirmationPage: React.FC = () => {
       navigate('/success', {
         state: {
           paymentMethod: 'wallet',
-          amount: reservation.price,
+          amount: paymentAmount,
         },
       });
     } catch (error: any) {
@@ -247,6 +255,8 @@ const ConfirmationPage: React.FC = () => {
       </div>
     );
   }
+
+  const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.price;
 
   return (
     <div className="bg-[#faf7f2] min-h-screen pt-16">
@@ -294,8 +304,22 @@ const ConfirmationPage: React.FC = () => {
                 <p className="text-[#8b5d3b]">{reservation.specialRequests || 'No special requests'}</p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-[#2c2420]">Total Amount</h3>
-                <p className="text-2xl text-[#8b5d3b] font-bold">₹{reservation.price}</p>
+                <h3 className="text-lg font-semibold text-[#2c2420]">Payment Details</h3>
+                {reservation.couponCode ? (
+                  <>
+                    <p className="text-[#8b5d3b] text-sm">
+                      Original Price: ₹{reservation.price}
+                    </p>
+                    <p className="text-[#8b5d3b] text-sm">
+                      Coupon Applied: {reservation.couponCode} (-₹{reservation.discountApplied})
+                    </p>
+                    <p className="text-2xl text-[#8b5d3b] font-bold">
+                      Final Amount: ₹{paymentAmount}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-2xl text-[#8b5d3b] font-bold">₹{paymentAmount}</p>
+                )}
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Wallet Balance</h3>
@@ -311,16 +335,16 @@ const ConfirmationPage: React.FC = () => {
             <div className="mt-6 space-y-4">
               <button
                 onClick={handleWalletPayment}
-                disabled={isProcessing || walletBalance === null || walletBalance < reservation.price}
+                disabled={isProcessing || walletBalance === null || walletBalance < paymentAmount}
                 className={`w-full px-6 py-3 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-opacity text-lg font-medium ${
-                  isProcessing || walletBalance === null || walletBalance < reservation.price
+                  isProcessing || walletBalance === null || walletBalance < paymentAmount
                     ? 'opacity-50 cursor-not-allowed'
                     : ''
                 }`}
               >
                 {isProcessing ? 'Processing...' : 'Pay with Wallet'}
               </button>
-              {walletBalance !== null && walletBalance < reservation.price && (
+              {walletBalance !== null && walletBalance < paymentAmount && (
                 <p className="text-red-600 text-sm">
                   Insufficient wallet balance. Please add money or use another payment method.
                 </p>

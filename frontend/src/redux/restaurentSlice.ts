@@ -6,8 +6,8 @@ interface Restaurent {
   email: string;
   phone?: string;
   certificate?: string;
-  role?: "restaurent" | "branch"; // Add role field
-  parentRestaurantId?: string; // For branches
+  role?: "restaurent" | "branch";  
+  parentRestaurantId?: string;  
 }
 
 interface RestaurentState {

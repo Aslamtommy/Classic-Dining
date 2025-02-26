@@ -14,6 +14,9 @@ interface Reservation {
   partySize: number;
   status: string;
   paymentId?: string;
+  couponCode?: string;  
+  discountApplied?: number; 
+  finalAmount?: number;
 }
 
 const Bookings: React.FC = () => {
@@ -110,7 +113,25 @@ const Bookings: React.FC = () => {
                   </p>
                   <p className="text-[#8b5d3b] text-sm">Table: {res.tableType.name}</p>
                   <p className="text-[#8b5d3b] text-sm">Party Size: {res.partySize}</p>
-                  <p className="text-[#8b5d3b] text-sm">Price: ₹{res.tableType.price}</p>
+                  <div>
+                    {res.couponCode ? (
+                      <>
+                        <p className="text-[#2c2420]/80 text-base">
+                          Original Price: <span className="text-[#8b5d3b] font-medium">₹{res.tableType.price}</span>
+                        </p>
+                        <p className="text-[#2c2420]/80 text-base">
+                          Coupon: <span className="text-[#8b5d3b] font-medium">{res.couponCode}</span> (-₹{res.discountApplied})
+                        </p>
+                        <p className="text-[#2c2420] text-lg font-bold">
+                          Final Amount: <span className="text-[#8b5d3b]">₹{res.finalAmount}</span>
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-[#2c2420] text-lg font-bold">
+                        Price: <span className="text-[#8b5d3b]">₹{res.tableType.price}</span>
+                      </p>
+                    )}
+                  </div>
                   <p
                     className={`text-sm font-medium ${
                       res.status === 'confirmed'

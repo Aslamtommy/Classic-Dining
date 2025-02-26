@@ -61,15 +61,7 @@ export class BranchService {
         const branch = await this.branchRepository.findById(branchId);
         if (!branch) throw new Error("Branch not found");
     
-        if (branch.image) {
-          const oldPublicId = branch.image.split('/upload/')[1]?.split('/').slice(1).join('/').replace(/\.[^/.]+$/, '');
-          console.log('old',oldPublicId)
-          if (oldPublicId) {
-            const decodedPublicId = decodeURIComponent(oldPublicId);
-            await CloudinaryService.deleteFile(decodedPublicId);
-          }
-   
-        }
+        
     
         return await CloudinaryService.uploadFile(file.path, "branch_images", `branch_${branch.email}`);
       }
@@ -88,16 +80,7 @@ export class BranchService {
         const branch = await this.branchRepository.findById(branchId);
         if (!branch) throw new Error("Branch not found");
       
-        if (branch.image) {
-            const publicId = branch.image.split('/upload/')[1]?.split('/').slice(1).join('/').replace(/\.[^/.]+$/, '');
-            if (!publicId) {
-              throw new Error('Failed to extract public ID');
-            }
-            const decodedPublicId = decodeURIComponent(publicId);
-
-            console.log('Final decoded public ID:', decodedPublicId); // Debugging
-            await CloudinaryService.deleteFile(decodedPublicId);
-        }
+        
       
         // Remove the branch from the parent restaurant
         await this.restaurentRepository.removeBranchFromRestaurant(

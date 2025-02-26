@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TableManagement from "../Restaurent/TableManagement";
 import restaurentApi from "../../Axios/restaurentInstance";
@@ -8,8 +8,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmationDialog from "../CommonComponents/ConfirmationDialog";
 
-const BranchDetails = () => {
-  const { branchId } = useParams();
+const BranchDetails: React.FC = () => {
+  const { branchId } = useParams<{ branchId: string }>();
   const [branch, setBranch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -17,20 +17,22 @@ const BranchDetails = () => {
 
   useEffect(() => {
     const fetchBranchDetails = async () => {
+      if (!branchId) {
+        toast.error("Branch ID is missing");
+        return;
+      }
+      setLoading(true);
       try {
-        const response: any = await restaurentApi.get(`/branches/${branchId}`);
+        const response:any = await restaurentApi.get(`/branches/${branchId}`);
         setBranch(response.data.data);
-      } catch (error) {
-        toast.error("Failed to load branch details");
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || "Failed to load branch details");
         navigate("/restaurent/branches");
       } finally {
         setLoading(false);
       }
     };
-
-    if (branchId) {
-      fetchBranchDetails();
-    }
+    fetchBranchDetails();
   }, [branchId, navigate]);
 
   const handleDeleteBranch = async () => {
@@ -38,37 +40,28 @@ const BranchDetails = () => {
       await restaurentApi.delete(`/branches/${branchId}`);
       toast.success("Branch deleted successfully");
       navigate("/restaurent/branches");
-    } catch (error) {
-      toast.error("Failed to delete branch");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete branch");
     }
   };
 
-  if (loading) {
-    return <div className="p-6 text-gray-600">Loading branch details...</div>;
-  }
-
-  if (!branch) {
-    return <div className="p-6 text-red-500">Branch not found</div>;
-  }
+  if (loading) return <div className="p-6 text-gray-600">Loading branch details...</div>;
+  if (!branch) return <div className="p-6 text-red-500">Branch not found</div>;
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="text-blue-600 hover:text-blue-800 mb-6 transition-colors duration-200"
         >
           ← Back to Branches
         </button>
-
-        {/* Branch Details */}
         <div className="bg-white p-8 rounded-xl shadow-lg">
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">{branch.name}</h1>
-              <p className="text-gray-600 mt-2">{branch.address}</p>
-
+              <p className="text-gray-600 mt-2">{branch.address || "No address provided"}</p>
               <div className="mt-4 space-y-2 text-gray-700">
                 <p>
                   <strong>Email:</strong> {branch.email}
@@ -77,13 +70,10 @@ const BranchDetails = () => {
                   <strong>Phone:</strong> {branch.phone}
                 </p>
                 <p>
-                  <strong>Created At:</strong>{" "}
-                  {new Date(branch.createdAt).toLocaleDateString()}
+                  <strong>Created At:</strong> {new Date(branch.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
-
-            {/* Action Buttons */}
             <div className="flex gap-2">
               <Button
                 variant="contained"
@@ -105,8 +95,6 @@ const BranchDetails = () => {
               </Button>
             </div>
           </div>
-
-          {/* Branch Image */}
           {branch.image && (
             <div className="mt-6">
               <img
@@ -117,13 +105,9 @@ const BranchDetails = () => {
             </div>
           )}
         </div>
-
-        {/* Table Management */}
         <div className="mt-8">
           <TableManagement branchId={branchId!} />
         </div>
-
-        {/* Confirmation Dialog */}
         <ConfirmationDialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}

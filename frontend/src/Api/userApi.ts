@@ -1,16 +1,16 @@
 import api from "../Axios/userInstance";
 
-export const fetchBranches = async () => {
-  try {
-    const response:any = await api.get("/branches");
-    if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to fetch branches');
-    }
-    return response.data 
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to fetch branches');
-  }
-};
+// export const fetchBranches = async () => {
+//   try {
+//     const response:any = await api.get("/branches");
+//     if (!response.data.success) {
+//       throw new Error(response.data.message || 'Failed to fetch branches');
+//     }
+//     return response.data 
+//   } catch (error: any) {
+//     throw new Error(error.response?.data?.message || error.message || 'Failed to fetch branches');
+//   }
+// };
 
  
 
@@ -116,4 +116,32 @@ export const fetchWalletData = async () => {
   } catch (error: any) {
     throw new Error(error.response?.data?.message || error.message || 'Failed to fetch wallet data');
   }
-};
+}
+
+  export const fetchAvailableCoupons = async () => {
+    try {
+      const response: any = await api.get('/coupons');
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch available coupons');
+      }
+      return response.data.data; // Returns array of available ICoupon objects
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch available coupons');
+    }
+
+
+  } 
+
+  export const fetchBranches = async (search: string = '', page: number = 1, limit: number = 10) => {
+    try {
+      const response: any = await api.get("/branches", {
+        params: { search, page, limit },
+      });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch branches');
+      }
+      return response.data.data; // Returns { branches, total, page, pages }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch branches');
+    }
+  };
