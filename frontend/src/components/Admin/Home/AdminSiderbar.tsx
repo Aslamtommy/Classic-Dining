@@ -1,9 +1,7 @@
-"use client"
-
 import * as React from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { LayoutDashboard, Users, UserCog, MessageSquare, ClipboardCheck, LogOut, ChevronLeft, Bell } from "lucide-react"
+import { LayoutDashboard, Users, UserCog, MessageSquare, ClipboardCheck, LogOut, ChevronLeft, Bell, Ticket } from "lucide-react"
 import { cn } from "../../../lib/utils"
 
 interface SidebarProps {
@@ -45,6 +43,12 @@ export function AdminSiderbar({ className }: SidebarProps) {
       icon: ClipboardCheck,
       path: "/admin/approvals",
       badge: "2",
+    },
+    {
+      name: "Coupons Management",
+      icon: Ticket,
+      path: "/admin/coupons",
+      badge: "4",
     },
   ]
 

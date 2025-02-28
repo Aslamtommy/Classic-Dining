@@ -24,10 +24,12 @@ if (!user) throw new Error('User not found');
         return await Transaction.create(transactionData);
       }
 
-      async getTransactions(userId: string, limit: number = 10): Promise<ITransaction[]> {
+      async getTransactions(userId: string, page: number = 1, limit: number = 10): Promise<ITransaction[]> {
+        const skip = (page - 1) * limit; // Calculate how many documents to skip
         return await Transaction.find({ userId })
-          .sort({ date: -1 })
-          .limit(limit)
+          .sort({ date: -1 })  
+          .skip(skip)         
+          .limit(limit)        
           .exec();
       }
 

@@ -63,7 +63,7 @@ export class BranchRepository {
       return BranchModel.find()
         .skip(skip)
         .limit(limit)
-        .lean(); // Return all branches if no search term
+        .lean();  
     }
     const searchRegex = new RegExp(trimmedQuery, 'i');
     return BranchModel.find({
@@ -74,13 +74,13 @@ export class BranchRepository {
     })
       .skip(skip)
       .limit(limit)
-      .lean(); // Simple search on branch name and email
+      .lean(); 
   }
 
   async countBranches(query: string): Promise<number> {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
-      return BranchModel.countDocuments(); // Count all branches if no search term
+      return BranchModel.countDocuments(); 
     }
     const searchRegex = new RegExp(trimmedQuery, 'i');
     return BranchModel.countDocuments({

@@ -78,8 +78,8 @@ export const tableTypeApi = {
     }
   },
     updateTableType :async (tableTypeId: string, data: any) => {
-    const response = await restaurentApi.put(`/edittables/${tableTypeId}`, data);
-    return response; // Ensure the response is returned
+   return restaurentApi.put(`/edittables/${tableTypeId}`, data);
+  
   },
 
 };

@@ -17,7 +17,7 @@ interface SignupFormInputs {
   email: string;
   password: string;
   confirmPassword: string;
-  mobileNo: string;
+  mobile: string;
 }
 
 // Create a Yup schema for strong validations.
@@ -44,7 +44,7 @@ const validationSchema = yup
       .string()
       .oneOf([yup.ref('password') ], 'Passwords do not match')
       .required('Confirm Password is required'),
-    mobileNo: yup
+    mobile: yup
       .string()
       .matches(/^\d{10}$/, 'Mobile number must be 10 digits')
       .required('Mobile number is required'),
@@ -104,7 +104,7 @@ const SignupForm: React.FC = () => {
         name: data.name,
         email: data.email,
         password: data.password,
-        mobile_no: data.mobileNo,
+        mobile: data.mobile,
       });
       console.log('signupsuccess response',response)
       dispatch(setUser(response.data.user));
@@ -241,7 +241,7 @@ const SignupForm: React.FC = () => {
           <div className="mb-4">
             <label className="block text-sm font-medium text-[#2c2420] mb-2">Mobile No</label>
             <Controller
-              name="mobileNo"
+              name="mobile"
               control={control}
               defaultValue=""
               render={({ field }) => (
@@ -253,7 +253,7 @@ const SignupForm: React.FC = () => {
                 />
               )}
             />
-            {errors.mobileNo && <p className="text-red-600 text-sm">{errors.mobileNo.message}</p>}
+            {errors.mobile && <p className="text-red-600 text-sm">{errors.mobile.message}</p>}
           </div>
 
           <button

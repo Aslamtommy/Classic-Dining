@@ -11,7 +11,10 @@ const RestaurentProtected: React.FC = () => {
   const isRestaurant = restaurent?.role === "restaurent";
 
   useEffect(() => {
-    if (!restaurent) return; // Skip if already logged out
+    if (!restaurent) {
+      
+      return 
+    }
     if (!isRestaurant) {
       toast.error("You don't have permission to access this page.", {
  

@@ -10,11 +10,11 @@ import { FaSearch } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const Branches = () => {
-  const [branches, setBranches] = useState<any[]>([]); // Store all branches
+  const [branches, setBranches] = useState<any[]>([]);  
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const limit = 6; // Number of branches per page
+  const limit = 6;  
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const navigate = useNavigate();

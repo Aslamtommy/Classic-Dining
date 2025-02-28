@@ -26,11 +26,16 @@ export class WalletController {
   async getWalletData(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.data?.id;
+      const { page = 1, limit = 10 } = req.query; 
       if (!userId) {
         sendError(res, HttpStatus.Unauthorized, MessageConstants.USER_ID_NOT_FOUND);
         return;
       }
-      const walletData = await this.walletService.getWalletData(userId);
+      const walletData = await this.walletService.getWalletData(
+        userId,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
       sendResponse(res, HttpStatus.OK, 'Wallet data fetched successfully', walletData);
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, error.message || 'Failed to fetch wallet data');

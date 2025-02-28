@@ -49,22 +49,50 @@ const Bookings: React.FC = () => {
     navigate(`/confirmation/${reservationId}`);
   };
 
-  const handleCancel = async (reservationId: string) => {
-    if (window.confirm('Are you sure you want to cancel this reservation?')) {
-      try {
-        await cancelReservation(reservationId);
-        // Refetch current page to reflect changes
-        const data = await fetchUserReservations(page, limit, status);
-        setReservations(data.reservations);
-        setTotal(data.total);
-        toast.success('Reservation cancelled successfully', {
-          duration: 4000,
-          position: 'top-center',
-        });
-      } catch (error: any) {
-        toast.error(error.message, { duration: 4000, position: 'top-center' });
+  const handleCancel = (reservationId: string) => {
+    // Show a toast with confirmation buttons
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center">
+          <p className="mb-2 text-[#2c2420]">
+            Are you sure you want to cancel this reservation?
+          </p>
+          <div className="space-x-2">
+            <button
+              onClick={async () => {
+                try {
+                  await cancelReservation(reservationId);
+                  const data = await fetchUserReservations(page, limit, status);
+                  setReservations(data.reservations);
+                  setTotal(data.total);
+                  toast.dismiss(t.id); // Dismiss the confirmation toast
+                  toast.success('Reservation cancelled successfully', {
+                    duration: 4000,
+                    position: 'top-center',
+                  });
+                } catch (error: any) {
+                  toast.dismiss(t.id);
+                  toast.error(error.message, { duration: 4000, position: 'top-center' });
+                }
+              }}
+              className="px-4 py-1 bg-[#8b5d3b] text-white rounded hover:bg-[#2c2420]"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity, // Keeps the toast open until dismissed
+        position: 'top-center',
       }
-    }
+    );
   };
 
   if (loading) {

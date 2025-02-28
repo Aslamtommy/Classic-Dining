@@ -62,7 +62,7 @@ console.log(response)
       const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
    
       dispatch(setError(errorMessage));
-      toast.error(errorMessage); // Add toast notification
+      toast.error(errorMessage);  
     }
 }
 

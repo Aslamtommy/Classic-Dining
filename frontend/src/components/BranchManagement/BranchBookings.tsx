@@ -18,7 +18,7 @@ const BranchBookings: React.FC = () => {
     pending: "bg-amber-100 text-amber-800",
     confirmed: "bg-emerald-100 text-emerald-800",
     completed: "bg-blue-100 text-blue-800",
-    cancelled: "bg-rose-100 text-rose-800"
+    cancelled: "bg-rose-100 text-rose-800",
   };
 
   const fetchBookings = async () => {
@@ -28,7 +28,7 @@ const BranchBookings: React.FC = () => {
     }
     setLoading(true);
     try {
-      const response:any = await restaurentApi.get(`/branches/${branchId}/reservations`, {
+      const response: any = await restaurentApi.get(`/branches/${branchId}/reservations`, {
         params: { page, limit, status: statusFilter },
       });
       setBookings(response.data.data.reservations || []);
@@ -82,7 +82,7 @@ const BranchBookings: React.FC = () => {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          
+
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
             <button
@@ -123,7 +123,9 @@ const BranchBookings: React.FC = () => {
                 <div className="p-6">
                   {/* Guest Info */}
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">{booking.userId.name}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {booking.userId?.name || "Unknown User"}
+                    </h3>
                     <span className={`px-3 py-1 rounded-full text-sm ${statusStyles[booking.status]}`}>
                       {booking.status}
                     </span>

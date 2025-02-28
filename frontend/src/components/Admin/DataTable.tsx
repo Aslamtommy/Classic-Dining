@@ -20,8 +20,8 @@ const DataTable: React.FC<DataTableProps> = ({ columns, data, actions }) => {
         </tr>
       </thead>
       <tbody>
-        {data.map((item, index) => (
-          <tr key={index} className="hover:bg-gray-100">
+        {data.map(item => (
+          <tr key={item._id} className="hover:bg-gray-100">
             {columns.map((column, colIndex) => (
               <td key={colIndex} className="p-2 border border-gray-300">
                 {item[column]}

@@ -110,23 +110,34 @@ async getPendingRestaurents(
     return { restaurents, total };
   }
 
-  async getAllUsers(page: number, limit: number, searchTerm: string, isBlocked: string): Promise<{ users: any[]; total: number }> {
+  async getAllUsers(
+    page: number,
+    limit: number,
+    searchTerm: string,
+    isBlocked: string
+  ): Promise<{ users: any[]; total: number }> {
     const skip = (page - 1) * limit;
 
     // Build filter query
     const filter: any = {};
     if (searchTerm) {
-      filter.$or = [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { email: { $regex: searchTerm, $options: 'i' } }
-      ];
+      // Ensure searchTerm is trimmed and handle empty strings
+      const trimmedSearchTerm = searchTerm.trim().toLowerCase();
+      if (trimmedSearchTerm) {
+        filter.$or = [
+          { name: { $regex: trimmedSearchTerm, $options: 'i' } }, // Case-insensitive regex
+          { email: { $regex: trimmedSearchTerm, $options: 'i' } }
+        ];
+      }
     }
     if (isBlocked === 'blocked') {
       filter.isBlocked = true;
     } else if (isBlocked === 'active') {
       filter.isBlocked = false;
     }
-    
+
+    console.log('Filter for getAllUsers:', filter); // Debugging
+
     const [users, total] = await Promise.all([
       this.userRepository.findAll(filter, skip, limit),
       this.userRepository.countAll(filter),

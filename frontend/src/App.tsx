@@ -56,7 +56,7 @@ const App: React.FC = () => {
         {/* User Routes */}
         <Route element={<UserProtected />}>
           <Route path="/" element={<UserHomePage />} />
-          <Route path="/restaurentList" element={<RestaurantListPage />} />
+         
           <Route path="/book/:branchId" element={<BookingPage />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
           <Route path="/confirmation/:reservationId" element={<ConfirmationPage />} />
@@ -65,6 +65,7 @@ const App: React.FC = () => {
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/bookings" element={<Bookings />} />
+            <Route path="/restaurentList" element={<RestaurantListPage />} />
           </Route>
         </Route>
 

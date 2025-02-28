@@ -10,15 +10,15 @@ interface AuthenticatedRequest extends Request {
 
 export const checkApproved = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // Ensure the user is authenticated
+ 
     if (!req.data) {
       return sendError(res, HttpStatus.Unauthorized, "User not authenticated");
     }
 
-    // Extract email from the authenticated user
+    
     const email = req.data.email;
 
-    // Fetch the user by email from the database
+ 
     const user = await RestaurentModel.findOne({ email }).exec();
 
     if (!user) {

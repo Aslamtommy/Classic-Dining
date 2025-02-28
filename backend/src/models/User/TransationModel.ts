@@ -1,4 +1,4 @@
-// models/Transaction.ts
+ 
 import mongoose, { Schema, Document, ObjectId } from 'mongoose';
 
 export interface ITransaction extends Document {

@@ -400,9 +400,9 @@ const BookingPage: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </motion.button>
-            <p className="text-xs text-[#2c2420]/60 mt-3 text-center">
+            {/* <p className="text-xs text-[#2c2420]/60 mt-3 text-center">
               You'll receive a confirmation email with your reservation details
-            </p>
+            </p> */}
           </motion.div>
         </motion.form>
       </div>

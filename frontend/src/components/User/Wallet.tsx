@@ -19,17 +19,21 @@ const WalletPage: React.FC = () => {
   const [amount, setAmount] = useState<string>("");
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const limit = 6;  
 
   useEffect(() => {
-    fetchWalletData();
-  }, []);
+    fetchWalletData(currentPage);
+  }, [currentPage]);
 
-  const fetchWalletData = async () => {
+  const fetchWalletData = async (page: number) => {
     try {
       setIsLoading(true);
-      const response: any = await api.get("/wallet");
+      const response: any = await api.get(`/wallet?page=${page}&limit=${limit}`);
       setBalance(response.data.data.balance);
       setTransactions(response.data.data.transactions);
+      setTotalPages(Math.ceil(response.data.data.totalTransactions / limit));
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to fetch wallet data", {
         duration: 4000,
@@ -46,15 +50,11 @@ const WalletPage: React.FC = () => {
       toast.error("Please enter a valid amount", { duration: 4000, position: 'top-center' });
       return;
     }
-
     try {
       setIsAdding(true);
-
-      // Step 1: Create Razorpay order
-      const response:any = await api.post('/wallet/create-order', { amount: parsedAmount });
+      const response: any = await api.post('/wallet/create-order', { amount: parsedAmount });
       const orderData = response.data.data;
 
-      // Step 2: Load Razorpay script
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
@@ -64,9 +64,8 @@ const WalletPage: React.FC = () => {
         script.onload = () => resolve();
       });
 
-      // Step 3: Open Razorpay payment modal
       const options = {
-        key: 'rzp_test_ihsNz6lracNIu3', // Replace with your Razorpay key_id
+        key: 'rzp_test_ihsNz6lracNIu3',
         amount: orderData.amount,
         currency: orderData.currency,
         order_id: orderData.id,
@@ -74,8 +73,7 @@ const WalletPage: React.FC = () => {
         description: 'Add Money to Wallet',
         handler: async function (response: any) {
           try {
-            // Step 4: Confirm payment with backend
-            const confirmResponse:any = await api.post('/wallet/confirm-add', {
+            const confirmResponse: any = await api.post('/wallet/confirm-add', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -100,11 +98,8 @@ const WalletPage: React.FC = () => {
             toast.error("Payment cancelled", { duration: 4000, position: 'top-center' });
           },
         },
-        prefill: {
-          // Add user details if available, e.g., name, email, phone
-        },
         theme: {
-          color: '#8b5d3b', // Match your app's theme
+          color: '#8b5d3b',
         },
       };
 
@@ -123,6 +118,18 @@ const WalletPage: React.FC = () => {
         position: 'top-center',
       });
       setIsAdding(false);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
@@ -239,6 +246,28 @@ const WalletPage: React.FC = () => {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            )}
+            {/* Pagination Controls */}
+            {transactions.length > 0 && (
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-[#8b5d3b] text-white rounded-lg disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-[#2c2420]">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-[#8b5d3b] text-white rounded-lg disabled:opacity-50"
+                >
+                  Next
+                </button>
               </div>
             )}
           </div>

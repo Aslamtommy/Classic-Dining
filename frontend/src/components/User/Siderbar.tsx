@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { User, Calendar, Wallet, Settings, LogOut } from 'lucide-react';
+import { User, Calendar, Wallet, Settings, LogOut, Utensils } from 'lucide-react'; // Added Utensils for Restaurants
 import { useSelector } from 'react-redux';
 
 const Sidebar = () => {
-     
-const profile = useSelector((state: any) => state.user.user);
-console.log(profile)
+  const profile = useSelector((state: any) => state.user.user);
+  console.log(profile);
+
   return (
     <motion.div
       className="bg-white h-screen w-72 fixed left-0 top-0 shadow-xl overflow-hidden border-r border-[#e8e2d9]"
@@ -22,8 +22,7 @@ console.log(profile)
           whileTap={{ scale: 0.95 }}
         >
           <img
-            src={ profile.profilePicture
-            } // Replace with your profile image URL
+            src={profile.profilePicture}
             alt="Profile"
             className="w-14 h-14 rounded-full border-4 border-[#e8e2d9] object-cover shadow-lg"
           />
@@ -39,6 +38,7 @@ console.log(profile)
             { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Profile' },
             { to: '/bookings', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
             { to: '/wallet', icon: <Wallet className="w-5 h-5" />, text: 'Wallet' },
+            { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' }, // Added Restaurants
             { to: '/settings', icon: <Settings className="w-5 h-5" />, text: 'Settings' },
           ].map((link, index) => (
             <NavLink

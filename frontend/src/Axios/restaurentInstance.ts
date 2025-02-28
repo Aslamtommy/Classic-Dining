@@ -22,7 +22,7 @@ const restaurentApi = axios.create({
 // Logout function
 const logout = (): void => {
   console.log("Logging out the Restaurent...");
-  const dispatch = store.dispatch;
+  const {dispatch} = store 
   dispatch(logoutRestaurent());
 
   toast.error("Your session has expired. Please log in again.", {

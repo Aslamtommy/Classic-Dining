@@ -8,12 +8,11 @@ export const fetchRestaurents = async (page: number, limit: number,searchTerm: s
     const response = await adminApi.get<any>('/restaurent', {
       params: { page, limit,searchTerm,isBlocked }
     });
-
-    // Extract the nested `data` object from the response
+ 
     const { data } = response.data;
 
-    console.log('Extracted data:', data); // Log the extracted data
-    return data; // Return the nested `data` object
+    console.log('Extracted data:', data);  
+    return data; 
   } catch (error) {
     console.error('Error fetching restaurents:', error);
     throw new Error('Failed to fetch restaurents. Please try again later.');
@@ -30,8 +29,8 @@ export const fetchUsers = async (page: number, limit: number,searchTerm: string,
     // Extract the nested `data` object from the response
     const { data } = response.data;
 
-    console.log('Extracted data:', data); // Log the extracted data
-    return data; // Return the nested `data` object
+    console.log('Extracted data:', data); 
+    return data;  
   } catch (error) {
     console.error('Error fetching users:', error);
     throw new Error('Failed to fetch users. Please try again later.');

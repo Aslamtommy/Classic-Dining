@@ -25,12 +25,12 @@ export class Usercontroller {
 
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
-      const { name, email, password, mobile_no } = req.body;
+      const { name, email, password, mobile } = req.body;
       const newUser = await this.userService.registerUser(
         name,
         email,
         password,
-        mobile_no
+        mobile
       );
 
       const responseData = {
@@ -110,7 +110,7 @@ export class Usercontroller {
 
   async refreshAccessToken(req: Request, res: Response): Promise<void> {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const  refreshToken  = req.cookies.refreshToken;
       if (!refreshToken) {
         sendError(res, HttpStatus.BadRequest, MessageConstants.REFRESH_TOKEN_REQUIRED);
         return;
@@ -234,9 +234,7 @@ export class Usercontroller {
       }
 
       const { name, email, mobile} = req.body;
-console.log('reqbody',req.body)
-      // Validate required fields
-      
+ 
 
      
 
@@ -272,8 +270,8 @@ console.log('reqbody',req.body)
 
   async getBranchDetails(req: Request, res: Response) {
     try {
-      const branchId = req.params.branchId;
-      console.log('branchid',branchId)
+      const {branchId} = req.params 
+    
       const branch = await this.userService.getBranchDetails(branchId);
       if (!branch) {
         return sendError(res, HttpStatus.NotFound, 'Branch not found');

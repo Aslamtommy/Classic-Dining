@@ -36,7 +36,7 @@ export class UserService implements IUserService {
     name: string,
     email: string,
     password: string,
-    mobile_no: string,
+    mobile: string,
   ): Promise<IUser> {
     console.log('Register: Checking if user exists for email:', email);
 
@@ -53,7 +53,7 @@ export class UserService implements IUserService {
       name,
       email,
       password: hashedPassword,
-      mobile_no,
+      mobile,
       is_verified: false,
       isBlocked: false,
     };

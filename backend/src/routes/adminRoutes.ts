@@ -27,7 +27,7 @@ adminRoute.post( '/update-status',(req,res)=> adminController.updateRestaurentSt
 adminRoute.post('/refresh-token',(req,res)=>adminController.refreshAccessToken (req,res))
 adminRoute.post('/logout',(req,res)=>adminController.logout(req,res))
 adminRoute.get('/restaurent', (req, res) => adminController.getAllRestaurents(req, res));
-adminRoute.get('/users', (req, res) => adminController.getAllUsers(req, res));
+adminRoute.get('/users',authenticateToken('admin'), (req, res) => adminController.getAllUsers(req, res));
 adminRoute.post('/block',(req,res)=>adminController.blockRestaurent(req,res))
 adminRoute.post('/block-user', (req, res) => adminController.blockUser(req, res));
 

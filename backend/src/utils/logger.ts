@@ -8,7 +8,7 @@ const logFormat = winston.format.printf(({ level, message, timestamp }) => {
 
 // Create a logger instance
 const logger = winston.createLogger({
-  level: "info", // Set the default logging level
+  level: "info",  
   format: winston.format.combine(
     winston.format.timestamp(), // Add timestamp to logs
     logFormat

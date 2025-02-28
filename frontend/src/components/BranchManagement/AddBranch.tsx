@@ -13,7 +13,8 @@ const AddBranch = () => {
   const navigate = useNavigate();
 
   const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required"),
+    name: Yup.string()  .required("Name is required")
+    .min(4, "Name must be at least 4 characters"),
     email: Yup.string().email("Invalid email address").required("Email is required"),
     phone: Yup.string()
       .matches(/^\d{10}$/, "Phone number must be 10 digits")
