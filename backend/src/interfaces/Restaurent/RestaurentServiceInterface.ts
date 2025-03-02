@@ -1,4 +1,4 @@
-import { IRestaurent} from "../../models/Restaurent/RestaurentModel";
+import { IRestaurent} from "../../models/Restaurent/restaurentModel";
 
 export interface IForgotPasswordResponse {
   success: boolean;

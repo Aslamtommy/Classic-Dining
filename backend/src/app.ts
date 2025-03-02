@@ -8,7 +8,17 @@ import path from 'path'; // Import path for static file handling
 import adminRoute from './routes/adminRoutes';
 import restaurentRoute from './routes/restaurentRoutes';
  import { startCronJobs } from './cronJobs';
-
+ declare global {
+  namespace Express {
+    export interface Request {
+      data?: {
+        id: string;
+        role: string;
+        userId?: string;
+      };
+    }
+  }
+}
 const app: Application = express();
 
 // Middleware

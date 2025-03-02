@@ -1,6 +1,6 @@
 import { IUser } from '../../models/User/userModel';
 import { googleUserData } from '../../types/google';
- import { ForgotPasswordResponse } from '../../services/UserService';
+ 
 
 export interface IUserService {
  
@@ -25,13 +25,13 @@ export interface IUserService {
   refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }>;
 
  
-  forgotPasswordVerify(email: string): Promise<ForgotPasswordResponse>;
+  forgotPasswordVerify(email: string): Promise<string>;
 
  
   resetPassword(
     email: string,
     newPassword: string,
-  ): Promise<{ success: boolean; message: string }>;
+  ): Promise<void>;
   getUserProfile(userId: string): Promise<{
     id: string;
     name: string;
@@ -40,7 +40,7 @@ export interface IUserService {
     profilePicture: string;
   } | null>;
  
-    uploadProfilePicture(userId: string, filePath: string): Promise<{ success: boolean; message: string; profilePicture?: string }>;
+    uploadProfilePicture(userId: string, filePath: string): Promise<    string>;
  
     updateUserProfile( userId: string,
       updateData: { name: string; email: string; mobile: string }

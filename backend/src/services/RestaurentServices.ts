@@ -2,7 +2,7 @@
 import { IRestaurentService, ILoginResponse, IForgotPasswordResponse, IResetPasswordResponse } from "../interfaces/Restaurent/RestaurentServiceInterface";
 import IOtpRepository from "../interfaces/otp/OtpRepositoryInterface";
 import bcrypt from "bcrypt";
-import { IRestaurent } from "../models/Restaurent/RestaurentModel";
+import { IRestaurent } from "../models/Restaurent/restaurentModel";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../utils/jwt";
 import { generateOtp, hashOtp } from "../utils/GenerateOtp";
 import { sentMail } from "../utils/SendMails";

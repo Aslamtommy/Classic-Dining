@@ -1,12 +1,12 @@
 
 // controllers/WalletController.ts
 import { Request, Response } from 'express';
-import { WalletService } from '../services/WalletService';
+ import { IWalletService } from '../interfaces/wallet/IWalletService';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { sendResponse, sendError } from '../utils/responseUtils';
  import Razorpay from 'razorpay';
- import crypto from 'crypto';
+ 
 
 
  const razorpay = new Razorpay({
@@ -16,11 +16,11 @@ import { sendResponse, sendError } from '../utils/responseUtils';
 
 
 export class WalletController {
-  private walletService: WalletService;
 
-  constructor() {
-    this.walletService = new WalletService();
-  }
+
+  constructor(  private _walletService: IWalletService   ) {}
+   
+ 
 
 
   async getWalletData(req: Request, res: Response): Promise<void> {
@@ -31,7 +31,7 @@ export class WalletController {
         sendError(res, HttpStatus.Unauthorized, MessageConstants.USER_ID_NOT_FOUND);
         return;
       }
-      const walletData = await this.walletService.getWalletData(
+      const walletData = await this._walletService.getWalletData(
         userId,
         parseInt(page as string),
         parseInt(limit as string)
@@ -107,7 +107,7 @@ export class WalletController {
       }
        
       // If signature is valid, add money to wallet
-      const walletData = await this.walletService.addMoney(userId, amount);
+      const walletData = await this._walletService.addMoney(userId, amount);
       sendResponse(res, HttpStatus.OK, 'Money added successfully', walletData);
     } catch (error: any) {
       sendError(res, HttpStatus.InternalServerError, error.message || 'Failed to add money');

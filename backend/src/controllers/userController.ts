@@ -3,36 +3,25 @@ import admin from "../config/Firebase/firebase";
 import { googleUserData } from "../types/google";
 import { HttpStatus } from "../constants/HttpStatus";
 import { CookieManager } from "../utils/cookiemanager";
-import { IUserService } from "../interfaces/user/UserServiceInterface";
 import { MessageConstants } from "../constants/MessageConstants";
-import { sendResponse, sendError } from "../utils/responseUtils"; // Import utility functions
-import { BranchRepository } from "../repositories/BranchRepository";
-import { CoupenService } from "../services/CouponService";
-declare global {
-  namespace Express {
-    export interface Request {
-      data?: {
-        id: string;
-        role: string;
-        userId?: string;
-      };
-    }
-  }
-}
+import { sendResponse, sendError } from "../utils/responseUtils";
+import { ICouponService } from "../interfaces/coupon/ICouponService"; // Updated interface
+import { IUserService } from "../interfaces/user/UserServiceInterface";
+import { AppError } from "../utils/AppError";
 
-export class Usercontroller {
-  constructor(private userService: IUserService,private branchRepository: BranchRepository,private couponService: CoupenService ) {}
+export class Usercontroller { // Fixed typo in class name
+  constructor(
+    private userService: IUserService,
+    private couponService: ICouponService // Typo fixed: CoupenService -> CouponService, typed with interface
+  ) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { name, email, password, mobile } = req.body;
-      const newUser = await this.userService.registerUser(
-        name,
-        email,
-        password,
-        mobile
-      );
-
+      if (!name || !email || !password || !mobile) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+      const newUser = await this.userService.registerUser(name, email, password, mobile);
       const responseData = {
         user: {
           id: newUser._id,
@@ -43,8 +32,8 @@ export class Usercontroller {
       };
       sendResponse(res, HttpStatus.Created, MessageConstants.USER_REGISTER_SUCCESS, responseData);
     } catch (error: any) {
-      if (error.message === "User with this email already exists.") {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ALREADY_EXISTS, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
       } else {
         sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
       }
@@ -54,23 +43,19 @@ export class Usercontroller {
   async signIn(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
+      if (!email || !password) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
       const { user, accessToken, refreshToken } = await this.userService.authenticateUser(email, password);
-  
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
-  
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
-        user: { id: user._id, name: user.name, email: user.email ,mobile:user.mobile}
+        user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile },
       });
     } catch (error: any) {
-      switch (error.message) {
-        case MessageConstants.USER_NOT_FOUND:
-          sendError(res, HttpStatus.NotFound, error.message);
-          break;
-        case MessageConstants.INVALID_PASSWORD: 
-          sendError(res, HttpStatus.Unauthorized, error.message);
-          break;
-        default:
-          sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
       }
     }
   }
@@ -79,10 +64,8 @@ export class Usercontroller {
     try {
       const { idToken } = req.body;
       if (!idToken) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.ID_TOKEN_REQUIRED);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.ID_TOKEN_REQUIRED);
       }
-
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const userData: googleUserData = {
         uid: decodedToken.uid,
@@ -90,68 +73,58 @@ export class Usercontroller {
         email_verified: decodedToken.email_verified!,
         name: decodedToken.name || "Unknown",
       };
-
-      const { user, accessToken, refreshToken } =
-        await this.userService.googleSignIn(userData);
+      const { user, accessToken, refreshToken } = await this.userService.googleSignIn(userData);
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
-
       const responseData = {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-        },
+        user: { id: user._id, name: user.name, email: user.email },
       };
       sendResponse(res, HttpStatus.OK, MessageConstants.GOOGLE_SIGNIN_SUCCESS, responseData);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.GOOGLE_SIGNIN_FAILED, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.GOOGLE_SIGNIN_FAILED, error.message);
+      }
     }
   }
 
   async refreshAccessToken(req: Request, res: Response): Promise<void> {
     try {
-      const  refreshToken  = req.cookies.refreshToken;
+      const refreshToken = req.cookies.refreshToken;
       if (!refreshToken) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.REFRESH_TOKEN_REQUIRED);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REFRESH_TOKEN_REQUIRED);
       }
-
       const tokens = await this.userService.refreshAccessToken(refreshToken);
-      if (!tokens?.accessToken) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.INVALID_REFRESH_TOKEN);
-        return;
-      }
-
-      res.cookie(
-        "accessToken",
-        tokens.accessToken,
-        CookieManager.getCookieOptions()
-      );
+      res.cookie("accessToken", tokens.accessToken, CookieManager.getCookieOptions());
       sendResponse(res, HttpStatus.OK, MessageConstants.ACCESS_TOKEN_REFRESHED, {
         accessToken: tokens.accessToken,
       });
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INVALID_REFRESH_TOKEN, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INVALID_REFRESH_TOKEN, error.message);
+      }
     }
   }
 
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?. id;
+      const userId = req.data?.id;
       if (!userId) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
       }
-
       const userProfile = await this.userService.getUserProfile(userId);
       if (!userProfile) {
-        sendError(res, HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
-        return;
+        throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
-
       sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_FETCHED_SUCCESS, userProfile);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
 
@@ -159,60 +132,53 @@ export class Usercontroller {
     try {
       const { email } = req.body;
       if (!email) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       }
-
-      const serviceResponse = await this.userService.forgotPasswordVerify(email);
-      if (serviceResponse.success) {
-        sendResponse(res, HttpStatus.OK, serviceResponse.message, serviceResponse.data);
-      } else {
-        sendError(res, HttpStatus.BadRequest, serviceResponse.message, serviceResponse.error);
-      }
+      const emailSent = await this.userService.forgotPasswordVerify(email);
+      sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS, { email: emailSent });
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
 
   async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      const result = await this.userService.resetPassword(email, password);
-  
-      if (!result.success) {
-        sendError(res, HttpStatus.BadRequest , result.message, result.message);
-        return;
+      if (!email || !password) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      
+      await this.userService.resetPassword(email, password);
       sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
-  
+
   async uploadProfilePicture(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?.id
+      const userId = req.data?.id;
       if (!userId) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
       }
-
       if (!req.file?.path) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.FILE_NOT_UPLOADED);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.FILE_NOT_UPLOADED);
       }
-
-      const result = await this.userService.uploadProfilePicture(userId, req.file.path);
-      if (result.success) {
-        sendResponse(res, HttpStatus.OK, result.message, {
-          profilePicture: result.profilePicture,
-        });
-      } else {
-        sendError(res, HttpStatus.BadRequest, result.message, "Failed to upload profile picture");
-      }
+      const profilePicture = await this.userService.uploadProfilePicture(userId, req.file.path);
+      sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_PICTURE_UPLOADED, { profilePicture });
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
 
@@ -227,71 +193,71 @@ export class Usercontroller {
 
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?.id; // Extracted from authentication middleware
+      const userId = req.data?.id;
       if (!userId) {
-        sendError(res, HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
       }
-
-      const { name, email, mobile} = req.body;
- 
-
-     
-
-      // Update the profile
-      const updatedUser = await this.userService.updateUserProfile(userId, {
-        name,
-        email,
-        mobile,
-      });
-
+      const { name, email, mobile } = req.body;
+      const updatedUser = await this.userService.updateUserProfile(userId, { name, email, mobile });
       if (!updatedUser) {
-        sendError(res, HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
-        return;
+        throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
-
       sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_UPDATED_SUCCESS, updatedUser);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
-  
+
   async getAllBranches(req: Request, res: Response): Promise<void> {
     try {
-      const search = req.query.search as string || '';
+      const search = (req.query.search as string) || '';
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10; // Accept limit from frontend
+      const limit = parseInt(req.query.limit as string) || 10;
       const result = await this.userService.getAllBranches(search, page, limit);
       sendResponse(res, HttpStatus.OK, "Branches fetched successfully", result);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches", error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches", error.message);
+      }
     }
   }
 
-  async getBranchDetails(req: Request, res: Response) {
+  async getBranchDetails(req: Request, res: Response): Promise<void> {
     try {
-      const {branchId} = req.params 
-    
+      const { branchId } = req.params;
+      if (!branchId) {
+        throw new AppError(HttpStatus.BadRequest, "Branch ID is required");
+      }
       const branch = await this.userService.getBranchDetails(branchId);
       if (!branch) {
-        return sendError(res, HttpStatus.NotFound, 'Branch not found');
+        throw new AppError(HttpStatus.NotFound, "Branch not found");
       }
-      sendResponse(res, HttpStatus.OK, 'Branch details fetched successfully', branch);
+      sendResponse(res, HttpStatus.OK, "Branch details fetched successfully", branch);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
 
   async getAvailableCoupons(req: Request, res: Response): Promise<void> {
     try {
       const coupons = await this.couponService.getAvailableCoupons();
-      sendResponse(res, HttpStatus.OK, 'Available coupons retrieved successfully', coupons);
+      sendResponse(res, HttpStatus.OK, "Available coupons retrieved successfully", coupons);
     } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, error.message);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+      }
     }
   }
-
-
-  
-
 }

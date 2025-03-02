@@ -2,12 +2,13 @@
 import { IReservation } from '../models/User/Reservation';
 import Reservation from '../models/User/Reservation';
 import { ReservationStatus } from '../models/User/Reservation';
-export class ReservationRepository {
+import { IReservationRepository } from '../interfaces/Reservation/IReservationRepository';
+export class ReservationRepository implements IReservationRepository  {
   async create(reservationData: Partial<IReservation>): Promise<IReservation> {
     return Reservation.create(reservationData);
   }
 
-  async findById(id: string,session?:any): Promise<IReservation | null> {
+  async findById(id: string ): Promise<IReservation | null> {
     return Reservation.findById(id)
       .populate('branch')
       .populate('tableType')
@@ -81,7 +82,7 @@ async findByUserId(userId: string): Promise<IReservation[]> {
   return Reservation.find({ userId })
     .populate('branch', 'name') // Populate branch name
     .populate('tableType', 'name capacity price') // Populate table details
-    .sort({ reservationDate: -1 }) // Sort by date, newest first
+    .sort({ reservationDate:  -1 }) // Sort by date, newest first
     .exec();
 }
 
@@ -123,6 +124,7 @@ async findByBranchIdWithPagination(
     return Reservation.find(query)
       .populate('branch')
       .populate('tableType')
+      .sort({ reservationDate: -1 })
       .skip(skip)
       .limit(limit)
       .exec();

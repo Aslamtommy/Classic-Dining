@@ -2,8 +2,8 @@
 import { ITableType } from '../models/Restaurent/TableModel';
 import TableModel from '../models/Restaurent/TableModel';
 
-
-export class TableTypeRepository {
+import { ITableTypeRepository } from '../interfaces/table/ITableTypeRepository';
+export class TableTypeRepository implements ITableTypeRepository {
   async create(tableTypeData: Partial<ITableType>): Promise<ITableType> {
     return await  TableModel.create(tableTypeData);
   }

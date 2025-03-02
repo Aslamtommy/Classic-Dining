@@ -1,17 +1,20 @@
 // src/services/BranchService.ts
+import { IBranchRepository } from "../interfaces/branch/IBranchRepository";
 import { IBranch } from "../models/Restaurent/Branch/BranchModel";
-import { BranchRepository } from "../repositories/BranchRepository";
-import { RestaurentRepository } from "../repositories/RestaurentRepository";
+ 
+ 
 import { CloudinaryService } from "../utils/cloudinary.service";
+import { IBranchService } from "../interfaces/branch/IBranchService";
+ import { IRestaurentRepository } from "../interfaces/Restaurent/RestaurentRepositoryInterface";
 import bcrypt from "bcrypt";
 
-export class BranchService {
-    private branchRepository: BranchRepository;
-    private restaurentRepository: RestaurentRepository;
-    constructor() {
-      this.branchRepository = new BranchRepository();
-      this.restaurentRepository = new RestaurentRepository();
-    }
+export class BranchService implements IBranchService {
+
+   
+    constructor( private _branchRepository: IBranchRepository, private _restaurentRepository: IRestaurentRepository) {}
+
+
+    
   
     async createBranch(branchData: Partial<IBranch>) {
         const { email, password, parentRestaurant } = branchData;
@@ -22,7 +25,7 @@ export class BranchService {
         }
     
         // Check if branch already exists
-        const existingBranch = await this.branchRepository.findByEmail(email);
+        const existingBranch = await this. _branchRepository.findByEmail(email);
         if (existingBranch) {
             throw new Error("Branch with this email already exists");
         }
@@ -41,7 +44,7 @@ export class BranchService {
         const hashedPassword = await bcrypt.hash(password, 10);
     
         // Create branch
-        const branch = await this.branchRepository.createBranch({
+        const branch = await this. _branchRepository.createBranch({
             ...branchData,
             password: hashedPassword,
             isBranch: true,
@@ -49,16 +52,16 @@ export class BranchService {
         });
     
         // Link branch to parent restaurant
-        await this.restaurentRepository.addBranchToRestaurant(parentRestaurant.toString(), branch._id .toString());
+        await this._restaurentRepository.addBranchToRestaurant(parentRestaurant.toString(), branch._id .toString());
     
         return branch;
     }
     async getBranchesByParent(parentId: string): Promise<IBranch[]> {
-        return this.branchRepository.findBranchesByParent(parentId);
+        return this. _branchRepository.findBranchesByParent(parentId);
       }
 
       async handleImageUpload(file: any, branchId: string): Promise<string | undefined> {
-        const branch = await this.branchRepository.findById(branchId);
+        const branch = await this. _branchRepository.findById(branchId);
         if (!branch) throw new Error("Branch not found");
     
         
@@ -70,27 +73,31 @@ export class BranchService {
       }
 
       async updateBranch(branchId: string, updateData: any): Promise<IBranch | null> {
-        const branch = await this.branchRepository.findById(branchId);
+        const branch = await this. _branchRepository.findById(branchId);
         if (!branch) throw new Error("Branch not found");
     
-        return await this.branchRepository.findByIdAndUpdate(branchId, updateData);
+        return await this. _branchRepository.findByIdAndUpdate(branchId, updateData);
       }
 
       async deleteBranch(branchId: string): Promise<void> {
-        const branch = await this.branchRepository.findById(branchId);
+        const branch = await this. _branchRepository.findById(branchId);
         if (!branch) throw new Error("Branch not found");
       
         
       
         // Remove the branch from the parent restaurant
-        await this.restaurentRepository.removeBranchFromRestaurant(
+        await this._restaurentRepository.removeBranchFromRestaurant(
           branch.parentRestaurant.toString(),
           branchId
         );
       
         // Delete the branch
-        await this.branchRepository.deleteBranch(branchId);
+        await this. _branchRepository.deleteBranch(branchId);
       }
       
+      async getBranchById(branchId:string):Promise<IBranch | null> {
+        const branch = await this. _branchRepository.findById(branchId);
+        return branch;
+      }
   }
   

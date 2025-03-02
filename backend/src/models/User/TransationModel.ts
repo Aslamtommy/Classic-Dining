@@ -2,7 +2,7 @@
 import mongoose, { Schema, Document, ObjectId } from 'mongoose';
 
 export interface ITransaction extends Document {
-  userId: ObjectId;
+  userId: string;
   type: 'credit' | 'debit';
   amount: number;
   description: string;

@@ -1,4 +1,4 @@
-import { IRestaurent } from "../../models/Restaurent/RestaurentModel";
+import { IRestaurent } from "../../models/Restaurent/restaurentModel";
 
 export interface IRestaurentRepository {
   findByEmail(email: string): Promise<IRestaurent | null>;
@@ -14,4 +14,6 @@ export interface IRestaurentRepository {
   countAll(filter: any): Promise<number>;
   updatePassword(userId: string, hashedPassword: string): Promise<void>;
   countAllPending(filter: any):Promise<number>
+  addBranchToRestaurant(restaurentId: string, branchId: string): Promise<void>;
+  removeBranchFromRestaurant(restaurentId: string, branchId: string): Promise<void>;
 }

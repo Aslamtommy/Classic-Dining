@@ -1,7 +1,7 @@
 import { ICoupon } from "../models/Admin/CouponModel";
 import CouponModel from "../models/Admin/CouponModel";
-
-export class CouponRepository{
+import { ICouponRepository } from "../interfaces/coupon/ICouponRepository";
+export class CouponRepository implements ICouponRepository{
     async createCoupon(couponData:Partial<ICoupon>):Promise<ICoupon>{
         return CouponModel.create(couponData)
     }

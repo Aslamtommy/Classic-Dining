@@ -1,0 +1,30 @@
+// src/interfaces/reservation/IReservationService.ts
+import { IReservation } from '../../models/User/Reservation';
+import { ReservationStatus } from '../../models/User/Reservation';
+
+export interface IReservationService {
+    createReservation(reservationData: Partial<IReservation>): Promise<IReservation>;
+    getReservation(id: string): Promise<IReservation>;
+    cancelReservation(id: string): Promise<IReservation>;
+    confirmReservation(id: string, paymentId: string): Promise<IReservation>;
+    failReservation(id: string, paymentId: string): Promise<IReservation>;
+    getAvailableTables(branchId: string, date: Date, timeSlot: string): Promise<any[]>;
+    getUserReservationsWithPagination(
+        userId: string,
+        page: number,
+        limit: number,
+        status?: ReservationStatus
+    ): Promise<{ reservations: IReservation[]; total: number }>;
+    confirmWithWallet(reservationId: string, userId: string): Promise<IReservation>;
+    getBranchReservations(
+        branchId: string,
+        page: number,
+        limit: number,
+        status?: ReservationStatus
+    ): Promise<{ reservations: IReservation[]; total: number }>;
+    updateBranchReservationStatus(
+        reservationId: string,
+        status: 'completed' | 'cancelled',
+        branchId: string
+    ): Promise<IReservation | null>;
+}

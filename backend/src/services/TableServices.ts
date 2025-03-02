@@ -1,54 +1,46 @@
-// src/services/TableTypeService.ts
+// src/services/TableServices.ts
 import { TableTypeRepository } from '../repositories/TableRepository';
 import { BranchRepository } from '../repositories/BranchRepository';
- 
-export interface ITableType {
-    _id: string;
-    name: string;
-    capacity: number;
-    branch: string;
-  }
-  
-export class TableTypeService {
-  private tableTypeRepository: TableTypeRepository;
-  private branchRepository: BranchRepository;
+import { ITableType } from '../models/Restaurent/TableModel';
+import { ITableTypeService } from '../interfaces/table/ITableTypeService';
+import { Types } from 'mongoose';
 
-  constructor() {
-    this.tableTypeRepository = new TableTypeRepository();
-    this.branchRepository = new BranchRepository();
-  }
+export class TableTypeService implements ITableTypeService {
+  constructor(
+    private _tableTypeRepository: TableTypeRepository,
+    private _branchRepository: BranchRepository
+  ) {}
 
-  async createTableType(branchId: string, tableTypeData: any) {
-    // Validate branch
-    const branch = await this.branchRepository.findById(branchId);
-    if (!branch) {
-      throw new Error('Branch not found');
-    }
+  async createTableType(branchId: string, tableTypeData: Partial<ITableType>): Promise<ITableType> {
+    const branch = await this._branchRepository.findById(branchId);
+    if (!branch) throw new Error('Branch not found');
 
-    // Create table type
-    const tableType = await this.tableTypeRepository.create({
+    const tableType = await this._tableTypeRepository.create({
       ...tableTypeData,
-      branch: branchId,
+      branch: new Types.ObjectId(branchId), // Convert string to ObjectId
     });
-      // Link table type to branch
-      await this.branchRepository.addTableType(branchId, tableType._id );
 
+    await this._branchRepository.addTableType(branchId, tableType._id);
     return tableType;
   }
 
-  async getTableTypesByBranch(branchId: string) {
-    return await this.tableTypeRepository.findByBranch(branchId);
+  async getTableTypesByBranch(branchId: string): Promise<ITableType[]> {
+    return await this._tableTypeRepository.findByBranch(branchId);
   }
 
-  async updateTableTypeQuantity(tableTypeId: string, quantity: number) {
-    return await this.tableTypeRepository.updateQuantity(tableTypeId, quantity);
+  async updateTableTypeQuantity(tableTypeId: string, quantity: number): Promise<ITableType> {
+    const updatedTableType = await this._tableTypeRepository.updateQuantity(tableTypeId, quantity);
+    if (!updatedTableType) throw new Error('Table type not found or update failed');
+    return updatedTableType;
   }
- // TableTypeService.ts
-async updateTableType(tableTypeId: string, updateData: Partial<ITableType>) {
-  return await this.tableTypeRepository.update(tableTypeId, updateData);
-}
 
-  async deleteTableType(tableTypeId: string) {
-    await this.tableTypeRepository.delete(tableTypeId);
+  async updateTableType(tableTypeId: string, updateData: Partial<ITableType>): Promise<ITableType> {
+    const updatedTableType = await this._tableTypeRepository.update(tableTypeId, updateData);
+    if (!updatedTableType) throw new Error('Table type not found or update failed');
+    return updatedTableType;
+  }
+
+  async deleteTableType(tableTypeId: string): Promise<void> {
+    await this._tableTypeRepository.delete(tableTypeId);
   }
 }

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../constants/HttpStatus';
 import { sendError } from '../utils/responseUtils';
 import { MessageConstants } from '../constants/MessageConstants';
-import RestaurentModel from '../models/Restaurent/RestaurentModel';
+import RestaurentModel from '../models/Restaurent/restaurentModel';
 
 interface AuthenticatedRequest extends Request {
   data?: any;  

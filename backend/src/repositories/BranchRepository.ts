@@ -1,9 +1,10 @@
+import { IBranchRepository } from "../interfaces/branch/IBranchRepository";
 import { IBranch } from "../models/Restaurent/Branch/BranchModel";
 import BranchModel from "../models/Restaurent/Branch/BranchModel";
-import { Types } from 'mongoose';
+ 
 import { ObjectId } from "mongoose";
 
-export class BranchRepository {
+export class BranchRepository implements IBranchRepository{
     async createBranch(branchData: Partial<IBranch>) {
         return BranchModel.create(branchData);
     }

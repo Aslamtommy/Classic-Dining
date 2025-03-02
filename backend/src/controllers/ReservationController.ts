@@ -1,12 +1,10 @@
 // controllers/ReservationController.ts
 import { Request, Response } from 'express';
-import { ReservationService } from '../services/ReservationService';
-import { ReservationRepository } from '../repositories/ReservationRepository';
-import { BranchRepository } from '../repositories/BranchRepository';
-import { TableTypeRepository } from '../repositories/TableRepository';
+ 
+ import { IReservationService } from '../interfaces/Reservation/IReservationService';
+ 
 import { sendResponse, sendError } from '../utils/responseUtils';
-import { WalletRepository } from '../repositories/WalletRepository';
-import { CouponRepository } from '../repositories/CouponRepository';
+ 
 import { ReservationStatus } from '../models/User/Reservation';
 import Razorpay from 'razorpay';
 
@@ -16,23 +14,17 @@ const razorpay = new Razorpay({
 });
 
 export class ReservationController {
-  private reservationService: ReservationService;
 
-  constructor() {
-    this.reservationService = new ReservationService(
-      new ReservationRepository(),
-      new BranchRepository(),
-      new TableTypeRepository(),
-      new WalletRepository(),
-      new CouponRepository()
-    );
+
+  constructor(  private _reservationService:  IReservationService ) {
+    
   }
 
   async createReservation(req: Request, res: Response) {
     try {
       const userId=req.data?.id
    const    reservationData={...req.body,userId}
-      const reservation = await this.reservationService.createReservation(reservationData);
+      const reservation = await this._reservationService.createReservation(reservationData);
       sendResponse(res, 201, 'Reservation created successfully', reservation);
     } catch (error: any) {
       console.error('Reservation creation error:', error.message, error.stack);
@@ -42,7 +34,7 @@ export class ReservationController {
 
   async getReservation(req: Request, res: Response) {
     try {
-      const reservation = await this.reservationService.getReservation(req.params.id);
+      const reservation = await this._reservationService.getReservation(req.params.id);
       if (!reservation) {
         return sendError(res, 404, 'Reservation not found');
       }
@@ -55,7 +47,7 @@ export class ReservationController {
 
   async cancelReservation(req: Request, res: Response) {
     try {
-      const reservation = await this.reservationService.cancelReservation(req.params.id);
+      const reservation = await this._reservationService.cancelReservation(req.params.id);
       if(!reservation){
         return sendError(res,404,'Reservation not found')
       }
@@ -70,7 +62,7 @@ export class ReservationController {
   async confirmReservation(req: Request, res: Response) {
     try {
       const { paymentId } = req.body;
-      const reservation = await this.reservationService.confirmReservation(req.params.id, paymentId);
+      const reservation = await this._reservationService.confirmReservation(req.params.id, paymentId);
       sendResponse(res, 200, 'Reservation confirmed successfully', reservation);
     } catch (error: any) {
       console.error('Reservation confirmation error:', error.message, error.stack);
@@ -82,7 +74,7 @@ export class ReservationController {
     try {
       console.log('failReservation called with ID:', req.params.id);
       const { paymentId } = req.body;
-      const reservation = await this.reservationService.failReservation(req.params.id, paymentId);
+      const reservation = await this._reservationService.failReservation(req.params.id, paymentId);
       sendResponse(res, 200, 'Reservation marked as payment failed', reservation) 
     } catch (error: any) {
       console.error('Reservation payment failure error:', error.message, error.stack);
@@ -99,7 +91,7 @@ export class ReservationController {
         return sendError(res, 400, 'Branch ID, date, and time slot are required');
       }
 
-      const availableTables = await this.reservationService.getAvailableTables(
+      const availableTables = await this._reservationService.getAvailableTables(
         branchId as string,
         new Date(date as string),
         timeSlot as string
@@ -141,7 +133,7 @@ export class ReservationController {
       const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
   
-      const result = await this.reservationService.getUserReservationsWithPagination(
+      const result = await this._reservationService.getUserReservationsWithPagination(
         userId,
         pageNum,
         limitNum,
@@ -166,7 +158,7 @@ async confirmWithWallet(req: Request, res: Response) {
     const reservationId = req.params.id;
     if (!userId) return sendError(res, 401, 'User not authenticated');
 
-    const reservation = await this.reservationService.confirmWithWallet(reservationId, userId);
+    const reservation = await this._reservationService.confirmWithWallet(reservationId, userId);
     sendResponse(res, 200, 'Reservation confirmed with wallet', reservation);
   } catch (error: any) {
     console.error('Wallet payment error:', error.message, error.stack);
@@ -186,7 +178,7 @@ async confirmWithWallet(req: Request, res: Response) {
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
 
-    const result = await this.reservationService.getBranchReservations(
+    const result = await this._reservationService.getBranchReservations(
       branchId,
       pageNum,
       limitNum,
@@ -217,7 +209,7 @@ async updateBranchReservationStatus(req:Request,res:Response){
     if(!branchId){
       return sendError(res,401,'Unauthorized')
     }
-    const reservation=await this.reservationService.updateBranchReservationStatus(
+    const reservation=await this._reservationService.updateBranchReservationStatus(
       reservationId,status,branchId
     )
     sendResponse(res, 200, `Reservation updated to ${status} successfully`, reservation);

@@ -17,4 +17,4 @@ export const startCronJobs = () => {
       console.error('Error in cron job:', error);
     }
   });
-};
+} 

@@ -32,7 +32,8 @@ export const MessageConstants = {
   OTP_SENT: "OTP sent successfully",
   INVALID_PASSWORD: "Wrong Password.",
   RESTAURENT_APPROVAL_REQUIRED: "Your account requires administrator approval to perform this action",
-
+  REQUIRED_FIELDS_MISSING: "All required fields must be provided",
+  PROFILE_PICTURE_UPLOADED: "Profile picture uploaded successfully",
   // New constants for BookingController
   UNAUTHORIZED: "Unauthorized access. Please log in.",
   BOOKING_CREATED: "Booking created successfully.",

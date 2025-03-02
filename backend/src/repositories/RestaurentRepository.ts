@@ -1,6 +1,6 @@
-import   { IRestaurent} from '../models/Restaurent/RestaurentModel';
+import   { IRestaurent} from '../models/Restaurent/restaurentModel';
 import { IRestaurentRepository} from '../interfaces/Restaurent/RestaurentRepositoryInterface';
-import RestaurentModel from '../models/Restaurent/RestaurentModel';
+import RestaurentModel from '../models/Restaurent/restaurentModel';
 export class RestaurentRepository implements IRestaurentRepository {
 
   
@@ -69,21 +69,23 @@ async countAll(filter: any): Promise<number> {
      }
    }
 
-   async addBranchToRestaurant(restaurantId: string, branchId: string): Promise<IRestaurent | null> {
-    return RestaurentModel.findByIdAndUpdate(
-      restaurantId,
-      { $push: { branches: branchId } }, // Add branch ID to branches array
-      { new: true }
-    );
-  }
-    // Remove branch from restaurant
-    async removeBranchFromRestaurant(restaurantId: string, branchId: string): Promise<IRestaurent | null> {
-      return RestaurentModel.findByIdAndUpdate(
-        restaurantId,
-        { $pull: { branches: branchId } }, // Remove branch ID from branches array
+   async addBranchToRestaurant(restaurentId: string, branchId: string): Promise<void> {
+    await RestaurentModel.findByIdAndUpdate(
+        restaurentId,
+        { $push: { branches: branchId } }, // Assuming 'branches' is an array field
         { new: true }
-      );
-    }
+    ).exec();
+    // No return value, aligns with Promise<void>
+}
+    // Remove branch from restaurant
+    async removeBranchFromRestaurant(restaurentId: string, branchId: string): Promise<void> {
+      await RestaurentModel.findByIdAndUpdate(
+          restaurentId,
+          { $pull: { branches: branchId } }, // Assuming 'branches' is an array field
+          { new: true }
+      ).exec();
+      // No return value, aligns with Promise<void>
+  }
     // Add these repository methods
 async findAllPending(filter: any, skip: number, limit: number): Promise<any> {
   return RestaurentModel.find(filter)
