@@ -1,4 +1,3 @@
-// src/services/ReservationService.ts
 import { IReservationRepository } from '../interfaces/Reservation/IReservationRepository';
 import { IBranchRepository } from '../interfaces/branch/IBranchRepository';
 import { TableTypeRepository } from '../repositories/TableRepository';
@@ -9,6 +8,9 @@ import { ICouponRepository } from '../interfaces/coupon/ICouponRepository';
 import { ITableType } from '../models/Restaurent/TableModel';
 import mongoose, { Types } from 'mongoose';
 import { IReservationService } from '../interfaces/Reservation/IReservationService';
+import { AppError } from '../utils/AppError';
+import { HttpStatus } from '../constants/HttpStatus';
+import { MessageConstants } from '../constants/MessageConstants';
 
 export class ReservationService implements IReservationService {
   constructor(
@@ -20,68 +22,78 @@ export class ReservationService implements IReservationService {
   ) {}
 
   async createReservation(reservationData: Partial<IReservation>): Promise<IReservation> {
-    const branchId = reservationData.branch?.toString();
-    const tableTypeId = reservationData.tableType?.toString();
-    if (!branchId || !tableTypeId) throw new Error('Branch and table type are required');
+    try {
+      const branchId = reservationData.branch?.toString();
+      const tableTypeId = reservationData.tableType?.toString();
+      if (!branchId || !tableTypeId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
 
-    const [branch, tableType] = await Promise.all([
-      this._branchRepo.findById(branchId),
-      this._tableTypeRepo.findById(tableTypeId),
-    ]);
+      const [branch, tableType] = await Promise.all([
+        this._branchRepo.findById(branchId),
+        this._tableTypeRepo.findById(tableTypeId),
+      ]);
 
-    if (!branch || !tableType) throw new Error('Invalid branch or table type');
-    if ((reservationData.partySize || 0) > tableType.capacity) {
-      throw new Error(`Party size exceeds table capacity. Maximum capacity: ${tableType.capacity}`);
-    }
-
-    const existingReservations = await this._reservationRepo.findAvailability(
-      branchId,
-      tableTypeId,
-      reservationData.reservationDate as Date,
-      reservationData.timeSlot as string
-    );
-
-    if (existingReservations >= tableType.quantity) throw new Error('No available tables for selected time slot');
-
-    let discountApplied = 0;
-    let finalAmount = tableType.price || 0;
-
-    if (reservationData.couponCode) {
-      const coupon = await this._couponRepo.findByCode(reservationData.couponCode);
-      if (!coupon || !coupon.isActive || coupon.expiryDate < new Date()) {
-        throw new Error('Invalid or expired coupon');
+      if (!branch || !tableType) throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_BRANCH_OR_TABLE);
+      if ((reservationData.partySize || 0) > tableType.capacity) {
+        throw new AppError(HttpStatus.BadRequest, `${MessageConstants.PARTY_SIZE_EXCEEDED}. Maximum capacity: ${tableType.capacity}`);
       }
-      if (coupon.minOrderAmount && finalAmount < coupon.minOrderAmount) {
-        throw new Error(`Minimum order amount of ${coupon.minOrderAmount} required`);
-      }
-      if (coupon.discountType === 'percentage') {
-        discountApplied = (coupon.discount / 100) * finalAmount;
-        if (coupon.maxDiscountAmount && discountApplied > coupon.maxDiscountAmount) {
-          discountApplied = coupon.maxDiscountAmount;
+
+      const existingReservations = await this._reservationRepo.findAvailability(
+        branchId,
+        tableTypeId,
+        reservationData.reservationDate as Date,
+        reservationData.timeSlot as string
+      );
+
+      if (existingReservations >= tableType.quantity) throw new AppError(HttpStatus.BadRequest, MessageConstants.NO_AVAILABLE_TABLES);
+
+      let discountApplied = 0;
+      let finalAmount = tableType.price || 0;
+
+      if (reservationData.couponCode) {
+        const coupon = await this._couponRepo.findByCode(reservationData.couponCode);
+        if (!coupon || !coupon.isActive || coupon.expiryDate < new Date()) {
+          throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_COUPON);
         }
-      } else {
-        discountApplied = coupon.discount;
+        if (coupon.minOrderAmount && finalAmount < coupon.minOrderAmount) {
+          throw new AppError(HttpStatus.BadRequest, `${MessageConstants.MIN_ORDER_AMOUNT_REQUIRED} ${coupon.minOrderAmount}`);
+        }
+        if (coupon.discountType === 'percentage') {
+          discountApplied = (coupon.discount / 100) * finalAmount;
+          if (coupon.maxDiscountAmount && discountApplied > coupon.maxDiscountAmount) {
+            discountApplied = coupon.maxDiscountAmount;
+          }
+        } else {
+          discountApplied = coupon.discount;
+        }
+        finalAmount = finalAmount - discountApplied;
+        if (finalAmount < 0) finalAmount = 0;
       }
-      finalAmount = finalAmount - discountApplied;
-      if (finalAmount < 0) finalAmount = 0;
+
+      const reservation = await this._reservationRepo.create({
+        ...reservationData,
+        couponCode: reservationData.couponCode,
+        discountApplied,
+        finalAmount,
+        branch: new Types.ObjectId(branchId),
+        tableType: new Types.ObjectId(tableTypeId),
+      });
+
+      return reservation;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
-
-    const reservation = await this._reservationRepo.create({
-      ...reservationData,
-      couponCode: reservationData.couponCode,
-      discountApplied,
-      finalAmount,
-      branch: new Types.ObjectId(branchId),
-      tableType: new Types.ObjectId(tableTypeId),
-    });
-
-    return reservation;
   }
 
   async getReservation(id: string): Promise<IReservation> {
-    const reservation = await this._reservationRepo.findById(id);
-    if (!reservation) throw new Error('Reservation not found');
-    return reservation;
+    try {
+      const reservation = await this._reservationRepo.findById(id);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      return reservation;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async cancelReservation(id: string): Promise<IReservation> {
@@ -89,22 +101,22 @@ export class ReservationService implements IReservationService {
     session.startTransaction();
 
     try {
-      const reservation = await this._reservationRepo.findById(id, session);
-      if (!reservation) throw new Error('Reservation not found');
-      if (reservation.status === ReservationStatus.CANCELLED) throw new Error('Reservation is already cancelled');
+      const reservation = await this._reservationRepo.findById(id);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      if (reservation.status === ReservationStatus.CANCELLED) throw new AppError(HttpStatus.BadRequest, MessageConstants.RESERVATION_ALREADY_CANCELLED);
 
       if (reservation.status === ReservationStatus.CONFIRMED) {
         const tableType = typeof reservation.tableType === 'object' && 'price' in reservation.tableType
           ? reservation.tableType as ITableType
           : await this._tableTypeRepo.findById(reservation.tableType.toString());
 
-        if (!tableType || !('price' in tableType)) throw new Error('Table type not found or invalid');
+        if (!tableType || !('price' in tableType)) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INVALID_BRANCH_OR_TABLE);
 
         const amount = reservation.finalAmount !== undefined ? reservation.finalAmount : tableType.price || 0;
         if (amount > 0) {
           await this._walletRepo.updateWalletBalance(reservation.userId.toString(), amount);
           await this._walletRepo.createTransaction({
-            userId: reservation.userId.toString(), // Assuming ITransaction.userId is string
+            userId: reservation.userId.toString(),
             type: 'credit',
             amount,
             description: `Refund for cancelled reservation ${id}`,
@@ -114,58 +126,73 @@ export class ReservationService implements IReservationService {
       }
 
       const updatedReservation = await this._reservationRepo.updateStatus(id, ReservationStatus.CANCELLED);
-      if (!updatedReservation) throw new Error('Failed to cancel reservation');
+      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       await session.commitTransaction();
       return updatedReservation;
     } catch (error) {
       await session.abortTransaction();
-      throw error;
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     } finally {
       session.endSession();
     }
   }
 
   async confirmReservation(id: string, paymentId: string): Promise<IReservation> {
-    const reservation = await this._reservationRepo.findById(id);
-    if (!reservation) throw new Error('Reservation not found');
-    if (reservation.status !== ReservationStatus.PENDING && reservation.status !== ReservationStatus.PAYMENT_FAILED) {
-      throw new Error(`Reservation cannot be confirmed in current status: ${reservation.status}`);
+    try {
+      const reservation = await this._reservationRepo.findById(id);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      if (reservation.status !== ReservationStatus.PENDING && reservation.status !== ReservationStatus.PAYMENT_FAILED) {
+        throw new AppError(HttpStatus.BadRequest, `${MessageConstants.INVALID_RESERVATION_STATUS}: ${reservation.status}`);
+      }
+      const updatedReservation = await this._reservationRepo.update(id, {
+        status: ReservationStatus.CONFIRMED,
+        paymentId,
+        paymentMethod: 'razorpay',
+      });
+      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      return updatedReservation;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
-    const updatedReservation = await this._reservationRepo.update(id, {
-      status: ReservationStatus.CONFIRMED,
-      paymentId,
-      paymentMethod: 'razorpay',
-    });
-    if (!updatedReservation) throw new Error('Failed to confirm reservation');
-    return updatedReservation;
   }
 
   async failReservation(id: string, paymentId: string): Promise<IReservation> {
-    const reservation = await this._reservationRepo.findById(id);
-    if (!reservation) throw new Error('Reservation not found');
-    if (reservation.status !== ReservationStatus.PENDING) {
-      throw new Error(`Reservation cannot be updated from current status: ${reservation.status}`);
+    try {
+      const reservation = await this._reservationRepo.findById(id);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      if (reservation.status !== ReservationStatus.PENDING) {
+        throw new AppError(HttpStatus.BadRequest, `${MessageConstants.INVALID_RESERVATION_STATUS}: ${reservation.status}`);
+      }
+      const updatedReservation = await this._reservationRepo.update(id, {
+        status: ReservationStatus.PAYMENT_FAILED,
+        paymentId,
+      });
+      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      return updatedReservation;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
-    const updatedReservation = await this._reservationRepo.update(id, {
-      status: ReservationStatus.PAYMENT_FAILED,
-      paymentId,
-    });
-    if (!updatedReservation) throw new Error('Failed to fail reservation');
-    return updatedReservation;
   }
 
   async getAvailableTables(branchId: string, date: Date, timeSlot: string): Promise<any[]> {
-    const allTables = await this._tableTypeRepo.findAllByBranch(branchId);
-    const availabilityPromises = allTables.map(async (table) => {
-      const existingReservations = await this._reservationRepo.findAvailability(
-        branchId,
-        table._id.toString(),
-        date,
-        timeSlot
-      );
-      return existingReservations < table.quantity ? table : null;
-    });
-    return (await Promise.all(availabilityPromises)).filter((table) => table !== null);
+    try {
+      const allTables = await this._tableTypeRepo.findAllByBranch(branchId);
+      const availabilityPromises = allTables.map(async (table) => {
+        const existingReservations = await this._reservationRepo.findAvailability(
+          branchId,
+          table._id.toString(),
+          date,
+          timeSlot
+        );
+        return existingReservations < table.quantity ? table : null;
+      });
+      return (await Promise.all(availabilityPromises)).filter((table) => table !== null);
+    } catch (error) {
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async getUserReservationsWithPagination(
@@ -174,37 +201,46 @@ export class ReservationService implements IReservationService {
     limit: number = 10,
     status?: ReservationStatus
   ): Promise<{ reservations: IReservation[]; total: number }> {
-    const skip = (page - 1) * limit;
-    const [reservations, total] = await Promise.all([
-      this._reservationRepo.findByUserIdWithPagination(userId, skip, limit, status),
-      this._reservationRepo.countByUserId(userId, status),
-    ]);
-    return { reservations, total };
+    try {
+      const skip = (page - 1) * limit;
+      const [reservations, total] = await Promise.all([
+        this._reservationRepo.findByUserIdWithPagination(userId, skip, limit, status),
+        this._reservationRepo.countByUserId(userId, status),
+      ]);
+      return { reservations, total };
+    } catch (error) {
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async confirmWithWallet(reservationId: string, userId: string): Promise<IReservation> {
-    const reservation = await this._reservationRepo.findById(reservationId);
-    if (!reservation) throw new Error('Reservation not found');
-    if (reservation.userId.toString() !== userId) throw new Error('Unauthorized');
-    if (reservation.status !== ReservationStatus.PENDING) {
-      throw new Error(`Reservation cannot be confirmed in current status: ${reservation.status}`);
+    try {
+      const reservation = await this._reservationRepo.findById(reservationId);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      if (reservation.userId.toString() !== userId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      if (reservation.status !== ReservationStatus.PENDING) {
+        throw new AppError(HttpStatus.BadRequest, `${MessageConstants.INVALID_RESERVATION_STATUS}: ${reservation.status}`);
+      }
+
+      const tableTypeId = typeof reservation.tableType === 'object' && 'price' in reservation.tableType
+        ? (reservation.tableType as ITableType)._id.toString()
+        : reservation.tableType.toString();
+
+      const tableType = await this._tableTypeRepo.findById(tableTypeId);
+      if (!tableType || !('price' in tableType)) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INVALID_BRANCH_OR_TABLE);
+
+      const amount = reservation.finalAmount !== undefined ? reservation.finalAmount : tableType.price || 0;
+      await this._walletRepo.payWithWallet(userId, amount, reservationId);
+      const updatedReservation = await this._reservationRepo.update(reservationId, {
+        status: ReservationStatus.CONFIRMED,
+        paymentMethod: 'wallet',
+      });
+      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      return updatedReservation;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.WALLET_CONFIRMATION_FAILED);
     }
-
-    const tableTypeId = typeof reservation.tableType === 'object' && 'price' in reservation.tableType
-      ? (reservation.tableType as ITableType)._id.toString()
-      : reservation.tableType.toString();
-
-    const tableType = await this._tableTypeRepo.findById(tableTypeId);
-    if (!tableType || !('price' in tableType)) throw new Error('Table type not found or invalid');
-
-    const amount = reservation.finalAmount !== undefined ? reservation.finalAmount : tableType.price || 0;
-    await this._walletRepo.payWithWallet(userId, amount, reservationId);
-    const updatedReservation = await this._reservationRepo.update(reservationId, {
-      status: ReservationStatus.CONFIRMED,
-      paymentMethod: 'wallet',
-    });
-    if (!updatedReservation) throw new Error('Failed to confirm reservation with wallet');
-    return updatedReservation;
   }
 
   async getBranchReservations(
@@ -213,15 +249,20 @@ export class ReservationService implements IReservationService {
     limit: number = 10,
     status?: ReservationStatus
   ): Promise<{ reservations: IReservation[]; total: number }> {
-    const branch = await this._branchRepo.findById(branchId);
-    if (!branch) throw new Error('Branch not found');
+    try {
+      const branch = await this._branchRepo.findById(branchId);
+      if (!branch) throw new AppError(HttpStatus.NotFound, MessageConstants.BRANCH_NOT_FOUND);
 
-    const skip = (page - 1) * limit;
-    const [reservations, total] = await Promise.all([
-      this._reservationRepo.findByBranchIdWithPagination(branchId, skip, limit, status),
-      this._reservationRepo.countByBranchId(branchId, status),
-    ]);
-    return { reservations, total };
+      const skip = (page - 1) * limit;
+      const [reservations, total] = await Promise.all([
+        this._reservationRepo.findByBranchIdWithPagination(branchId, skip, limit, status),
+        this._reservationRepo.countByBranchId(branchId, status),
+      ]);
+      return { reservations, total };
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async updateBranchReservationStatus(
@@ -234,10 +275,10 @@ export class ReservationService implements IReservationService {
 
     try {
       const reservation = await this._reservationRepo.findById(reservationId);
-      if (!reservation) throw new Error('Reservation not found');
-      if (reservation.branch.toString() !== branchId) throw new Error('You do not have permission to update this reservation');
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      if (reservation.branch.toString() !== branchId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
       if (reservation.status !== ReservationStatus.CONFIRMED) {
-        throw new Error('Only confirmed reservations can be updated to completed or cancelled');
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_RESERVATION_STATUS);
       }
 
       let updatedReservation: IReservation | null = null;
@@ -247,13 +288,13 @@ export class ReservationService implements IReservationService {
           ? reservation.tableType as ITableType
           : await this._tableTypeRepo.findById(reservation.tableType.toString());
 
-        if (!tableType || !('price' in tableType)) throw new Error('Table type not found or invalid');
+        if (!tableType || !('price' in tableType)) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INVALID_BRANCH_OR_TABLE);
 
         const amount = reservation.finalAmount !== undefined ? reservation.finalAmount : tableType.price || 0;
         if (amount > 0) {
           await this._walletRepo.updateWalletBalance(reservation.userId.toString(), amount);
           await this._walletRepo.createTransaction({
-            userId: reservation.userId.toString(), // Assuming ITransaction.userId is string
+            userId: reservation.userId.toString(),
             type: 'credit',
             amount,
             description: `Refund for cancelled reservation ${reservationId} by branch`,
@@ -264,11 +305,13 @@ export class ReservationService implements IReservationService {
 
       const mappedStatus = status === 'completed' ? ReservationStatus.COMPLETED : ReservationStatus.CANCELLED;
       updatedReservation = await this._reservationRepo.update(reservationId, { status: mappedStatus });
+      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       await session.commitTransaction();
       return updatedReservation;
     } catch (error) {
       await session.abortTransaction();
-      throw error;
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     } finally {
       session.endSession();
     }

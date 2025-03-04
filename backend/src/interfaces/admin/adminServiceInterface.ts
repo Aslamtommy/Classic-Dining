@@ -1,22 +1,29 @@
+import { IUser } from '../../models/User/userModel';
+import { IRestaurent } from '../../models/Restaurent/restaurentModel';
+import { IAdmin } from '../../models/Admin/adminModel';
+
 export interface IAdminService {
-  adminLogin(email: string, password: string): Promise<{ admin: any; accessToken: string; refreshToken: string }>;
+  adminLogin(email: string, password: string): Promise<{ admin: IAdmin; accessToken: string; refreshToken: string }>;
   refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }>;
-  getPendingRestaurents( page: number,
+  getPendingRestaurents(
+    page: number,
     limit: number,
-    searchTerm: string): Promise<{ restaurents: any[]; total: number }>;
-  updateRestaurentStatus(restaurentId: string, isBlocked: boolean,  blockReason?: string) : Promise<any>;
- 
+    searchTerm: string
+  ): Promise<{ restaurents: IRestaurent[]; total: number }>;
+  updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent>;
   getAllRestaurents(
     page: number,
     limit: number,
     searchTerm: string,
     isBlocked: string
-  ): Promise<{ restaurents: any[]; total: number }>;
-  getAllUsers( page: number,
+  ): Promise<{ restaurents: IRestaurent[]; total: number }>;
+  getAllUsers(
+    page: number,
     limit: number,
     searchTerm: string,
-    isBlocked: string): Promise<{ users: any[]; total: number }>;
-   restaurentBlock(restaurentId: string, isBlocked: boolean): Promise<any>;
-  blockUser(userId: string, isBlocked: boolean): Promise<any>;
+    isBlocked: string
+  ): Promise<{ users: IUser[]; total: number }>;
+  restaurentBlock(restaurentId: string, isBlocked: boolean): Promise<IRestaurent>;
+  blockUser(userId: string, isBlocked: boolean): Promise<IUser>;
 }
- 
+

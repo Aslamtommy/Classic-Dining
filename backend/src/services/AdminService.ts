@@ -2,82 +2,93 @@ import { IAdminService } from "../interfaces/admin/adminServiceInterface";
 import { IRestaurentRepository } from "../interfaces/Restaurent/RestaurentRepositoryInterface";
 import { UserRepositoryInterface } from "../interfaces/user/UserRepositoryInterface";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../utils/jwt";
-import { IAdminrepository } from "../interfaces/admin/adminRepositoryInterface";
+import { IAdminRepository } from "../interfaces/admin/adminRepositoryInterface";
+import { AppError } from '../utils/AppError';
+import { HttpStatus } from "../constants/HttpStatus";
+import { MessageConstants } from "../constants/MessageConstants";
+import { IAdmin } from "../models/Admin/adminModel";
+import { IRestaurent } from "../models/Restaurent/restaurentModel";
+import { IUser } from "../models/User/userModel";
+ 
 
-class AdminService implements IAdminService {
+export class AdminService implements IAdminService {
   constructor(
-    private adminRepository: IAdminrepository,
+    private adminRepository: IAdminRepository,
     private restaurentRepository: IRestaurentRepository,
     private userRepository: UserRepositoryInterface
   ) {}
 
-  async adminLogin(email: string, password: string): Promise<{ admin: any; accessToken: string; refreshToken: string }> {
-    console.log("Admin login request for email:", email);
+  async adminLogin(email: string, password: string): Promise<{ admin: IAdmin; accessToken: string; refreshToken: string }> {
+    try {
+      const admin = await this.adminRepository.findByEmail(email);
+      if (!admin) {
+        throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
+      }
+ 
+       
+      if (password !==admin.password) {
+        throw new AppError(HttpStatus.Unauthorized, MessageConstants.INVALID_PASSWORD);
+      }
 
-    const admin = await this.adminRepository.findByEmail(email);
-
-    if (!admin) {
-      console.error("Admin not found for email:", email);
-      throw new Error("Admin not found");
+      const accessToken = generateAccessToken({ id: admin._id.toString(), role: "admin" });
+      const refreshToken = generateRefreshToken({ id: admin._id.toString(), role: "admin" });
+      return { admin, accessToken, refreshToken };
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
-
-    if (password !== admin.password) {
-      console.error("Invalid password for admin:", email);
-      throw new Error("Invalid email or password");
-    }
-
-    // Generate tokens by passing an object payload
-    const accessToken = generateAccessToken({ id: admin._id.toString(), role: "admin" });
-    const refreshToken = generateRefreshToken({ id: admin._id.toString(), role: "admin" });
-
-    console.log("Tokens generated successfully for admin:", admin._id.toString());
-
-    return { admin, accessToken, refreshToken };
   }
 
   async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
       const decoded = verifyToken(refreshToken);
-
-      // Check for the expected property "id" in the payload
       if (!decoded || typeof decoded !== "object" || !("id" in decoded)) {
-        throw new Error("Invalid or malformed token");
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_REFRESH_TOKEN);
       }
-
-      // Generate a new access token using the decoded token's id and role "admin"
-      const newAccessToken = generateAccessToken({ id: decoded.id, role: "admin" });
+      const newAccessToken = generateAccessToken({ id: (decoded as { id: string }).id, role: "admin" });
       return { accessToken: newAccessToken };
-    } catch (error: any) {
-      throw new Error("Failed to refresh tokens");
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.REFRESH_TOKEN_FAILED);
     }
   }
 
- // Update service method
-async getPendingRestaurents(
-  page: number,
-  limit: number,
-  searchTerm: string
-): Promise<{ restaurents: any[]; total: number }> {
-  const skip = (page - 1) * limit;
-  
-  const filter: any = { 
-      isBlocked: true,
-      $or: [
+  async getPendingRestaurents(
+    page: number,
+    limit: number,
+    searchTerm: string
+  ): Promise<{ restaurents: IRestaurent[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      const filter = { 
+        isBlocked: true,
+        $or: [
           { name: { $regex: searchTerm, $options: 'i' } },
           { email: { $regex: searchTerm, $options: 'i' } }
-      ]
-  };
+        ]
+      };
+      const [restaurents, total] = await Promise.all([
+        this.restaurentRepository.findAllPending(filter, skip, limit),
+        this.restaurentRepository.countAllPending(filter),
+      ]);
+      return { restaurents, total };
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, "Failed to fetch pending restaurants");
+    }
+  }
 
-  const [restaurents, total] = await Promise.all([
-      this.restaurentRepository.findAllPending(filter, skip, limit),
-      this.restaurentRepository.countAllPending(filter),
-  ]);
-
-  return { restaurents, total };
-}
-
-  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<any> {
-    return await this.restaurentRepository.updateRestaurentStatus(restaurentId, isBlocked, blockReason);
+  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent> {
+    try {
+      const updated = await this.restaurentRepository.updateRestaurentStatus(restaurentId, isBlocked, blockReason);
+      if (!updated) {
+        throw new AppError(HttpStatus.NotFound, "Restaurant not found");
+      }
+      return updated;
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, "Failed to update restaurant status");
+    }
   }
 
   async getAllRestaurents(
@@ -85,29 +96,28 @@ async getPendingRestaurents(
     limit: number,
     searchTerm: string,
     isBlocked: string
-  ): Promise<{ restaurents: any[]; total: number }> {
-    const skip = (page - 1) * limit;
-    
-    // Build filter query
-    const filter: any = {};
-    if (searchTerm) {
-      filter.$or = [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { email: { $regex: searchTerm, $options: 'i' } }
-      ];
+  ): Promise<{ restaurents: IRestaurent[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      const filter: Record<string, any> = {};
+      if (searchTerm) {
+        filter.$or = [
+          { name: { $regex: searchTerm, $options: 'i' } },
+          { email: { $regex: searchTerm, $options: 'i' } }
+        ];
+      }
+      if (isBlocked === 'blocked') filter.isBlocked = true;
+      else if (isBlocked === 'active') filter.isBlocked = false;
+
+      const [restaurents, total] = await Promise.all([
+        this.restaurentRepository.findAll(filter, skip, limit),
+        this.restaurentRepository.countAll(filter),
+      ]);
+      return { restaurents, total };
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, "Failed to fetch restaurants");
     }
-    if (isBlocked === 'blocked') {
-      filter.isBlocked = true;
-    } else if (isBlocked === 'active') {
-      filter.isBlocked = false;
-    }
-  
-    const [restaurents, total] = await Promise.all([
-      this.restaurentRepository.findAll(filter, skip, limit),
-      this.restaurentRepository.countAll(filter),
-    ]);
-  
-    return { restaurents, total };
   }
 
   async getAllUsers(
@@ -115,61 +125,58 @@ async getPendingRestaurents(
     limit: number,
     searchTerm: string,
     isBlocked: string
-  ): Promise<{ users: any[]; total: number }> {
-    const skip = (page - 1) * limit;
-
-    // Build filter query
-    const filter: any = {};
-    if (searchTerm) {
-      // Ensure searchTerm is trimmed and handle empty strings
-      const trimmedSearchTerm = searchTerm.trim().toLowerCase();
-      if (trimmedSearchTerm) {
-        filter.$or = [
-          { name: { $regex: trimmedSearchTerm, $options: 'i' } }, // Case-insensitive regex
-          { email: { $regex: trimmedSearchTerm, $options: 'i' } }
-        ];
+  ): Promise<{ users: IUser[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      const filter: Record<string, any> = {};
+      if (searchTerm) {
+        const trimmedSearchTerm = searchTerm.trim().toLowerCase();
+        if (trimmedSearchTerm) {
+          filter.$or = [
+            { name: { $regex: trimmedSearchTerm, $options: 'i' } },
+            { email: { $regex: trimmedSearchTerm, $options: 'i' } }
+          ];
+        }
       }
-    }
-    if (isBlocked === 'blocked') {
-      filter.isBlocked = true;
-    } else if (isBlocked === 'active') {
-      filter.isBlocked = false;
-    }
+      if (isBlocked === 'blocked') filter.isBlocked = true;
+      else if (isBlocked === 'active') filter.isBlocked = false;
 
-    console.log('Filter for getAllUsers:', filter); // Debugging
-
-    const [users, total] = await Promise.all([
-      this.userRepository.findAll(filter, skip, limit),
-      this.userRepository.countAll(filter),
-    ]);
-    return { users, total };
+      const [users, total] = await Promise.all([
+        this.userRepository.findAll(filter, skip, limit),
+        this.userRepository.countAll(filter),
+      ]);
+      return { users, total };
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, "Failed to fetch users");
+    }
   }
 
-  async restaurentBlock(restaurentId: string, isBlocked: boolean): Promise<any> {
-    const restaurent = await this.restaurentRepository.findById(restaurentId);
-
-    if (!restaurent) {
-      throw new Error("Restaurent not found");
+  async restaurentBlock(restaurentId: string, isBlocked: boolean): Promise<IRestaurent> {
+    try {
+      const restaurent = await this.restaurentRepository.findById(restaurentId);
+      if (!restaurent) {
+        throw new AppError(HttpStatus.NotFound, "Restaurant not found");
+      }
+      restaurent.isBlocked = isBlocked;
+      return await this.restaurentRepository.save(restaurent);
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, "Failed to block/unblock restaurant");
     }
-
-    restaurent.isBlocked = isBlocked;
-    const updatedRestaurent = await this.restaurentRepository.save(restaurent);
-
-    return updatedRestaurent;
   }
 
-  async blockUser(userId: string, isBlocked: boolean): Promise<any> {
+  async blockUser(userId: string, isBlocked: boolean): Promise<IUser> {
     try {
       const user = await this.userRepository.findById(userId);
       if (!user) {
-        throw new Error("User not found");
+        throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
-      console.log('User is blocking boolean:', isBlocked);
       user.isBlocked = isBlocked;
-      const updatedUser = await this.userRepository.save(user);
-      return updatedUser;
-    } catch (error: any) {
-      throw new Error(error.message);
+      return await this.userRepository.save(user);
+    } catch (error: unknown) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, "Failed to block/unblock user");
     }
   }
 }

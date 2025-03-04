@@ -10,7 +10,7 @@ import blockedUserMiddleware from '../middlewares/blockedUserMiddleware';
 import { BranchRepository } from '../repositories/BranchRepository';
 import { ReservationController } from '../controllers/ReservationController';
 import { WalletController } from '../controllers/WalletController';
-import { CoupenService } from '../services/CouponService';
+import { CouponService } from '../services/CouponService';
 import { CouponRepository } from '../repositories/CouponRepository';
 import { ReservationService } from '../services/ReservationService'; // Added import
 import { ReservationRepository } from '../repositories/ReservationRepository'; // Added import
@@ -30,7 +30,7 @@ const walletRepository = new WalletRepository();
 
 // Instantiate services
 const userService = new UserService(userRepository, otpRepository, branchRepository);
-const couponService = new CoupenService(couponRepository); // Corrected typo
+const couponService = new CouponService(couponRepository); // Corrected typo
 const reservationService = new ReservationService(
   reservationRepository,
   branchRepository,

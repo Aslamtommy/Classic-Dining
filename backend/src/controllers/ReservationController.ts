@@ -1,12 +1,12 @@
-// controllers/ReservationController.ts
+// src/controllers/ReservationController.ts
 import { Request, Response } from 'express';
- 
- import { IReservationService } from '../interfaces/Reservation/IReservationService';
- 
+import { IReservationService } from '../interfaces/Reservation/IReservationService';
 import { sendResponse, sendError } from '../utils/responseUtils';
- 
 import { ReservationStatus } from '../models/User/Reservation';
 import Razorpay from 'razorpay';
+import { HttpStatus } from '../constants/HttpStatus';
+import { AppError } from '../utils/AppError';
+import { MessageConstants } from '../constants/MessageConstants';
 
 const razorpay = new Razorpay({
   key_id: 'rzp_test_ihsNz6lracNIu3',
@@ -14,208 +14,237 @@ const razorpay = new Razorpay({
 });
 
 export class ReservationController {
+  constructor(private _reservationService: IReservationService) {}
 
-
-  constructor(  private _reservationService:  IReservationService ) {
-    
-  }
-
-  async createReservation(req: Request, res: Response) {
+  async createReservation(req: Request, res: Response): Promise<void> {
     try {
-      const userId=req.data?.id
-   const    reservationData={...req.body,userId}
+      const userId = req.data?.id;
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      const reservationData = { ...req.body, userId };
       const reservation = await this._reservationService.createReservation(reservationData);
-      sendResponse(res, 201, 'Reservation created successfully', reservation);
-    } catch (error: any) {
-      console.error('Reservation creation error:', error.message, error.stack);
-      sendError(res, 400, error.message || 'Failed to create reservation');
-    }
-  }
-
-  async getReservation(req: Request, res: Response) {
-    try {
-      const reservation = await this._reservationService.getReservation(req.params.id);
-      if (!reservation) {
-        return sendError(res, 404, 'Reservation not found');
+      sendResponse(res, HttpStatus.Created, MessageConstants.RESERVATION_CREATED, reservation);
+    } catch (error: unknown) {
+      console.error('Reservation creation error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.INTERNAL_SERVER_ERROR);
       }
-      sendResponse(res, 200, 'Reservation fetched successfully', reservation);
-    } catch (error: any) {
-      console.error('Reservation fetch error:', error.message, error.stack);
-      sendError(res, 500, error.message || 'Failed to fetch reservation');
     }
   }
 
-  async cancelReservation(req: Request, res: Response) {
+  async getReservation(req: Request, res: Response): Promise<void> {
     try {
-      const reservation = await this._reservationService.cancelReservation(req.params.id);
-      if(!reservation){
-        return sendError(res,404,'Reservation not found')
+      const id = req.params.id;
+      if (!id) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      const reservation = await this._reservationService.getReservation(id);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATIONS_FETCHED, reservation);
+    } catch (error: unknown) {
+      console.error('Reservation fetch error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
-      console.log(`Reservation ${req.params.id} cancelled${reservation.status === 'confirmed' ? ', amount credited to wallet' : ''}`);
-      sendResponse(res, 200, 'Reservation cancelled successfully', reservation);
-    } catch (error: any) {
-      console.error('Reservation cancellation error:', error.message, error.stack);
-      sendError(res, 400, error.message || 'Failed to cancel reservation');
     }
   }
 
-  async confirmReservation(req: Request, res: Response) {
+  async cancelReservation(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.params.id;
+      if (!id) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      const reservation = await this._reservationService.cancelReservation(id);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      console.log(`Reservation ${id} cancelled${reservation.status === 'confirmed' ? ', amount credited to wallet' : ''}`);
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_CANCELLED, reservation);
+    } catch (error: unknown) {
+      console.error('Reservation cancellation error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  async confirmReservation(req: Request, res: Response): Promise<void> {
     try {
       const { paymentId } = req.body;
-      const reservation = await this._reservationService.confirmReservation(req.params.id, paymentId);
-      sendResponse(res, 200, 'Reservation confirmed successfully', reservation);
-    } catch (error: any) {
-      console.error('Reservation confirmation error:', error.message, error.stack);
-      sendError(res, 400, error.message || 'Failed to confirm reservation');
+      const id = req.params.id;
+      if (!id || !paymentId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      const reservation = await this._reservationService.confirmReservation(id, paymentId);
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_CONFIRMED, reservation);
+    } catch (error: unknown) {
+      console.error('Reservation confirmation error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
-  async failReservation(req: Request, res: Response) {
+  async failReservation(req: Request, res: Response): Promise<void> {
     try {
-      console.log('failReservation called with ID:', req.params.id);
       const { paymentId } = req.body;
-      const reservation = await this._reservationService.failReservation(req.params.id, paymentId);
-      sendResponse(res, 200, 'Reservation marked as payment failed', reservation) 
-    } catch (error: any) {
-      console.error('Reservation payment failure error:', error.message, error.stack);
-      
-      sendError(res, 400, error.message || 'Failed to mark reservation as payment failed' );
+      const id = req.params.id;
+      if (!id || !paymentId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      console.log('failReservation called with ID:', id);
+      const reservation = await this._reservationService.failReservation(id, paymentId);
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_PAYMENT_FAILED, reservation);
+    } catch (error: unknown) {
+      console.error('Reservation payment failure error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
-  async getAvailableTables(req: Request, res: Response) {
+  async getAvailableTables(req: Request, res: Response): Promise<void> {
     try {
       console.log('getAvailableTables called with:', req.query);
       const { branchId, date, timeSlot } = req.query;
       if (!branchId || !date || !timeSlot) {
-        return sendError(res, 400, 'Branch ID, date, and time slot are required');
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-
       const availableTables = await this._reservationService.getAvailableTables(
         branchId as string,
         new Date(date as string),
         timeSlot as string
       );
-
-      sendResponse(res, 200, 'Available tables fetched successfully', availableTables);
-    } catch (error: any) {
-      console.error('Error fetching available tables:', error.message, error.stack);
-      sendError(res, 500, error.message || 'Failed to fetch available tables');
+      sendResponse(res, HttpStatus.OK, MessageConstants.AVAILABLE_TABLES_FETCHED, availableTables);
+    } catch (error: unknown) {
+      console.error('Error fetching available tables:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
-  async createPaymentOrder(req: Request, res: Response) {
+  async createPaymentOrder(req: Request, res: Response): Promise<void> {
     try {
       const { amount, currency } = req.body;
+      if (!amount || !currency) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       const options = {
         amount: amount,
         currency: currency,
         receipt: `reserve_${Date.now()}`
       };
-
       const order = await razorpay.orders.create(options);
-      sendResponse(res, 200, 'Order created successfully', order);
-    } catch (error: any) {
-      console.error('Payment order error:', error);
-      sendError(res, 500, 'Failed to create payment order');
+      sendResponse(res, HttpStatus.OK, MessageConstants.PAYMENT_ORDER_CREATED, order);
+    } catch (error: unknown) {
+      console.error('Payment order error:', error instanceof Error ? error : 'Unknown error');
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
-    
   }
 
- 
-  async getUserReservations(req: Request, res: Response) {
+  async getUserReservations(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.data?.id; // From auth middleware
-      if (!userId) {
-        return sendError(res, 401, 'User not authenticated');
-      }
+      const userId = req.data?.id;
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
       const { page = '1', limit = '10', status } = req.query;
       const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
-  
       const result = await this._reservationService.getUserReservationsWithPagination(
         userId,
         pageNum,
         limitNum,
         status as ReservationStatus | undefined
       );
-  
-      sendResponse(res, 200, 'Reservations fetched successfully', {
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATIONS_FETCHED, {
         reservations: result.reservations,
         total: result.total,
         page: pageNum,
         limit: limitNum,
         totalPages: Math.ceil(result.total / limitNum),
       });
-    } catch (error: any) {
-      console.error('Error fetching user reservations:', error.message, error.stack);
-      sendError(res, 500, error.message || 'Failed to fetch reservations');
+    } catch (error: unknown) {
+      console.error('Error fetching user reservations:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
-async confirmWithWallet(req: Request, res: Response) {
-  try {
-    const userId = req.data?.id; // Assuming req.data.id comes from auth middleware
-    const reservationId = req.params.id;
-    if (!userId) return sendError(res, 401, 'User not authenticated');
 
-    const reservation = await this._reservationService.confirmWithWallet(reservationId, userId);
-    sendResponse(res, 200, 'Reservation confirmed with wallet', reservation);
-  } catch (error: any) {
-    console.error('Wallet payment error:', error.message, error.stack);
-    sendError(res, 400, error.message || 'Failed to confirm with wallet');
-  }
-}
-
- async getBranchReservations(req: Request, res: Response) {
-  try {
-    const { branchId } = req.params;
-    const authenticatedBranchId = req.data?.id;
-    if (branchId !== authenticatedBranchId) {
-      return sendError(res, 403, 'You can only access your own branch reservations');
+  async confirmWithWallet(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.data?.id;
+      const reservationId = req.params.id;
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      if (!reservationId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      const reservation = await this._reservationService.confirmWithWallet(reservationId, userId);
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_CONFIRMED_WITH_WALLET, reservation);
+    } catch (error: unknown) {
+      console.error('Wallet payment error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.BadRequest, MessageConstants.WALLET_CONFIRMATION_FAILED);
+      }
     }
-
-    const { page = '1', limit = '10', status } = req.query;
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
-
-    const result = await this._reservationService.getBranchReservations(
-      branchId,
-      pageNum,
-      limitNum,
-      status as ReservationStatus | undefined
-    );
-
-    sendResponse(res, 200, 'Branch reservations fetched successfully', {
-      reservations: result.reservations,
-      total: result.total,
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(result.total / limitNum),
-    });
-  } catch (error: any) {
-    console.error('Error fetching branch reservations:', error.message, error.stack);
-    sendError(res, 500, error.message || 'Failed to fetch branch reservations');
   }
-}
 
-
-async updateBranchReservationStatus(req:Request,res:Response){
-  
-  try {
-    const {reservationId}=req.params
-    const {status}=req.body
-    const branchId=req.data?.id
-
-    if(!branchId){
-      return sendError(res,401,'Unauthorized')
+  async getBranchReservations(req: Request, res: Response): Promise<void> {
+    try {
+      const { branchId } = req.params;
+      const authenticatedBranchId = req.data?.id;
+      if (!branchId || branchId !== authenticatedBranchId) {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+      const { page = '1', limit = '10', status } = req.query;
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+      const result = await this._reservationService.getBranchReservations(
+        branchId,
+        pageNum,
+        limitNum,
+        status as ReservationStatus | undefined
+      );
+      sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATIONS_FETCHED, {
+        reservations: result.reservations,
+        total: result.total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(result.total / limitNum),
+      });
+    } catch (error: unknown) {
+      console.error('Error fetching branch reservations:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
-    const reservation=await this._reservationService.updateBranchReservationStatus(
-      reservationId,status,branchId
-    )
-    sendResponse(res, 200, `Reservation updated to ${status} successfully`, reservation);
-  } catch (error:any) {
-    console.error('Error updating reservation status:', error.message, error.stack);
-    sendError(res, 500, error.message || 'Failed to update reservation status');
   }
-}
+
+  async updateBranchReservationStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { reservationId } = req.params;
+      const { status } = req.body;
+      const branchId = req.data?.id;
+      if (!branchId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      if (!reservationId || !status) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      const reservation = await this._reservationService.updateBranchReservationStatus(reservationId, status, branchId);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      sendResponse(res, HttpStatus.OK, `Reservation updated to ${status} successfully`, reservation);
+    } catch (error: unknown) {
+      console.error('Error updating reservation status:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
 }

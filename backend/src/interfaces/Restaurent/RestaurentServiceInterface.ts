@@ -6,6 +6,12 @@ export interface IForgotPasswordResponse {
   data: string | null;
 }
 
+export interface TokenPayload {
+  id: string;
+  role: string;
+  email: string;
+  parentRestaurantId?: string;
+}
 export interface ILoginResponse {
   restaurent: IRestaurent;
   accessToken: string;

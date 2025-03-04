@@ -1,7 +1,6 @@
 // src/interfaces/branch/IBranchService.ts
 import { IBranch } from "../../models/Restaurent/Branch/BranchModel";
-import { Express } from "express";
-
+ 
 export interface IBranchService {
     createBranch(branchData: Partial<IBranch>): Promise<IBranch>;
     getBranchesByParent(parentId: string): Promise<IBranch[]>;

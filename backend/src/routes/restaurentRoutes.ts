@@ -46,7 +46,7 @@ const tableTypeService = new TableTypeService(tableTypeRepository, branchReposit
 // Instantiate controllers
 const branchController = new BranchController(branchService);
 const reservationController = new ReservationController(reservationService);
-const restaurentService = new RestaurentServices(restaurentRepository, otpRepository, branchService, branchRepository);
+const restaurentService = new RestaurentServices(restaurentRepository, otpRepository,  branchRepository);
 const restaurentController = new RestaurentController(restaurentService);
 const tabletypeController = new TableTypeController(tableTypeService);
 

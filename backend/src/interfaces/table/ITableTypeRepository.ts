@@ -1,6 +1,5 @@
  
-import { ITableType } from "../../services/TableServices";
-
+import { ITableType } from "../../models/Restaurent/TableModel";
 export interface ITableTypeRepository {
   create(tableTypeData: Partial<ITableType>): Promise<ITableType>;
   findByBranch(branchId: string): Promise<ITableType[]>;

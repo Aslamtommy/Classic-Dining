@@ -1,6 +1,7 @@
-// src/interfaces/reservation/IReservationService.ts
+ 
 import { IReservation } from '../../models/User/Reservation';
 import { ReservationStatus } from '../../models/User/Reservation';
+import { ITableType } from '../../models/Restaurent/TableModel'; // Import ITableType
 
 export interface IReservationService {
     createReservation(reservationData: Partial<IReservation>): Promise<IReservation>;
@@ -8,7 +9,7 @@ export interface IReservationService {
     cancelReservation(id: string): Promise<IReservation>;
     confirmReservation(id: string, paymentId: string): Promise<IReservation>;
     failReservation(id: string, paymentId: string): Promise<IReservation>;
-    getAvailableTables(branchId: string, date: Date, timeSlot: string): Promise<any[]>;
+    getAvailableTables(branchId: string, date: Date, timeSlot: string): Promise<ITableType[]>; // Changed from any[] to ITableType[]
     getUserReservationsWithPagination(
         userId: string,
         page: number,

@@ -1,116 +1,102 @@
-
-// controllers/WalletController.ts
 import { Request, Response } from 'express';
- import { IWalletService } from '../interfaces/wallet/IWalletService';
+import { IWalletService } from '../interfaces/wallet/IWalletService';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { sendResponse, sendError } from '../utils/responseUtils';
- import Razorpay from 'razorpay';
- 
+import Razorpay from 'razorpay';
+import { AppError } from '../utils/AppError';
 
-
- const razorpay = new Razorpay({
+const razorpay = new Razorpay({
   key_id: 'rzp_test_ihsNz6lracNIu3',
   key_secret: 'f2SAIeZnMz9gBmhNUtCDSLwy'
-})
-
+});
 
 export class WalletController {
-
-
-  constructor(  private _walletService: IWalletService   ) {}
-   
- 
-
+  constructor(private _walletService: IWalletService) {}
 
   async getWalletData(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.data?.id;
-      const { page = 1, limit = 10 } = req.query; 
-      if (!userId) {
-        sendError(res, HttpStatus.Unauthorized, MessageConstants.USER_ID_NOT_FOUND);
-        return;
-      }
+      const { page = 1, limit = 10 } = req.query;
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+
       const walletData = await this._walletService.getWalletData(
         userId,
         parseInt(page as string),
         parseInt(limit as string)
       );
-      sendResponse(res, HttpStatus.OK, 'Wallet data fetched successfully', walletData);
-    } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, error.message || 'Failed to fetch wallet data');
+      sendResponse(res, HttpStatus.OK, MessageConstants.WALLET_DATA_FETCHED, walletData);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
-
-   
 
   async createAddMoneyOrder(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.data?.id;
       const { amount } = req.body;
-  
-      
-  
-      if (!userId) {
-        console.log('No userId found in request');
-        sendError(res, HttpStatus.Unauthorized, MessageConstants.USER_ID_NOT_FOUND);
-        return;
-      }
-  
-      if (!amount) {
-        console.log('Amount is missing in request body');
-        sendError(res, HttpStatus.BadRequest, 'Amount is required');
-        return;
-      }
-  
+
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      if (!amount) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+
       const parsedAmount = parseFloat(amount);
       if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        console.log('Invalid amount:', amount);
-        sendError(res, HttpStatus.BadRequest, 'Amount must be a positive number');
-        return;
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_AMOUNT);
       }
-  
+
       const razorpayAmount = Math.round(parsedAmount * 100);
       const options = {
         amount: razorpayAmount,
         currency: 'INR',
-      receipt: `wallet_${userId.slice(0, 10)}_${Date.now().toString().slice(-6)}`,
+        receipt: `wallet_${userId.slice(0, 10)}_${Date.now().toString().slice(-6)}`,
       };
- 
-  
+
       const order = await razorpay.orders.create(options);
       console.log('Razorpay order created:', order);
-  
-      sendResponse(res, HttpStatus.OK, 'Order created successfully', order);
-    } catch (error: any) {
+
+      sendResponse(res, HttpStatus.OK, MessageConstants.WALLET_ORDER_CREATED, order);
+    } catch (error: unknown) {
       console.error('Detailed error in createAddMoneyOrder:', {
-        message: error.message || 'No message provided',
-        stack: error.stack || 'No stack trace',
-        code: error.code || 'No error code',
-        razorpayError: error.response ? error.response.data : 'No Razorpay response',
+        message: error instanceof Error ? error.message : 'No message provided',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        code: (error as any).code || 'No error code',
+        razorpayError: (error as any).response ? (error as any).response.data : 'No Razorpay response',
       });
-  
-      const errorMessage =
-        error.response?.data?.error?.description ||
-        error.message ||
-        'Failed to create order due to an unexpected error';
-      sendError(res, HttpStatus.InternalServerError, errorMessage);
+
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        const errorMessage =
+          (error as any).response?.data?.error?.description || MessageConstants.INTERNAL_SERVER_ERROR;
+        sendError(res, HttpStatus.InternalServerError, errorMessage);
+      }
     }
   }
+
   async confirmAddMoney(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.data?.id;
-      const {  amount } = req.body;
-      if (!userId) {
-        sendError(res, HttpStatus.Unauthorized, MessageConstants.USER_ID_NOT_FOUND);
-        return;
+      const { amount } = req.body;
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      if (!amount) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_AMOUNT);
       }
-       
-      // If signature is valid, add money to wallet
-      const walletData = await this._walletService.addMoney(userId, amount);
-      sendResponse(res, HttpStatus.OK, 'Money added successfully', walletData);
-    } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, error.message || 'Failed to add money');
+
+      const walletData = await this._walletService.addMoney(userId, parsedAmount);
+      sendResponse(res, HttpStatus.OK, MessageConstants.WALLET_MONEY_ADDED, walletData);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 }

@@ -6,7 +6,7 @@ import AdminController from '../controllers/AdminController';
  import { AdminRepository } from '../repositories/AdminRepository';
 import { RestaurentRepository } from '../repositories/RestaurentRepository';
 import { UserRepository } from '../repositories/UserRepository';
-import { CoupenService } from '../services/CouponService';
+import { CouponService } from '../services/CouponService';
 import { CouponController } from '../controllers/CouponController';
 import { CouponRepository } from '../repositories/CouponRepository';
 const adminRoute:Router=express.Router();
@@ -17,7 +17,7 @@ const adminRepository=new AdminRepository()
 const adminService=new AdminService(adminRepository,restaurentRepository,userRepository)
 const adminController=new AdminController(adminService)
 const couponRepository = new CouponRepository();
-const couponService = new CoupenService(couponRepository);
+const couponService = new CouponService(couponRepository);
 const couponController = new CouponController(couponService );
 adminRoute.post('/login',(req:Request,res:Response)=>{
     adminController.login(req,res)

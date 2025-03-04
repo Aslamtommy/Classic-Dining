@@ -5,14 +5,14 @@ import { HttpStatus } from "../constants/HttpStatus";
 import { CookieManager } from "../utils/cookiemanager";
 import { MessageConstants } from "../constants/MessageConstants";
 import { sendResponse, sendError } from "../utils/responseUtils";
-import { ICouponService } from "../interfaces/coupon/ICouponService"; // Updated interface
+import { ICouponService } from "../interfaces/coupon/ICouponService";
 import { IUserService } from "../interfaces/user/UserServiceInterface";
 import { AppError } from "../utils/AppError";
 
-export class Usercontroller { // Fixed typo in class name
+export class Usercontroller {
   constructor(
     private userService: IUserService,
-    private couponService: ICouponService // Typo fixed: CoupenService -> CouponService, typed with interface
+    private couponService: ICouponService
   ) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
@@ -31,11 +31,11 @@ export class Usercontroller { // Fixed typo in class name
         },
       };
       sendResponse(res, HttpStatus.Created, MessageConstants.USER_REGISTER_SUCCESS, responseData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -51,11 +51,11 @@ export class Usercontroller { // Fixed typo in class name
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
         user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -79,11 +79,11 @@ export class Usercontroller { // Fixed typo in class name
         user: { id: user._id, name: user.name, email: user.email },
       };
       sendResponse(res, HttpStatus.OK, MessageConstants.GOOGLE_SIGNIN_SUCCESS, responseData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.GOOGLE_SIGNIN_FAILED, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.GOOGLE_SIGNIN_FAILED);
       }
     }
   }
@@ -99,11 +99,11 @@ export class Usercontroller { // Fixed typo in class name
       sendResponse(res, HttpStatus.OK, MessageConstants.ACCESS_TOKEN_REFRESHED, {
         accessToken: tokens.accessToken,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INVALID_REFRESH_TOKEN, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INVALID_REFRESH_TOKEN);
       }
     }
   }
@@ -119,11 +119,11 @@ export class Usercontroller { // Fixed typo in class name
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
       sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_FETCHED_SUCCESS, userProfile);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -136,11 +136,11 @@ export class Usercontroller { // Fixed typo in class name
       }
       const emailSent = await this.userService.forgotPasswordVerify(email);
       sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS, { email: emailSent });
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -153,11 +153,11 @@ export class Usercontroller { // Fixed typo in class name
       }
       await this.userService.resetPassword(email, password);
       sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -173,11 +173,11 @@ export class Usercontroller { // Fixed typo in class name
       }
       const profilePicture = await this.userService.uploadProfilePicture(userId, req.file.path);
       sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_PICTURE_UPLOADED, { profilePicture });
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -186,8 +186,8 @@ export class Usercontroller { // Fixed typo in class name
     try {
       CookieManager.clearAuthCookies(res);
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGOUT_SUCCESS);
-    } catch (error: any) {
-      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+    } catch (error: unknown) {
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -203,11 +203,11 @@ export class Usercontroller { // Fixed typo in class name
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
       sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_UPDATED_SUCCESS, updatedUser);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -219,11 +219,11 @@ export class Usercontroller { // Fixed typo in class name
       const limit = parseInt(req.query.limit as string) || 10;
       const result = await this.userService.getAllBranches(search, page, limit);
       sendResponse(res, HttpStatus.OK, "Branches fetched successfully", result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches", error.message);
+        sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches");
       }
     }
   }
@@ -239,11 +239,11 @@ export class Usercontroller { // Fixed typo in class name
         throw new AppError(HttpStatus.NotFound, "Branch not found");
       }
       sendResponse(res, HttpStatus.OK, "Branch details fetched successfully", branch);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -252,11 +252,11 @@ export class Usercontroller { // Fixed typo in class name
     try {
       const coupons = await this.couponService.getAvailableCoupons();
       sendResponse(res, HttpStatus.OK, "Available coupons retrieved successfully", coupons);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR, error.message);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }
   }
