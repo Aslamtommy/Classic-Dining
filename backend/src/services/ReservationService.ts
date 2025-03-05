@@ -23,8 +23,8 @@ export class ReservationService implements IReservationService {
 
   async createReservation(reservationData: Partial<IReservation>): Promise<IReservation> {
     try {
-      const branchId = reservationData.branch?.toString();
-      const tableTypeId = reservationData.tableType?.toString();
+      const branchId = reservationData.branch?._id?.toString()
+      const tableTypeId = reservationData.tableType?._id?.toString()
       if (!branchId || !tableTypeId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
 
       const [branch, tableType] = await Promise.all([
@@ -140,7 +140,9 @@ export class ReservationService implements IReservationService {
 
   async confirmReservation(id: string, paymentId: string): Promise<IReservation> {
     try {
+      console.log('iddd',id)
       const reservation = await this._reservationRepo.findById(id);
+     
       if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
       if (reservation.status !== ReservationStatus.PENDING && reservation.status !== ReservationStatus.PAYMENT_FAILED) {
         throw new AppError(HttpStatus.BadRequest, `${MessageConstants.INVALID_RESERVATION_STATUS}: ${reservation.status}`);
@@ -215,7 +217,9 @@ export class ReservationService implements IReservationService {
 
   async confirmWithWallet(reservationId: string, userId: string): Promise<IReservation> {
     try {
+      console.log('reseveid',reservationId)
       const reservation = await this._reservationRepo.findById(reservationId);
+   
       if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
       if (reservation.userId.toString() !== userId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
       if (reservation.status !== ReservationStatus.PENDING) {
@@ -274,9 +278,11 @@ export class ReservationService implements IReservationService {
     session.startTransaction();
 
     try {
+      console.log(`Starting reservation update - ID: ${reservationId}, Status: ${status}, Branch: ${branchId}`);
       const reservation = await this._reservationRepo.findById(reservationId);
       if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
-      if (reservation.branch.toString() !== branchId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      console.log('needs',reservation.branch.toString(),branchId)
+      if (reservation.branch._id.toString() !== branchId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
       if (reservation.status !== ReservationStatus.CONFIRMED) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_RESERVATION_STATUS);
       }

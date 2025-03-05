@@ -19,9 +19,9 @@ export class ReservationRepository implements IReservationRepository {
   async findById(id: string): Promise<IReservation | null> {
     try {
       return await Reservation.findById(id)
-        .populate('branch')
-        .populate('tableType')
-        .exec();
+      .populate('branch', 'name')
+      .populate('tableType', 'name capacity price')
+      .exec();
     } catch (error) {
       console.error('Error in findById:', error);
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);

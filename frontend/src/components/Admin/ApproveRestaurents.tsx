@@ -2,25 +2,9 @@ import React, { useEffect, useState } from 'react';
 import adminApi from '../../Axios/adminInstance';
 import Pagination from '../../Pagination/Pagination';
 import toast from 'react-hot-toast';
-interface Restaurent {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  certificate: string;
-  isBlocked: boolean;
-}
+import { Restaurent } from '../../types/restaurent';
+  import { PendingRestaurentsResponse } from '../../types/restaurent';
 
-interface PendingRestaurentsResponse {
-  success: boolean;
-  message: string;
-  data: {
-    restaurents: Restaurent[];
-    total: number;
-    page: number;
-    limit: number;
-  };
-}
 
 const ApproveRestaurents: React.FC = () => {
   const [pendingRestaurents, setPendingRestaurents] = useState<Restaurent[]>([]);
@@ -42,6 +26,8 @@ const ApproveRestaurents: React.FC = () => {
       const response = await adminApi.get<PendingRestaurentsResponse>('/pending', {
         params: { page, limit, searchTerm }
       });
+
+      console.log(response)
       setPendingRestaurents(response.data.data.restaurents || []);
       setTotal(response.data.data.total || 0);
     } catch (err: any) {

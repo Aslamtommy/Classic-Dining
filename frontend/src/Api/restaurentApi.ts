@@ -1,37 +1,26 @@
+// tableTypeApi.ts
 import restaurentApi from "../Axios/restaurentInstance";
+import {CreateTableTypeData,TableType,ApiResponse,CreateTableTypeResponse}  from "../types/table";
 
-// Define TypeScript interfaces
-interface TableType {
-  _id: string;
-  name: string;
-  capacity: number;
-  quantity: number;
-  description?: string;
-  position?: string;
-  minPartySize?: number;
-  maxPartySize?: number;
-}
-
-interface CreateTableTypeData {
-  name: string;
-  capacity: number;
-  quantity: number;
-  description?: string;
-  position?: string;
-  minPartySize?: number;
-  maxPartySize?: number;
-}
 
 export const tableTypeApi = {
   // Create a new table type
-  createTableType: async (branchId: string, data: CreateTableTypeData): Promise<TableType> => {
+  createTableType: async (
+    branchId: string,
+    data: CreateTableTypeData
+  ): Promise<TableType> => {
     try {
-      const response:any = await restaurentApi.post(`/branches/${branchId}/tables`, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
+      const response = await restaurentApi.post<ApiResponse<CreateTableTypeResponse>>(
+        `/branches/${branchId}/tables`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      console.log('createTableTyperesponse', response);
+      return response.data.data;
     } catch (error) {
       console.error('Error creating table type:', error);
       throw new Error('Failed to create table type');
@@ -41,8 +30,11 @@ export const tableTypeApi = {
   // Get all table types for a branch
   getTableTypes: async (branchId: string): Promise<TableType[]> => {
     try {
-      const response:any = await restaurentApi.get(`/branches/${branchId}/tables`);
-      return response.data;
+      const response = await restaurentApi.get<ApiResponse<TableType[]>>(
+        `/branches/${branchId}/tables`
+      );
+      console.log('getTableTypesresponse', response);
+      return response.data.data;
     } catch (error) {
       console.error('Error fetching table types:', error);
       throw new Error('Failed to fetch table types');
@@ -50,9 +42,12 @@ export const tableTypeApi = {
   },
 
   // Update table type quantity
-  updateTableTypeQuantity: async (tableTypeId: string, quantity: number): Promise<TableType> => {
+  updateTableTypeQuantity: async (
+    tableTypeId: string,
+    quantity: number
+  ): Promise<TableType> => {
     try {
-      const response:any = await restaurentApi.put(
+      const response = await restaurentApi.put<ApiResponse<TableType>>(
         `/tables/${tableTypeId}/quantity`,
         { quantity },
         {
@@ -61,7 +56,8 @@ export const tableTypeApi = {
           },
         }
       );
-      return response.data;
+      console.log('updateTableTypeQuantityresponse', response);
+      return response.data.data;
     } catch (error) {
       console.error('Error updating table quantity:', error);
       throw new Error('Failed to update table quantity');
@@ -77,9 +73,21 @@ export const tableTypeApi = {
       throw new Error('Failed to delete table type');
     }
   },
-    updateTableType :async (tableTypeId: string, data: any) => {
-   return restaurentApi.put(`/edittables/${tableTypeId}`, data);
-  
-  },
 
+  // Update table type
+  updateTableType: async (
+    tableTypeId: string,
+    data: Partial<CreateTableTypeData>
+  ): Promise<TableType> => {
+    try {
+      const response = await restaurentApi.put<ApiResponse<TableType>>(
+        `/edittables/${tableTypeId}`,
+        data
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating table type:', error);
+      throw new Error('Failed to update table type');
+    }
+  },
 };

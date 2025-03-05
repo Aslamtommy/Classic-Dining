@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ICoupon } from '../../../types/couponTypes';
+import { Coupon } from '../../../types/reservation';
 
 interface CouponModalProps {
   isOpen: boolean;
   onClose: () => void;
-  availableCoupons: ICoupon[];
+  availableCoupons: Coupon[];
   applyCoupon: (code: string) => void;
 }
 

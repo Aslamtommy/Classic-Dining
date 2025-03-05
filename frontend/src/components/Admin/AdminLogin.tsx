@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../../redux/adminSlice';
 import adminApi from '../../Axios/adminInstance';
 import toast from 'react-hot-toast';
+import { AdminLoginResponse } from '../../types/admin';
 
 const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -24,20 +25,25 @@ const AdminLogin: React.FC = () => {
     setLocalError(null); // Reset error before new request
 
     try {
-      const response:any = await adminApi.post('/login', { email, password });
+      const response = await adminApi.post<AdminLoginResponse>('/login', { email, password });
       console.log('Admin response received successfully:', response);
 
-      dispatch(adminLogin({ email: response.data.data.email })); // Dispatch the login action
+      // Dispatch the login action with the email from response
+      dispatch(adminLogin({ email: response.data.data.email }));
       navigate('/admin/dashboard');
-      toast.success('login success')
-    } catch (error: any) {
+      toast.success('Login success');
+    } catch (error: unknown) {
       console.error('Login error:', error);
 
-      // Extract the error response message from the backend
-      const errorMessage =
-        error.response?.data?.message || "Invalid email or password. Please try again.";
-      
-      setLocalError(errorMessage);
+      // Type-safe error handling
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        const errorMessage =
+          axiosError.response?.data?.message || 'Invalid email or password. Please try again.';
+        setLocalError(errorMessage);
+      } else {
+        setLocalError('An unexpected error occurred.');
+      }
     }
   };
 

@@ -1,25 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfilePicture, setUser } from '../../redux/userslice';
+import { updateProfilePicture, setUser, UserState } from '../../redux/userslice';
 import api from '../../Axios/userInstance';
 import toast from 'react-hot-toast';
 import OtpModal from '../CommonComponents/Modals/OtpModal';
 import sendOtp from '../../utils/sentotp';
 import NewPasswordModal from '../CommonComponents/Modals/NewPaawordModal';
 import { motion } from 'framer-motion';
- 
+import { ProfileResponse, UpdateProfileResponse, ProfilePictureResponse, AxiosError } from '../../types/auth';
+
 const UserProfile: React.FC = () => {
   const dispatch = useDispatch();
-  const profile = useSelector((state: any) => state.user.user);
+  const profile = useSelector((state: { user: UserState }) => state.user.user);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [editedEmail, setEditedEmail] = useState('');
-  const [editedMobile, setEditedMobile] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [tempEmail, setTempEmail] = useState('');
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editedName, setEditedName] = useState<string>('');
+  const [editedEmail, setEditedEmail] = useState<string>('');
+  const [editedMobile, setEditedMobile] = useState<string>('');
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [tempEmail, setTempEmail] = useState<string>('');
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProfile();
@@ -29,21 +30,21 @@ const UserProfile: React.FC = () => {
     if (profile) {
       setEditedName(profile.name);
       setEditedEmail(profile.email);
-      setEditedMobile(profile.mobile);
+      setEditedMobile(profile.mobile); // No need for || '' since mobile is required
     }
   }, [profile]);
 
   const fetchProfile = async () => {
     try {
-      const response: any = await api.get('/profile');
+      const response = await api.get<ProfileResponse>('/profile');
       dispatch(setUser(response.data.data));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching profile:', error);
     }
   };
 
   const handleSave = async () => {
-    if (editedEmail !== profile.email) {
+    if (editedEmail !== profile?.email) {
       setTempEmail(editedEmail);
       const { success, message: otpMessage } = await sendOtp(editedEmail, dispatch);
       if (!success) {
@@ -64,12 +65,14 @@ const UserProfile: React.FC = () => {
         mobile: editedMobile,
       };
 
-      const response: any = await api.put('/updateProfile', updatedData);
+      const response = await api.put<UpdateProfileResponse>('/updateProfile', updatedData);
       dispatch(setUser(response.data.data));
       setIsEditing(false);
       toast.success('Profile updated successfully');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update profile');
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      const errorMessage = axiosError.response?.data?.message || 'Failed to update profile';
+      toast.error(errorMessage);
       console.error('Update error:', error);
     }
   };
@@ -79,7 +82,7 @@ const UserProfile: React.FC = () => {
     setShowOtpModal(false);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setSelectedFile(file);
     if (file) {
@@ -90,7 +93,7 @@ const UserProfile: React.FC = () => {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      alert('Please select a file to upload.');
+      toast.error('Please select a file to upload.');
       return;
     }
 
@@ -98,26 +101,24 @@ const UserProfile: React.FC = () => {
     formData.append('profilePicture', selectedFile);
 
     try {
-      const response = await api.post<{ profilePicture: string }>('/uploadProfilePicture', formData, {
+      const response = await api.post<ProfilePictureResponse>('/uploadProfilePicture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      const uploadedImageUrl = response.data.profilePicture;
+      const uploadedImageUrl = response.data.data.profilePicture;
       toast.success('Profile picture uploaded successfully');
-
       dispatch(updateProfilePicture(uploadedImageUrl));
       setSelectedFile(null);
-    } catch (error) {
+      setPreview(null);
+    } catch (error: unknown) {
       console.error('Error uploading profile picture:', error);
-      alert('Failed to upload profile picture.');
+      toast.error('Failed to upload profile picture.');
     }
   };
 
   return (
-
-    
     <div className="bg-[#faf7f2] min-h-screen pt-24">
       <div className="max-w-7xl mx-auto px-6">
         {/* Profile Header */}
@@ -147,9 +148,9 @@ const UserProfile: React.FC = () => {
             transition={{ duration: 0.6 }}
           >
             <div className="flex flex-col items-center">
-              {profile.profilePicture || preview ? (
+              {profile?.profilePicture || preview ? (
                 <img
-                  src={preview || profile.profilePicture}
+                  src={preview || profile?.profilePicture || ''}
                   alt="Profile"
                   className="w-48 h-48 rounded-full object-cover border-4 border-[#e8e2d9] shadow-lg"
                 />
@@ -252,9 +253,9 @@ const UserProfile: React.FC = () => {
                     <button
                       onClick={() => {
                         setIsEditing(false);
-                        setEditedName(profile.name);
-                        setEditedEmail(profile.email);
-                        setEditedMobile(profile.mobile);
+                        setEditedName(profile?.name || '');
+                        setEditedEmail(profile?.email || '');
+                        setEditedMobile(profile?.mobile || '');
                       }}
                       className="bg-[#e8e2d9] text-[#2c2420] px-6 py-2 rounded-full hover:bg-[#d4ccc2] transition-colors"
                     >
@@ -291,12 +292,11 @@ const UserProfile: React.FC = () => {
         {showPasswordModal && (
           <NewPasswordModal
             show={showPasswordModal}
-            email={profile.email}
+            email={profile?.email || ''}
             onClose={() => setShowPasswordModal(false)}
             role="user"
           />
         )}
- 
       </div>
     </div>
   );

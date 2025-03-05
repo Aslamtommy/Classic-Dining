@@ -4,92 +4,46 @@ import { motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '../../Axios/userInstance';
 import { confirmReservation, failReservation, fetchReservation, fetchWalletData } from '../../Api/userApi';
-
-interface ReservationDetails {
-  reservationId: string;
-  branch: string | { name: string };
-  tableType: string | { name: string; price: number };
-  reservationDate: Date | string;
-  timeSlot: string;
-  partySize: number;
-  user: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  price: number;
-  specialRequests?: string;
-  status?: string;
-  couponCode?: string;
-  discountApplied?: number;
-  finalAmount?: number;
-}
-
-interface PaymentResponse {
-  success: boolean;
-  message: string;
-  data: {
-    amount: number;
-    currency: string;
-    id: string;
-    amount_due?: number;
-    amount_paid?: number;
-    attempts?: number;
-    created_at?: number;
-    entity?: string;
-    notes?: any[];
-    offer_id?: string | null;
-    receipt?: string;
-    status?: string;
-  };
-}
+import { Reservation, PaymentResponse, RazorpayOptions, RazorpayResponse, RazorpayErrorResponse } from '../../types/reservation';
 
 const ConfirmationPage: React.FC = () => {
   const { reservationId } = useParams<{ reservationId: string }>();
+  console.log('reservationId:', reservationId);
   const location = useLocation();
   const navigate = useNavigate();
-  const [reservation, setReservation] = useState<ReservationDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
   // Load reservation details
   useEffect(() => {
     const loadReservation = async () => {
-      try {
-        setLoading(true);
-        if (reservationId) {
-          const data = await fetchReservation(reservationId);
-          setReservation({
-            reservationId: data._id,
-            branch: data.branch.name,
-            tableType: { name: data.tableType.name, price: data.tableType.price },
-            reservationDate: data.reservationDate,
-            timeSlot: data.timeSlot,
-            partySize: data.partySize,
-            user: data.user,
-            price: data.tableType.price,
-            specialRequests: data.specialRequests,
-            status: data.status,
-            couponCode: data.couponCode,
-            discountApplied: data.discountApplied,
-            finalAmount: data.finalAmount,
-          });
-        } else if (location.state?.reservation) {
-          setReservation(location.state.reservation);
-        } else {
-          navigate('/');
+        try {
+          console.log(';hi')
+            setLoading(true);
+            if (reservationId) {
+              console.log(';fvhi')
+                const data = await fetchReservation(reservationId);
+                console.log('Reservation Data:', data); // Log the reservation data
+                setReservation(data);
+            } else if (location.state?.reservation) {
+                console.log('Reservation from Location State:', location.state.reservation); // Log the reservation data
+                setReservation(location.state.reservation as Reservation);
+            } else {
+                navigate('/');
+            }
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to load reservation details';
+            toast.error(message, { duration: 4000, position: 'top-center' });
+            navigate('/booking');
+        } finally {
+            setLoading(false);
         }
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to load reservation details', { duration: 4000, position: 'top-center' });
-        navigate('/booking');
-      } finally {
-        setLoading(false);
-      }
     };
     loadReservation();
-  }, [reservationId, location, navigate]);
+}, [reservationId, location, navigate]);
 
   // Fetch wallet balance when reservation is loaded
   useEffect(() => {
@@ -98,8 +52,9 @@ const ConfirmationPage: React.FC = () => {
         try {
           const walletData = await fetchWalletData();
           setWalletBalance(walletData.balance);
-        } catch (error: any) {
-          toast.error(error.message || 'Failed to load wallet balance', { duration: 4000, position: 'top-center' });
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : 'Failed to load wallet balance';
+          toast.error(message, { duration: 4000, position: 'top-center' });
         }
       };
       loadWalletData();
@@ -122,7 +77,7 @@ const ConfirmationPage: React.FC = () => {
         script.onload = () => resolve();
       });
 
-      const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.price;
+      const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.tableType.price;
       const response = await api.post<PaymentResponse>('/payments/create-order', {
         amount: paymentAmount * 100, // Convert to paise
         currency: 'INR',
@@ -130,7 +85,7 @@ const ConfirmationPage: React.FC = () => {
 
       const orderData = response.data.data;
 
-      const options = {
+      const options: RazorpayOptions = {
         key: 'rzp_test_ihsNz6lracNIu3',
         amount: orderData.amount,
         currency: orderData.currency,
@@ -138,9 +93,9 @@ const ConfirmationPage: React.FC = () => {
         name: 'ReserveBites',
         description: 'Table Reservation Payment',
         image: 'https://your-logo-url.com/logo.png',
-        handler: async function (response: any) {
+        handler: async (response: RazorpayResponse) => {
           try {
-            await confirmReservation(reservation.reservationId, response.razorpay_payment_id);
+            await confirmReservation(reservation._id, response.razorpay_payment_id);
             setPaymentSuccess(true);
             toast.success('Payment successful! Reservation confirmed.', {
               duration: 4000,
@@ -153,8 +108,9 @@ const ConfirmationPage: React.FC = () => {
                 paymentMethod: 'razorpay',
               },
             });
-          } catch (error: any) {
-            toast.error('Failed to confirm reservation. Please contact support.', {
+          } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to confirm reservation';
+            toast.error(`${message}. Please contact support.`, {
               duration: 4000,
               position: 'top-center',
             });
@@ -163,17 +119,18 @@ const ConfirmationPage: React.FC = () => {
           }
         },
         modal: {
-          ondismiss: async function () {
+          ondismiss: async () => {
             if (paymentSuccess) return;
             try {
-              await failReservation(reservation.reservationId, '');
+              await failReservation(reservation._id, '');
               toast.error('Payment cancelled. Reservation marked as payment failed.', {
                 duration: 4000,
                 position: 'top-center',
               });
               navigate('/booking');
-            } catch (error: any) {
-              toast.error(error.message || 'Failed to update reservation status', { duration: 4000, position: 'top-center' });
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : 'Failed to update reservation status';
+              toast.error(message, { duration: 4000, position: 'top-center' });
             } finally {
               setIsProcessing(false);
             }
@@ -189,11 +146,11 @@ const ConfirmationPage: React.FC = () => {
         },
       };
 
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.on('payment.failed', async function (response: any) {
+      const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', async (response: RazorpayErrorResponse) => {
         try {
           await failReservation(
-            reservation.reservationId,
+            reservation._id,
             response.error.metadata.payment_id || ''
           );
           toast.error('Payment failed. Reservation marked as payment failed.', {
@@ -201,16 +158,18 @@ const ConfirmationPage: React.FC = () => {
             position: 'top-center',
           });
           navigate('/booking');
-        } catch (error: any) {
-          toast.error(error.message || 'Failed to update reservation status', { duration: 4000, position: 'top-center' });
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : 'Failed to update reservation status';
+          toast.error(message, { duration: 4000, position: 'top-center' });
         } finally {
           setIsProcessing(false);
         }
       });
 
       razorpay.open();
-    } catch (error: any) {
-      toast.error('Payment initialization failed. Please try again.', {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Payment initialization failed';
+      toast.error(`${message}. Please try again.`, {
         duration: 4000,
         position: 'top-center',
       });
@@ -225,8 +184,9 @@ const ConfirmationPage: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.price;
-      await api.post(`/reservations/${reservation.reservationId}/confirm-wallet`);
+      const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.tableType.price;
+      console.log('reservationid', reservation._id);
+      await api.post(`/reservations/${reservation._id}/confirm-wallet`);
       setPaymentSuccess(true);
       toast.success('Payment successful! Reservation confirmed.', {
         duration: 4000,
@@ -238,11 +198,9 @@ const ConfirmationPage: React.FC = () => {
           amount: paymentAmount,
         },
       });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to confirm reservation with wallet.', {
-        duration: 4000,
-        position: 'top-center',
-      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to confirm reservation with wallet';
+      toast.error(message, { duration: 4000, position: 'top-center' });
     } finally {
       setIsProcessing(false);
     }
@@ -256,7 +214,7 @@ const ConfirmationPage: React.FC = () => {
     );
   }
 
-  const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.price;
+  const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.tableType.price;
 
   return (
     <div className="bg-[#faf7f2] min-h-screen pt-16">
@@ -275,9 +233,7 @@ const ConfirmationPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Branch</h3>
-                <p className="text-[#8b5d3b]">
-                  {typeof reservation.branch === 'string' ? reservation.branch : reservation.branch.name}
-                </p>
+                <p className="text-[#8b5d3b]">{reservation.branch.name}</p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Date & Time</h3>
@@ -293,11 +249,7 @@ const ConfirmationPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Selected Table</h3>
-                <p className="text-[#8b5d3b]">
-                  {typeof reservation.tableType === 'string'
-                    ? reservation.tableType
-                    : reservation.tableType.name}
-                </p>
+                <p className="text-[#8b5d3b]">{reservation.tableType.name}</p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Special Requests</h3>
@@ -308,7 +260,7 @@ const ConfirmationPage: React.FC = () => {
                 {reservation.couponCode ? (
                   <>
                     <p className="text-[#8b5d3b] text-sm">
-                      Original Price: ₹{reservation.price}
+                      Original Price: ₹{reservation.tableType.price}
                     </p>
                     <p className="text-[#8b5d3b] text-sm">
                       Coupon Applied: {reservation.couponCode} (-₹{reservation.discountApplied})

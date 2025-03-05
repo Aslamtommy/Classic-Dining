@@ -1,22 +1,7 @@
+// src/redux/restaurentSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-interface Restaurent {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  certificate?: string;
-  role?: "restaurent" | "branch";  
-  parentRestaurantId?: string;  
-}
-
-interface RestaurentState {
-  restaurent: Restaurent | null;
-  profile: Restaurent | null;
-  loading: boolean;
-  error: string | null;
-}
-
+ 
+import { Restaurent, RestaurentState } from "../types/restaurent";
 const initialState: RestaurentState = {
   restaurent: null,
   profile: null,
@@ -54,7 +39,12 @@ const restaurentSlice = createSlice({
   },
 });
 
-export const { setLoading, setRestaurent, setProfile, setError, logoutRestaurent } =
-  restaurentSlice.actions;
+export const {
+  setLoading,
+  setRestaurent,
+  setProfile,
+  setError,
+  logoutRestaurent,
+} = restaurentSlice.actions;
 
 export default restaurentSlice.reducer;

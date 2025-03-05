@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Branch,TableType } from '../../../types/types';
-import { ICoupon } from '../../../types/couponTypes';
- 
+import { Branch } from '../../../types/branch';
+import { TableType, Reservation, Coupon } from '../../../types/reservation'; // Use updated reservation.ts
 import { fetchBranchDetails, fetchAvailableTables, createReservation, fetchAvailableCoupons } from '../../../Api/userApi';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
@@ -12,6 +11,14 @@ import toast, { Toaster } from 'react-hot-toast';
 import CouponModal from './CouponModal';
 import FilterModal from './FilterModal';
 import TableSelection from './TableSelection';
+
+interface UserState {
+  user: {
+    name: string;
+    email: string;
+    mobile: string;
+  } | null;
+}
 
 const BookingPage: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
@@ -26,14 +33,14 @@ const BookingPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState<string>('');
-  const [availableCoupons, setAvailableCoupons] = useState<ICoupon[]>([]);
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [priceRange, setPriceRange] = useState<number[]>([0, 1000]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  const user = useSelector((state: any) => state.user.user);
+  const user = useSelector((state: { user: UserState }) => state.user.user);
 
   useEffect(() => {
     const loadBranchAndCoupons = async () => {
@@ -44,11 +51,12 @@ const BookingPage: React.FC = () => {
           fetchBranchDetails(branchId),
           fetchAvailableCoupons(),
         ]);
-        setBranch(branchData.data);
+        setBranch(branchData);
         setAvailableCoupons(couponData);
-      } catch (error: any) {
-        setError(error.message || 'Failed to load data');
-        toast.error(error.message || 'Failed to load data');
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Failed to load data';
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -67,16 +75,17 @@ const BookingPage: React.FC = () => {
       const formattedDate = selectedDate!.toISOString().split('T')[0];
       const available = await fetchAvailableTables(branchId!, formattedDate, selectedTime);
       setAvailableTables(available);
-      const highestPrice = Math.max(...available.map((t: TableType) => t.price || 0));
+      const highestPrice = Math.max(...available.map(t => t.price || 0));
       setMaxPrice(highestPrice);
       setPriceRange([0, highestPrice]);
-      if (selectedTable && !available.some((t: TableType) => t._id === selectedTable._id)) {
+      if (selectedTable && !available.some(t => t._id === selectedTable._id)) {
         setSelectedTable(null);
       }
-    } catch (error: any) {
-      setError(error.message || 'Failed to fetch available tables');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to fetch available tables';
+      setError(message);
       setAvailableTables([]);
-      toast.error(error.message || 'Failed to fetch tables');
+      toast.error(message);
     }
   };
 
@@ -102,38 +111,38 @@ const BookingPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTable || !selectedTime || !selectedDate || !branchId || !branch) {
-      toast.error('Please complete all selections');
+    if (!selectedTable || !selectedTime || !selectedDate || !branchId || !branch || !user) {
+      toast.error('Please complete all selections and ensure you are logged in');
       return;
     }
     try {
-      const reservationData = {
-        branch: branchId,
-        tableType: selectedTable._id,
-        reservationDate: selectedDate,
+      const reservationData: Partial<Reservation> = {
+        branch: { _id: branchId, name: branch.name },
+        tableType: selectedTable,
+        reservationDate: selectedDate.toISOString(),
         timeSlot: selectedTime,
         partySize,
         user: { name: user.name, email: user.email, phone: user.mobile },
         couponCode,
       };
-      const response: any = await createReservation(reservationData);
+      const response = await createReservation(reservationData);
+      console.log('Reservation Response:', response);
       toast.success(response.message || 'Reservation Created!');
-      setTimeout(() => navigate('/confirmation', { 
+      setTimeout(() => navigate(`/confirmation/${response.data._id}`, { 
         state: { 
           reservation: {
             ...reservationData,
             reservationId: response.data._id,
-            branch: branch.name,
-            tableType: selectedTable.name,
-            price: selectedTable.price || 0,
+            price: response.data.tableType.price || 0,
             discountApplied: response.data.discountApplied || 0,
-            finalAmount: response.data.finalAmount || selectedTable.price || 0,
+            finalAmount: response.data.finalAmount || (response.data.tableType.price || 0),
           }
         }
       }), 2000);
-    } catch (error: any) {
-      toast.error(error.message || 'Reservation Failed');
-      setError(error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Reservation Failed';
+      toast.error(message);
+      setError(message);
       setSelectedTable(null);
     }
   };
@@ -142,10 +151,10 @@ const BookingPage: React.FC = () => {
   const originalPrice = selectedTable?.price || 0;
   const discount = selectedCoupon 
     ? (selectedCoupon.discountType === 'percentage' 
-        ? originalPrice * (selectedCoupon.discount / 100)
+        ? Math.min(originalPrice * (selectedCoupon.discount / 100), selectedCoupon.maxDiscountAmount || Infinity)
         : selectedCoupon.discount)
     : 0;
-  const finalPrice = originalPrice - discount;
+  const finalPrice = Math.max(originalPrice - discount, 0);
 
   if (loading) {
     return (
@@ -400,9 +409,6 @@ const BookingPage: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </motion.button>
-            {/* <p className="text-xs text-[#2c2420]/60 mt-3 text-center">
-              You'll receive a confirmation email with your reservation details
-            </p> */}
           </motion.div>
         </motion.form>
       </div>

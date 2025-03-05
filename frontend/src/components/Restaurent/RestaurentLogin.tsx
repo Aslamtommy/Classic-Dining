@@ -1,53 +1,68 @@
+// src/components/RestaurentLogin.tsx
 import React, { useState } from "react";
 import restaurentApi from "../../Axios/restaurentInstance";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setRestaurent, setError, setLoading } from "../../redux/restaurentSlice";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal";
+import { RootState } from "../../redux/store";
+import {
+  LoginFormData,
+  LoginResponse,
+  RestaurentState,
+   
+} from "../../types/restaurent";
 
 const RestaurentLogin: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setErrorState] = useState("");
-  const [loading, setLoadingState] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setErrorState] = useState<string>("");
+  const [loading, setLoadingState] = useState<boolean>(false);
+  const [showForgotPassword, setShowForgotPassword] = useState<boolean>(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading: reduxLoading } = useSelector<RootState, RestaurentState>(
+    (state) => state.restaurent
+  );
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorState("");
     dispatch(setLoading());
     setLoadingState(true);
-  
+
+    const loginData: LoginFormData = { email, password };
+
     try {
-      const response: any = await restaurentApi.post("/login", { email, password });
+      const response = await restaurentApi.post<LoginResponse>(
+        "/login",
+        loginData
+      );
       console.log("Login response:", response.data);
-  
-      if (response.data.success) {
-        dispatch(setRestaurent(response.data.data));
-  
-        // Handle branch role
-        if (response.data.data.role === "branch") {
-          navigate("/restaurent/home", { replace: true });
-          toast.success("Branch login successful!");
-          return;
-        }
-  
-        // Handle restaurant approval status
-        if (response.data.data.isBlocked) {
-          navigate("/restaurent/pending-approval", { 
-            state: { blockReason: response.data.data.blockReason },
-            replace: true 
-          });
-          return;
-        }
-  
+
+      const restaurentData = response.data.data;
+      dispatch(setRestaurent(restaurentData));
+
+      // Handle branch role
+      if (restaurentData.role === "branch") {
         navigate("/restaurent/home", { replace: true });
-        toast.success("Login successful!");
+        toast.success("Branch login successful!");
+        return;
       }
+
+      // Handle restaurant approval status
+      if (restaurentData.isBlocked) {
+        navigate("/restaurent/pending-approval", {
+          state: { blockReason: restaurentData.blockReason },
+          replace: true,
+        });
+        return;
+      }
+
+      navigate("/restaurent/home", { replace: true });
+      toast.success("Login successful!");
     } catch (err: any) {
       console.log("Full error object:", err);
       console.log("Error response data:", err.response?.data);
@@ -77,6 +92,7 @@ const RestaurentLogin: React.FC = () => {
       setLoadingState(false);
     }
   };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
@@ -84,7 +100,10 @@ const RestaurentLogin: React.FC = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -98,7 +117,10 @@ const RestaurentLogin: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <input
@@ -114,11 +136,11 @@ const RestaurentLogin: React.FC = () => {
           <button
             type="submit"
             className={`w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 ${
-              loading ? "opacity-50" : ""
+              loading || reduxLoading ? "opacity-50" : ""
             }`}
-            disabled={loading}
+            disabled={loading || reduxLoading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading || reduxLoading ? "Logging in..." : "Login"}
           </button>
         </form>
         <div className="mt-4 text-center">
@@ -131,7 +153,6 @@ const RestaurentLogin: React.FC = () => {
         </div>
       </div>
 
-      {/* Show ForgotPasswordModal with role="restaurent" */}
       <ForgotPasswordModal
         show={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}

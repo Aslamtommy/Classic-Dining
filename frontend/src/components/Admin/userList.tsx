@@ -6,18 +6,8 @@ import TableActions from './TableActions';
 import Loader from './Loader';
 import Pagination from '../../Pagination/Pagination';
 import debounce from 'lodash/debounce';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  isBlocked: boolean;
-}
-
-interface FetchUsersResponse {
-  users: User[];
-  total: number;
-}
+import { FetchUsersResponse } from '../../types/auth';
+import {User} from '../../types/auth';
 
 const UserList: React.FC = () => {
   const [page, setPage] = useState<number>(1);

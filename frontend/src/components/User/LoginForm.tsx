@@ -1,95 +1,91 @@
-import type React from "react"
-import { useState } from "react"
-import { useDispatch } from "react-redux"
-import { setLoading, setUser, setError } from "../../redux/userslice"
-import api from "../../Axios/userInstance"
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
-import App from "../../features/FirebaseAuthentication/config"
-import { useNavigate } from "react-router-dom"
-import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal"
-import toast from "react-hot-toast"
-interface LoginResponse {
-  success: boolean;
-  message: string
-  data: {
-    user: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  }
-}
+import React, { FormEvent } from "react";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { setLoading, setUser, setError } from "../../redux/userslice";
+import api from "../../Axios/userInstance";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import App from "../../features/FirebaseAuthentication/config";
+import { useNavigate } from "react-router-dom";
+import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal";
+import toast from "react-hot-toast";
+import { LoginResponse, GoogleSignInResponse, AxiosError } from "../../types/auth";
 
-interface GoogleSignInResponse {
-  user: {
-    id: string
-    name: string
-    email: string
-    googleId: string
-  }
-  message: string
-}
+const LoginForm: React.FC = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-const LoginForm = () => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [showForgotPassword, setShowForgotPassword] = useState<boolean>(false);
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-  
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
     if (!email || !password) {
-      toast.error("Email and password are required.")
-      return
+      toast.error("Email and password are required.");
+      return;
     }
 
-    dispatch(setLoading())
+    dispatch(setLoading());
     try {
-      const response:any = await api.post ("/login", { email, password }, { withCredentials: true })
-console.log(response)
-      const { user } = response.data.data
-      dispatch(setUser({ name: user.name, email: user.email,mobile:user.mobile }))
-      toast.success('Login successfil')
-   
-      navigate("/")
-    }   catch (error: any) {
-      console.error(error);
-      const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
-   
+      const response = await api.post<LoginResponse>(
+        "/login",
+        { email, password },
+        { withCredentials: true }
+      );
+
+      const { user } = response.data.data;
+      dispatch(setUser({ 
+        name: user.name, 
+        email: user.email, 
+        mobile: user.mobile || "" // Provide default value if undefined
+      }));
+      toast.success("Login successful");
+      navigate("/");
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      const errorMessage =
+        axiosError.response?.data?.message || "Login failed. Please check your credentials.";
+      
+      console.error("Login error:", error);
       dispatch(setError(errorMessage));
-      toast.error(errorMessage);  
+      toast.error(errorMessage);
     }
-}
+  };
 
   const handleGoogleSignIn = async () => {
-    const auth = getAuth(App)
-    const provider = new GoogleAuthProvider()
+    const auth = getAuth(App);
+    const provider = new GoogleAuthProvider();
 
     try {
-      dispatch(setLoading())
-      const result = await signInWithPopup(auth, provider)
-      const idToken = await result.user.getIdToken()
+      dispatch(setLoading());
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
 
-      const response :any= await api.post<GoogleSignInResponse>("/google", { idToken }, { withCredentials: true })
-      console
-      const user  = response.data.data
-console.log(user)
-      dispatch(setUser(user))
-      toast.success('Google Sign-In successful!')
-     
-      navigate("/")
-    } catch (error: any) {
-      console.error(error)
-      const errorMessage = error.response?.data?.message || "Google Sign-In failed. Please try again."
-   
-      dispatch(setError(errorMessage))
+      const response = await api.post<GoogleSignInResponse>(
+        "/google",
+        { idToken },
+        { withCredentials: true }
+      );
+
+      const user = response.data.data;
+      dispatch(setUser({ 
+        name: user.name, 
+        email: user.email, 
+        mobile: user.mobile || "" // Provide default value if undefined
+      }));
+      toast.success("Google Sign-In successful!");
+      navigate("/");
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      const errorMessage =
+        axiosError.response?.data?.message || "Google Sign-In failed. Please try again.";
+      
+      console.error("Google Sign-In error:", error);
+      dispatch(setError(errorMessage));
+      toast.error(errorMessage);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-sepia-100 p-4">
@@ -110,7 +106,6 @@ console.log(user)
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 bg-sepia-50 border-2 border-sepia-300 rounded-none focus:outline-none focus:ring-2 focus:ring-sepia-500 text-sepia-900 font-serif"
-            
             />
           </div>
           <div>
@@ -120,7 +115,6 @@ console.log(user)
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 bg-sepia-50 border-2 border-sepia-300 rounded-none focus:outline-none focus:ring-2 focus:ring-sepia-500 text-sepia-900 font-serif"
-               
             />
           </div>
           <button
@@ -150,13 +144,14 @@ console.log(user)
           </button>
         </div>
 
-        <ForgotPasswordModal show={showForgotPassword} onClose={() => setShowForgotPassword(false)} role={"user"} />
-
-        
+        <ForgotPasswordModal 
+          show={showForgotPassword} 
+          onClose={() => setShowForgotPassword(false)} 
+          role="user" 
+        />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginForm
-
+export default LoginForm;

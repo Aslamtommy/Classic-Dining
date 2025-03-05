@@ -45,9 +45,9 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
     onSubmit: async (values) => {
       try {
         setLoading(true);
-        const response: any = await tableTypeApi.createTableType(branchId, values);
-        setTableTypes([...tableTypes, response.data]);
-        formik.resetForm(); // Reset form after successful submission
+        const response  = await tableTypeApi.createTableType(branchId, values);
+        setTableTypes([...tableTypes, response ]);
+        formik.resetForm(); 
       } catch (err) {
         setError('Failed to create table type');
       } finally {
@@ -60,8 +60,8 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
     const loadTableTypes = async () => {
       try {
         setLoading(true);
-        const response: any = await tableTypeApi.getTableTypes(branchId);
-        setTableTypes(response.data);
+        const response  = await tableTypeApi.getTableTypes(branchId);
+        setTableTypes(response );
       } catch (err) {
         setError('Failed to fetch table types');
       } finally {
@@ -74,10 +74,10 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
   const handleUpdateQuantity = async (tableTypeId: string, quantity: number) => {
     try {
       setLoading(true);
-      const updatedTable: any = await tableTypeApi.updateTableTypeQuantity(tableTypeId, quantity);
+      const updatedTable  = await tableTypeApi.updateTableTypeQuantity(tableTypeId, quantity);
       setTableTypes((prev) =>
         prev.map((table) =>
-          table._id === tableTypeId ? { ...table, quantity: updatedTable.data.quantity } : table
+          table._id === tableTypeId ? { ...table, quantity: updatedTable.quantity } : table
         )
       );
     } catch (err) {

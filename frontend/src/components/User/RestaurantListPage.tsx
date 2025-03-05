@@ -1,17 +1,17 @@
 // src/pages/RestaurantListPage.tsx
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { fetchBranches } from "../../Api/userApi";
-import { FaSearch, FaSortAlphaDown, FaSortAlphaUp  } from "react-icons/fa"; // Added map icon for new feature
+import { FaSearch, FaSortAlphaDown, FaSortAlphaUp } from "react-icons/fa";
+import { Branch } from "../../types/branch";
 
 const RestaurantListPage: React.FC = () => {
-  const [branches, setBranches] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const limit = 10;
   const navigate = useNavigate();
@@ -21,15 +21,18 @@ const RestaurantListPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await fetchBranches(search, pageNum, limit);
-      let sortedBranches = response.branches;
-      sortedBranches.sort((a: any, b: any) =>
+      console.log('branches',response)
+      let sortedBranches = [...response.branches];
+      sortedBranches.sort((a, b) =>
         sortOrder === "asc"
           ? a.name.localeCompare(b.name)
           : b.name.localeCompare(a.name)
       );
+
+    
       setBranches(sortedBranches);
       setTotalPages(response.pages);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error loading branches:", error);
     } finally {
       setLoading(false);
@@ -37,9 +40,10 @@ const RestaurantListPage: React.FC = () => {
   };
 
   // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
+    setPage(1); // Reset to page 1 on new search
     loadBranches(term.trim(), 1);
   };
 
@@ -71,7 +75,7 @@ const RestaurantListPage: React.FC = () => {
           transition={{ duration: 0.8 }}
           className="font-playfair text-5xl md:text-6xl text-[#2c2420] font-extrabold tracking-tight text-center mb-12"
         >
-          Discover Our Restaurents
+          Discover Our Restaurants
         </motion.h1>
 
         {/* Search Bar and Sort Toggle */}
@@ -105,7 +109,7 @@ const RestaurantListPage: React.FC = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {branches.map((branch: any, index: number) => (
+              {branches.map((branch, index) => (
                 <motion.div
                   key={branch._id}
                   className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 cursor-pointer border border-[#e8e2d9]"
@@ -120,14 +124,13 @@ const RestaurantListPage: React.FC = () => {
                       className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#2c2420]/60 to-transparent opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
-                    
                   </div>
                   <div className="p-6 text-center">
                     <h3 className="text-2xl font-playfair text-[#2c2420] mb-3 font-semibold tracking-tight">
                       {branch.name}
                     </h3>
                     <p className="text-[#8b5d3b] mb-2 text-sm">{branch.email}</p>
-                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone}</p>
+                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone || 'N/A'}</p>
                     <button
                       onClick={() => navigate(`/book/${branch._id}`)}
                       className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"

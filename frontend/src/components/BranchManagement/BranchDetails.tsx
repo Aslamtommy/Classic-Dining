@@ -3,14 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import TableManagement from "../Restaurent/TableManagement";
 import restaurentApi from "../../Axios/restaurentInstance";
 import toast from "react-hot-toast";
-import { Button } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmationDialog from "../CommonComponents/ConfirmationDialog";
-
+import { Branch } from "../../types/branch";  
+import { BranchResponse } from "../../types/branch";
 const BranchDetails: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
-  const [branch, setBranch] = useState<any>(null);
+  const [branch, setBranch] = useState<Branch | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const BranchDetails: React.FC = () => {
       }
       setLoading(true);
       try {
-        const response:any = await restaurentApi.get(`/branches/${branchId}`);
+        const response = await restaurentApi.get<BranchResponse>(`/branches/${branchId}`);
         setBranch(response.data.data);
       } catch (error: any) {
         toast.error(error.response?.data?.message || "Failed to load branch details");
@@ -45,7 +46,11 @@ const BranchDetails: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-6 text-gray-600">Loading branch details...</div>;
+  if (loading) return (
+    <div className="p-6 flex justify-center items-center">
+      <CircularProgress />
+    </div>
+  );
   if (!branch) return <div className="p-6 text-red-500">Branch not found</div>;
 
   return (
@@ -58,29 +63,29 @@ const BranchDetails: React.FC = () => {
           ← Back to Branches
         </button>
         <div className="bg-white p-8 rounded-xl shadow-lg">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col md:flex-row justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">{branch.name}</h1>
-              <p className="text-gray-600 mt-2">{branch.address || "No address provided"}</p>
+              {branch.address && <p className="text-gray-600 mt-2">{branch.address}</p>}
               <div className="mt-4 space-y-2 text-gray-700">
                 <p>
                   <strong>Email:</strong> {branch.email}
                 </p>
                 <p>
-                  <strong>Phone:</strong> {branch.phone}
+                  <strong>Phone:</strong> {branch.phone || "Not provided"}
                 </p>
                 <p>
-                  <strong>Created At:</strong> {new Date(branch.createdAt).toLocaleDateString()}
+                  <strong>Created At:</strong>{" "}
+                  {new Date(branch.createdAt!).toLocaleDateString()}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-4 md:mt-0">
               <Button
                 variant="contained"
                 color="primary"
                 startIcon={<EditIcon />}
                 onClick={() => navigate(`/restaurent/branches/edit/${branchId}`)}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all"
               >
                 Edit
               </Button>
@@ -89,7 +94,6 @@ const BranchDetails: React.FC = () => {
                 color="error"
                 startIcon={<DeleteIcon />}
                 onClick={() => setDeleteDialogOpen(true)}
-                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all"
               >
                 Delete
               </Button>
@@ -100,7 +104,7 @@ const BranchDetails: React.FC = () => {
               <img
                 src={branch.image}
                 alt={branch.name}
-                className="rounded-lg w-full h-64 object-cover shadow-md"
+                className="rounded-lg w-full max-h-96 object-cover shadow-md"
               />
             </div>
           )}

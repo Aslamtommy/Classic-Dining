@@ -76,7 +76,7 @@ export class RestaurentServices implements IRestaurentService {
       tokenPayload.parentRestaurantId = (user as IBranch).parentRestaurant.toString();
     }
 
-    const accessToken = generateAccessToken(tokenPayload);
+    const accessToken = generateAccessToken(tokenPayload, );
     const refreshToken = generateRefreshToken(tokenPayload);
 
     return { restaurent: user as IRestaurent, accessToken, refreshToken, role };

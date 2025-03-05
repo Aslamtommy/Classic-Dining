@@ -1,10 +1,10 @@
-import type React from "react";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import  restaurentApi from "../../Axios/restaurentInstance";
-import type { RootState } from "../../redux/store";
+import restaurentApi from "../../Axios/restaurentInstance";
+import { RootState } from "../../redux/store";
 import { setProfile, setError, setLoading } from "../../redux/restaurentSlice";
- 
+ import { RestaurentResponse } from "../../types/restaurent";
+
 const RestaurentProfile: React.FC = () => {
   const dispatch = useDispatch();
   const { restaurent, profile, loading, error } = useSelector(
@@ -20,9 +20,11 @@ const RestaurentProfile: React.FC = () => {
     const fetchProfile = async () => {
       try {
         dispatch(setLoading());
-        const response: any = await  restaurentApi.get(`/profile/${restaurent._id}`);
-        dispatch(setProfile(response.data.data));
-        console.log(response)
+        const response = await restaurentApi.get<RestaurentResponse>(
+          `/profile/${restaurent._id}`
+        );
+        dispatch(setProfile(response.data.data ));
+        console.log(response);
       } catch (err) {
         dispatch(setError("Failed to fetch profile."));
       }
@@ -31,19 +33,21 @@ const RestaurentProfile: React.FC = () => {
     fetchProfile();
   }, [dispatch, restaurent]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-[#f4ede8]">
         <div className="w-12 h-12 border-4 border-[#6b4f4f] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-[#f4ede8]">
         <p className="text-[#5a3e36] font-serif text-lg">Error: {error}</p>
       </div>
     );
+  }
 
   return (
     <div className="min-h-screen bg-[#f4ede8] flex justify-center items-center px-6 py-12">
@@ -54,25 +58,33 @@ const RestaurentProfile: React.FC = () => {
         <div className="absolute bottom-0 right-0 w-12 h-12 border-r-2 border-b-2 border-[#b08a60]"></div>
 
         <h1 className="text-2xl font-serif font-bold text-[#5a3e36] mb-6 text-center">
-        restaurent Profile
+          Restaurant Profile
         </h1>
 
         {profile ? (
           <div className="space-y-4">
             <div className="flex items-center border-b border-[#d2b48c] pb-3">
               <span className="text-[#7a5c45] font-serif w-24">Name:</span>
-              <span className="text-[#5a3e36] font-serif flex-1">{profile.name}</span>
+              <span className="text-[#5a3e36] font-serif flex-1">
+                {profile.name}
+              </span>
             </div>
             <div className="flex items-center border-b border-[#d2b48c] pb-3">
               <span className="text-[#7a5c45] font-serif w-24">Email:</span>
-              <span className="text-[#5a3e36] font-serif flex-1">{profile.email}</span>
+              <span className="text-[#5a3e36] font-serif flex-1">
+                {profile.email}
+              </span>
             </div>
             <div className="flex items-center border-b border-[#d2b48c] pb-3">
               <span className="text-[#7a5c45] font-serif w-24">Phone:</span>
-              <span className="text-[#5a3e36] font-serif flex-1">{profile.phone}</span>
+              <span className="text-[#5a3e36] font-serif flex-1">
+                {profile.phone}
+              </span>
             </div>
             <div className="pt-4">
-              <span className="text-[#7a5c45] font-serif block mb-2">Certificate:</span>
+              <span className="text-[#7a5c45] font-serif block mb-2">
+                Certificate:
+              </span>
               <a
                 href={profile.certificate}
                 target="_blank"
@@ -84,7 +96,9 @@ const RestaurentProfile: React.FC = () => {
             </div>
           </div>
         ) : (
-          <p className="text-[#7a5c45] font-serif text-center">No profile data available.</p>
+          <p className="text-[#7a5c45] font-serif text-center">
+            No profile data available.
+          </p>
         )}
       </div>
     </div>

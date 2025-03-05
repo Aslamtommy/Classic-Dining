@@ -27,6 +27,10 @@ export class BranchRepository implements IBranchRepository {
 
   async findById(branchId: string): Promise<IBranch | null> {
     try {
+      console.log('repositorybranchid', branchId); // Log the raw value
+      if (typeof branchId !== 'string') {
+        throw new Error(`Expected branchId to be a string, got ${typeof branchId}`);
+      }
       return await BranchModel.findById(branchId).exec();
     } catch (error) {
       console.error('Error in findById:', error);

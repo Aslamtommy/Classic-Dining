@@ -4,10 +4,18 @@ import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CalendarDays, Clock, Users, Utensils, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+ 
+import { Booking } from "../../types/reservation";
+ import { ApiResponse } from "../../types/reservation";
+
+ 
+ 
+
+
 
 const BranchBookings: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit] = useState(5);
@@ -28,7 +36,7 @@ const BranchBookings: React.FC = () => {
     }
     setLoading(true);
     try {
-      const response: any = await restaurentApi.get(`/branches/${branchId}/reservations`, {
+      const response = await restaurentApi.get<ApiResponse>(`/branches/${branchId}/reservations`, {
         params: { page, limit, status: statusFilter },
       });
       setBookings(response.data.data.reservations || []);
@@ -147,7 +155,11 @@ const BranchBookings: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Utensils className="w-4 h-4 text-gray-400" />
-                      {booking.tableType.name} (Capacity: {booking.tableType.capacity})
+                      {booking.tableType ? (
+                        `${booking.tableType.name} (Capacity: ${booking.tableType.capacity})`
+                      ) : (
+                        "Table information unavailable"
+                      )}
                     </div>
                   </div>
 

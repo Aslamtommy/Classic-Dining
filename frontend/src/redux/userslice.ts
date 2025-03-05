@@ -10,7 +10,7 @@ interface User {
 }
 
  
-interface UserState {
+export interface UserState {
   user: User | null;
   loading: boolean;
   error: string | null;

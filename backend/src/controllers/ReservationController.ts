@@ -181,6 +181,8 @@ export class ReservationController {
     try {
       const userId = req.data?.id;
       const reservationId = req.params.id;
+      console.log('userid',userId)
+      console.log('confirmWithWallet called with reservationId:', reservationId);
       if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
       if (!reservationId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       const reservation = await this._reservationService.confirmWithWallet(reservationId, userId);

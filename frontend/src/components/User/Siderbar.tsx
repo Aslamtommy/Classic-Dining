@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 import { User, Calendar, Wallet, Settings, LogOut, Utensils } from 'lucide-react'; // Added Utensils for Restaurants
 import { useSelector } from 'react-redux';
-
 const Sidebar = () => {
   const profile = useSelector((state: any) => state.user.user);
   console.log(profile);

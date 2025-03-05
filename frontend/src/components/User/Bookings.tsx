@@ -3,21 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { fetchUserReservations, cancelReservation } from '../../Api/userApi';
 import toast, { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-
-interface Reservation {
-  _id: string;
-  branch: { name: string } | null;
-  tableType: { name: string; price: number } | null;
-  reservationDate: string;
-  timeSlot: string;
-  partySize: number;
-  status: string;
-  paymentId?: string;
-  couponCode?: string;
-  discountApplied?: number;
-  finalAmount?: number;
-}
-
+import { Reservation } from '../../types/reservation';
+ 
 const Bookings: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [total, setTotal] = useState<number>(0);

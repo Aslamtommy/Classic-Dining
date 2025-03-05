@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TableType } from '../../../types/types';
+import { TableType } from '../../../types/reservation';
 
 interface TableSelectionProps {
   selectedTime: string;

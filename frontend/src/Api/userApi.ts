@@ -1,146 +1,175 @@
 import api from "../Axios/userInstance";
+import { AxiosError } from "../types/auth";
+import { BranchResponse  } from "../types/branch";
+import {
+  ReservationResponse,
+  ReservationsResponse,
+  AvailableTablesResponse,
+  Coupon,
+  CouponsResponse,
+  WalletResponse,
+  Reservation,
+  TableType,
+} from "../types/reservation";
 
- 
- 
-
-export const fetchBranchDetails = async (branchId: string) => {
+export const fetchBranchDetails = async (branchId: string): Promise<BranchResponse['data']> => {
   try {
-    const response :any= await api.get(`/branches/${branchId}`);
+    const response = await api.get<BranchResponse>(`/branches/${branchId}`);
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to fetch branch details');
     }
-    return response.data 
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to fetch branch details');
+    return response.data.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch branch details');
   }
 };
 
-export const createReservation = async (reservationData: any) => {
+export const createReservation = async (reservationData: Partial<Reservation>): Promise<ReservationResponse> => {
   try {
-    const response :any= await api.post(`/reservations`, reservationData);
+    const response = await api.post<ReservationResponse>(`/reservations`, reservationData);
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to create reservation');
     }
     return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to create reservation');
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to create reservation');
   }
 };
 
-export const fetchAvailableTables = async (branchId: string, date: string, timeSlot: string) => {
+export const fetchAvailableTables = async (
+  branchId: string,
+  date: string,
+  timeSlot: string
+): Promise<TableType[]> => {
   try {
-    const response :any= await api.get(`/available-tables`, {
+    const response = await api.get<AvailableTablesResponse>(`/available-tables`, {
       params: { branchId, date, timeSlot },
     });
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to fetch available tables');
     }
-    return response.data.data; // Returns array of available TableType objects
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to fetch available tables');
+    return response.data.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch available tables');
   }
 };
 
-export const confirmReservation = async (reservationId: string, paymentId: string) => {
+export const confirmReservation = async (reservationId: string, paymentId: string): Promise<ReservationResponse> => {
   try {
-    const response: any = await api.put(`/reservations/${reservationId}/confirm`, { paymentId });
+    const response = await api.put<ReservationResponse>(`/reservations/${reservationId}/confirm`, { paymentId });
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to confirm reservation');
     }
     return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to confirm reservation');
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to confirm reservation');
   }
 };
 
-export const failReservation = async (reservationId: string, paymentId: string) => {
+export const failReservation = async (reservationId: string, paymentId: string): Promise<ReservationResponse> => {
   try {
-    const response: any = await api.put(`/reservations/${reservationId}/fail`, { paymentId });
+    const response = await api.put<ReservationResponse>(`/reservations/${reservationId}/fail`, { paymentId });
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to mark reservation as payment failed');
     }
     return response.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to mark reservation as payment failed');
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to mark reservation as payment failed');
   }
 };
 
-// Fetch all user reservations
 export const fetchUserReservations = async (
   page: number = 1,
   limit: number = 10,
   status?: string
-) => {
+): Promise<ReservationsResponse['data']> => {
   try {
-    const params: any = { page, limit };
-    if (status) {
-      params.status = status;
-    }
-    const response: any = await api.get('/reservations', { params });
+    const params: { page: number; limit: number; status?: string } = { page, limit };
+    if (status) params.status = status;
+    const response = await api.get<ReservationsResponse>('/reservations', { params });
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to fetch reservations');
     }
-    return response.data.data; // Returns { reservations, total, page, limit, totalPages }
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch reservations');
-  }
-};
-// Fetch a single reservation by ID
-export const fetchReservation = async (reservationId: string) => {
-  try {
-    const response :any= await api.get(`/reservations/${reservationId}`);
     return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch reservation');
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch reservations');
   }
 };
 
-
-export const cancelReservation = async (reservationId: string) => {
+export const fetchReservation = async (reservationId: string): Promise<Reservation> => {
   try {
-    const response:any = await api.put(`/reservations/${reservationId}/cancel`);
+    const response = await api.get<ReservationResponse>(`/reservations/${reservationId}`);
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch reservation');
+    }
+    console.log('si',response.data.data);
     return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to cancel reservation');
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch reservation');
   }
 };
 
-export const fetchWalletData = async () => {
+export const cancelReservation = async (reservationId: string): Promise<Reservation> => {
   try {
-    const response:any = await api.get('/wallet');
+    const response = await api.put<ReservationResponse>(`/reservations/${reservationId}/cancel`);
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to cancel reservation');
+    }
+    return response.data.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to cancel reservation');
+  }
+};
+
+export const fetchWalletData = async (): Promise<WalletResponse['data']> => {
+  try {
+    const response = await api.get<WalletResponse>('/wallet');
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to fetch wallet data');
     }
     return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || error.message || 'Failed to fetch wallet data');
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch wallet data');
   }
-}
+};
 
-  export const fetchAvailableCoupons = async () => {
-    try {
-      const response: any = await api.get('/coupons');
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to fetch available coupons');
-      }
-      return response.data.data; // Returns array of available ICoupon objects
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch available coupons');
+export const fetchAvailableCoupons = async (): Promise<Coupon[]> => {
+  try {
+    const response = await api.get<CouponsResponse>('/coupons');
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch available coupons');
     }
+    return response.data.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch available coupons');
+  }
+};
 
-
-  } 
-
-  export const fetchBranches = async (search: string = '', page: number = 1, limit: number = 10) => {
-    try {
-      const response: any = await api.get("/branches", {
-        params: { search, page, limit },
-      });
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to fetch branches');
-      }
-      return response.data.data; // Returns { branches, total, page, pages }
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch branches');
+export const fetchBranches = async (
+  search: string = '',
+  page: number = 1,
+  limit: number = 10
+)  => {
+  try {
+    const response :any= await api.get ("/branches", {
+      params: { search, page, limit },
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch branches');
     }
-  };
+    return response.data.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch branches');
+  }
+};

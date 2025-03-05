@@ -205,7 +205,12 @@ export class UserService implements IUserService {
 
   async getBranchDetails(branchId: string): Promise<IBranch | null> {
     try {
+      // Ensure branchId is a string and valid
+      if (typeof branchId !== 'string' || !/^[0-9a-fA-F]{24}$/.test(branchId)) {
+        throw new AppError(HttpStatus.BadRequest, "Invalid branch ID format");
+      }
       const branch = await this.branchRepository.findByIdUser(branchId);
+      console.log('[branchservice]', branch);
       if (!branch) {
         throw new AppError(HttpStatus.NotFound, "Branch not found");
       }

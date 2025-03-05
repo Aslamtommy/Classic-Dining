@@ -1,3 +1,4 @@
+// src/components/RestaurentSignup.tsx
 import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -9,8 +10,14 @@ import { setLoading, setRestaurent, setError } from "../../redux/restaurentSlice
 import restaurentApi from "../../Axios/restaurentInstance";
 import OtpModal from "../CommonComponents/Modals/OtpModal";
 import sendOtp from "../../utils/sentotp";
+import {
+  SignupFormData,
+  RestaurentResponse,
+  RestaurentState,
+   
+} from "../../types/restaurent";
 
-// Yup Validation Schema
+// Validation Schema
 const validationSchema = yup.object().shape({
   name: yup
     .string()
@@ -37,92 +44,109 @@ const validationSchema = yup.object().shape({
     .matches(/^\d{10}$/, "Phone must be a valid 10-digit number")
     .required("Phone is required"),
   certificate: yup
-    .mixed()
+    .mixed<File>()
     .required("Certificate is required")
     .test(
       "fileFormat",
       "Unsupported file format. Only PDF, PNG, and JPG are allowed.",
-      (value) => {
+      (value: File | undefined) => {
         if (value) {
           const supportedFormats = ["application/pdf", "image/png", "image/jpeg"];
-          return supportedFormats.includes((value as File).type);
+          return supportedFormats.includes(value.type);
         }
         return false;
       }
     ),
 });
 
-type FormData = yup.InferType<typeof validationSchema>;
-
 const RestaurentSignup: React.FC = () => {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<SignupFormData>({
     resolver: yupResolver(validationSchema),
   });
 
-  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state: RootState) => state.restaurent);
+  const { loading, error } = useSelector<RootState, RestaurentState>(
+    (state) => state.restaurent
+  );
   const navigate = useNavigate();
+  const [formData, setFormData] = useState<SignupFormData | null>(null);
 
   useEffect(() => {
     return () => {
       dispatch(setError(""));
     };
   }, [dispatch]);
-  const [formData, setFormData] = useState<FormData | null>(null); // Store form data
 
-  const onSubmit = async (data: FormData) => {
-    setFormData(data); // Store data for later use
-  
+  const onSubmit = async (data: SignupFormData) => {
+    setFormData(data);
     const result = await sendOtp(data.email, dispatch);
     if (result.success) {
       setShowOtpModal(true);
     }
   };
 
-  
-  
   const completeRegistration = async () => {
-    if (!formData) return; // Ensure formData is available
-  
+    if (!formData) return;
+
     const formDataToSend = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      if (value instanceof File) {
-        formDataToSend.append(key, value);
-      } else {
-        formDataToSend.append(key, value.toString());
+      if (key !== "confirmPassword") {
+        if (value instanceof File) {
+          formDataToSend.append(key, value);
+        } else {
+          formDataToSend.append(key, value.toString());
+        }
       }
     });
-  
+
     try {
       dispatch(setLoading());
-      const response: any = await restaurentApi.post("/signup", formDataToSend, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      dispatch(setRestaurent(response.data.restaurent));
+      const response  = await restaurentApi.post<RestaurentResponse>(
+
+       
+        "/signup",  
+        formDataToSend,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log('response',response )
+      
+      // Correctly access the Restaurent object from response.data.data
+      dispatch(setRestaurent(response.data.data));  
       setShowOtpModal(false);
       navigate("/restaurent/login");
-    } catch (err: any) {
-      dispatch(setError(err.response?.data?.error || "Signup failed"));
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : "Signup failed";
+      dispatch(setError(errorMessage || "Signup failed"));
     }
   };
-  
-   
 
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">Restaurent Signup</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Restaurant Signup</h2>
       {error && (
         <p className="text-red-500 text-sm mb-4">
           {error.split(", ").map((msg, i) => (
-            <span key={i}>• {msg}<br /></span>
+            <span key={i}>
+              • {msg}
+              <br />
+            </span>
           ))}
         </p>
       )}
 
       {!showOtpModal && (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name Input */}
           <div className="flex flex-col">
             <label htmlFor="name" className="font-medium mb-1">
               Name
@@ -133,10 +157,11 @@ const RestaurentSignup: React.FC = () => {
               {...register("name")}
               className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name.message}</p>
+            )}
           </div>
 
-          {/* Email Input */}
           <div className="flex flex-col">
             <label htmlFor="email" className="font-medium mb-1">
               Email
@@ -147,10 +172,11 @@ const RestaurentSignup: React.FC = () => {
               {...register("email")}
               className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email.message}</p>
+            )}
           </div>
 
-          {/* Password Input */}
           <div className="flex flex-col">
             <label htmlFor="password" className="font-medium mb-1">
               Password
@@ -161,10 +187,11 @@ const RestaurentSignup: React.FC = () => {
               {...register("password")}
               className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
           </div>
 
-          {/* Confirm Password Input */}
           <div className="flex flex-col">
             <label htmlFor="confirmPassword" className="font-medium mb-1">
               Confirm Password
@@ -175,10 +202,13 @@ const RestaurentSignup: React.FC = () => {
               {...register("confirmPassword")}
               className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
-          {/* Phone Input */}
           <div className="flex flex-col">
             <label htmlFor="phone" className="font-medium mb-1">
               Phone
@@ -189,10 +219,11 @@ const RestaurentSignup: React.FC = () => {
               {...register("phone")}
               className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
+            {errors.phone && (
+              <p className="text-red-500 text-sm">{errors.phone.message}</p>
+            )}
           </div>
 
-          {/* Certificate Upload */}
           <div className="flex flex-col">
             <label htmlFor="certificate" className="font-medium mb-1">
               Certificate (PDF, PNG, JPG)
@@ -210,7 +241,9 @@ const RestaurentSignup: React.FC = () => {
                 />
               )}
             />
-            {errors.certificate && <p className="text-red-500 text-sm">{errors.certificate.message}</p>}
+            {errors.certificate && (
+              <p className="text-red-500 text-sm">{errors.certificate.message}</p>
+            )}
           </div>
 
           <button
@@ -227,15 +260,14 @@ const RestaurentSignup: React.FC = () => {
         </form>
       )}
 
-{showOtpModal && formData && (
-  <OtpModal
-    email={formData.email}
-    show={showOtpModal}
-    onClose={() => setShowOtpModal(false)}
-    onSuccess={completeRegistration}
-  />
-)}
-
+      {showOtpModal && formData && (
+        <OtpModal
+          email={formData.email}
+          show={showOtpModal}
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={completeRegistration}
+        />
+      )}
     </div>
   );
 };

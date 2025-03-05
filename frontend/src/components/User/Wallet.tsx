@@ -1,17 +1,10 @@
-// src/components/WalletPage.tsx
 import { useState, useEffect } from "react";
 import api from "../../Axios/userInstance";
 import { toast } from "react-hot-toast";
 import { Wallet, CreditCard, DollarSign, PlusCircle } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface Transaction {
-  _id: string;
-  type: 'credit' | 'debit';
-  amount: number;
-  description: string;
-  date: string;
-}
+import { WalletResponse, OrderResponse, ConfirmAddResponse, Transaction, RazorpayOptions, RazorpayResponse, RazorpayErrorResponse } from "../../types/wallet";
+import { AxiosError } from "../../types/auth";
 
 const WalletPage: React.FC = () => {
   const [balance, setBalance] = useState<number>(0);
@@ -21,7 +14,7 @@ const WalletPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const limit = 6;  
+  const limit = 6;
 
   useEffect(() => {
     fetchWalletData(currentPage);
@@ -30,12 +23,13 @@ const WalletPage: React.FC = () => {
   const fetchWalletData = async (page: number) => {
     try {
       setIsLoading(true);
-      const response: any = await api.get(`/wallet?page=${page}&limit=${limit}`);
+      const response = await api.get<WalletResponse>(`/wallet?page=${page}&limit=${limit}`);
       setBalance(response.data.data.balance);
       setTransactions(response.data.data.transactions);
       setTotalPages(Math.ceil(response.data.data.totalTransactions / limit));
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to fetch wallet data", {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      toast.error(axiosError.response?.data?.message || "Failed to fetch wallet data", {
         duration: 4000,
         position: 'top-center',
       });
@@ -52,7 +46,7 @@ const WalletPage: React.FC = () => {
     }
     try {
       setIsAdding(true);
-      const response: any = await api.post('/wallet/create-order', { amount: parsedAmount });
+      const response = await api.post<OrderResponse>('/wallet/create-order', { amount: parsedAmount });
       const orderData = response.data.data;
 
       const script = document.createElement('script');
@@ -64,16 +58,16 @@ const WalletPage: React.FC = () => {
         script.onload = () => resolve();
       });
 
-      const options = {
+      const options: RazorpayOptions = {
         key: 'rzp_test_ihsNz6lracNIu3',
         amount: orderData.amount,
         currency: orderData.currency,
         order_id: orderData.id,
         name: 'ReserveBites',
         description: 'Add Money to Wallet',
-        handler: async function (response: any) {
+        handler: async (response: RazorpayResponse) => {
           try {
-            const confirmResponse: any = await api.post('/wallet/confirm-add', {
+            const confirmResponse = await api.post<ConfirmAddResponse>('/wallet/confirm-add', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -83,8 +77,9 @@ const WalletPage: React.FC = () => {
             setTransactions(confirmResponse.data.data.transactions);
             setAmount("");
             toast.success("Money added successfully", { duration: 4000, position: 'top-center' });
-          } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to confirm payment", {
+          } catch (error: unknown) {
+            const axiosError = error as AxiosError;
+            toast.error(axiosError.response?.data?.message || "Failed to confirm payment", {
               duration: 4000,
               position: 'top-center',
             });
@@ -103,8 +98,8 @@ const WalletPage: React.FC = () => {
         },
       };
 
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.on('payment.failed', function (response: any) {
+      const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', (response: RazorpayErrorResponse) => {
         toast.error(`Payment failed: ${response.error.description}`, {
           duration: 4000,
           position: 'top-center',
@@ -112,8 +107,14 @@ const WalletPage: React.FC = () => {
         setIsAdding(false);
       });
       razorpay.open();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to initiate payment", {
+
+      // Cleanup script after use
+      return () => {
+        document.body.removeChild(script);
+      };
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      toast.error(axiosError.response?.data?.message || "Failed to initiate payment", {
         duration: 4000,
         position: 'top-center',
       });

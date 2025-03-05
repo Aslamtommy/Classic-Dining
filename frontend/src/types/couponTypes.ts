@@ -39,3 +39,4 @@ export interface ApiResponse {
     limit: number;
   };
 }
+
