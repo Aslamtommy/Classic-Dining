@@ -1,4 +1,4 @@
-// types/adminTypes.ts
+ 
 export interface Admin {
     _id: string;
     email: string;

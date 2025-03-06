@@ -6,8 +6,11 @@ import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { FilterQuery } from 'mongoose';
-
-export class UserRepository implements UserRepositoryInterface {
+import { BaseRepository } from './BaseRepository/BaseRepository';
+export class UserRepository extends BaseRepository<IUser> implements UserRepositoryInterface {
+  constructor() {
+    super(User);
+  }
   async create(user: Partial<IUser> | googleUserData): Promise<IUser> {
     try {
       let newUser;
@@ -33,18 +36,7 @@ export class UserRepository implements UserRepositoryInterface {
     }
   }
 
-  async findByEmail(email: string): Promise<IUser | null> {
-    try {
-      return await User.findOne({ email }).exec();
-    } catch (error: unknown) {
-      console.error('Error in findByEmail:', error);
-      const errorMessage = error instanceof Error 
-        ? `${MessageConstants.INTERNAL_SERVER_ERROR}: ${error.message}`
-        : MessageConstants.INTERNAL_SERVER_ERROR;
-      throw new AppError(HttpStatus.InternalServerError, errorMessage);
-    }
-  }
-
+   
   async findByGoogleId(googleId: string): Promise<IUser | null> {
     try {
       return await User.findOne({ google_id: googleId }).exec();
@@ -75,20 +67,7 @@ export class UserRepository implements UserRepositoryInterface {
     }
   }
 
-  async findAll(filter: FilterQuery<IUser>, skip: number, limit: number): Promise<IUser[]> {
-    try {
-      return await User.find(filter)
-        .skip(skip)
-        .limit(limit)
-        .exec();
-    } catch (error: unknown) {
-      console.error('Error in findAll:', error);
-      const errorMessage = error instanceof Error 
-        ? `${MessageConstants.INTERNAL_SERVER_ERROR}: ${error.message}`
-        : MessageConstants.INTERNAL_SERVER_ERROR;
-      throw new AppError(HttpStatus.InternalServerError, errorMessage);
-    }
-  }
+   
 
   async countAll(filter: FilterQuery<IUser>): Promise<number> {
     try {
@@ -102,17 +81,7 @@ export class UserRepository implements UserRepositoryInterface {
     }
   }
 
-  async findById(userId: string): Promise<IUser | null> {
-    try {
-      return await User.findById(userId).exec();
-    } catch (error: unknown) {
-      console.error('Error in findById:', error);
-      const errorMessage = error instanceof Error 
-        ? `${MessageConstants.INTERNAL_SERVER_ERROR}: ${error.message}`
-        : MessageConstants.INTERNAL_SERVER_ERROR;
-      throw new AppError(HttpStatus.InternalServerError, errorMessage);
-    }
-  }
+   
 
   async updateProfilePicture(userId: string, profilePicture: string): Promise<IUser | null> {
     try {
@@ -147,24 +116,5 @@ export class UserRepository implements UserRepositoryInterface {
     }
   }
 
-  async update(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
-    try {
-      const updatedUser = await User.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        { new: true }
-      ).exec();
-      if (!updatedUser) {
-        throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
-      }
-      return updatedUser;
-    } catch (error: unknown) {
-      console.error('Error in update:', error);
-      if (error instanceof AppError) throw error;
-      const errorMessage = error instanceof Error 
-        ? `${MessageConstants.INTERNAL_SERVER_ERROR}: ${error.message}`
-        : MessageConstants.INTERNAL_SERVER_ERROR;
-      throw new AppError(HttpStatus.InternalServerError, errorMessage);
-    }
-  }
+   
 }

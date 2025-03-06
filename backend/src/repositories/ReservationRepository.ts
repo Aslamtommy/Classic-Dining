@@ -5,16 +5,13 @@ import { IReservationRepository } from '../interfaces/Reservation/IReservationRe
 import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
-
-export class ReservationRepository implements IReservationRepository {
-  async create(reservationData: Partial<IReservation>): Promise<IReservation> {
-    try {
-      return await Reservation.create(reservationData);
-    } catch (error) {
-      console.error('Error in create:', error);
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+import { BaseRepository } from './BaseRepository/BaseRepository';
+export class ReservationRepository extends BaseRepository<IReservation> implements IReservationRepository {
+   constructor() {
+      super(Reservation);
     }
-  }
+   
+
 
   async findById(id: string): Promise<IReservation | null> {
     try {
@@ -37,14 +34,7 @@ export class ReservationRepository implements IReservationRepository {
     }
   }
 
-  async update(id: string, updateData:  Partial<IReservation>): Promise<IReservation | null> {
-    try {
-      return await Reservation.findByIdAndUpdate(id, updateData, { new: true }).exec();
-    } catch (error) {
-      console.error('Error in update:', error);
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-    }
-  }
+   
 
   async findAvailability(branchId: string, tableTypeId: string, date: Date, timeSlot: string): Promise<number> {
     try {
@@ -163,6 +153,7 @@ export class ReservationRepository implements IReservationRepository {
         .skip(skip)
         .limit(limit)
         .exec();
+        
     } catch (error) {
       console.error('Error in findByUserIdWithPagination:', error);
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);

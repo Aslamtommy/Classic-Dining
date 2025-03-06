@@ -1,21 +1,22 @@
 // src/components/CouponManagement.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import adminApi from '../../Axios/adminInstance';
-import moment  from 'moment';
-import { 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  DatePicker, 
+import moment from 'moment';
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
   message,
   Pagination,
   InputNumber,
-  TableColumnsType
+  TableColumnsType,
 } from 'antd';
- import { ICoupon, CouponFormValues, Pagination as PaginationType, ApiResponse } from '../../types/couponTypes';
+import debounce from 'lodash/debounce';
+import { ICoupon, CouponFormValues, Pagination as PaginationType, ApiResponse } from '../../types/couponTypes';
 
 const { Option } = Select;
 
@@ -29,7 +30,7 @@ const CouponManagement: React.FC = () => {
     current: 1,
     pageSize: 10,
     total: 0,
-    searchTerm: ''
+    searchTerm: '',
   });
 
   // Fetch coupons from backend
@@ -37,13 +38,12 @@ const CouponManagement: React.FC = () => {
     setLoading(true);
     try {
       const response = await adminApi.get<ApiResponse>(
-        `/coupons?page=${pagination.current}&limit=${pagination.pageSize}&searchTerm=${pagination.searchTerm}`,
-       
+        `/coupons?page=${pagination.current}&limit=${pagination.pageSize}&searchTerm=${pagination.searchTerm}`
       );
       setCoupons(response.data.data.coupons);
       setPagination(prev => ({
         ...prev,
-        total: response.data.data.total
+        total: response.data.data.total,
       }));
     } catch (error) {
       message.error('Failed to fetch coupons');
@@ -55,37 +55,42 @@ const CouponManagement: React.FC = () => {
     fetchCoupons();
   }, [pagination.current, pagination.pageSize, pagination.searchTerm]);
 
+  // Debounced search handler
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setPagination(prev => ({ ...prev, searchTerm: value, current: 1 }));
+    }, 500),
+    []  
+  );
+
+  // Handle search input
+  const handleSearch = (value: string) => {
+    debouncedSearch(value);
+  };
+
   // Handle form submission for create/update
   const handleSubmit = async (values: CouponFormValues) => {
     try {
       const payload = {
         ...values,
-        expiryDate: values.expiryDate.toISOString()
+        expiryDate: values.expiryDate.toISOString(),
       };
 
       if (editCoupon) {
-        // Update coupon
-        await adminApi.put(
-          `/coupons/${editCoupon._id}`,
-          payload,
- 
-        );
+        await adminApi.put(`/coupons/${editCoupon._id}`, payload);
         message.success('Coupon updated successfully');
       } else {
-        // Create coupon
-        await adminApi.post(
-          `/coupons`,
-          payload,
-  
-        );
+        await adminApi.post('/coupons', payload);
         message.success('Coupon created successfully');
       }
       setVisible(false);
       form.resetFields();
       setEditCoupon(null);
       fetchCoupons();
-    } catch (error) {
-      message.error('Operation failed');
+    } catch (error: any) {
+      const backendErrorMessage = error.response?.data?.message;
+      const errorMessage = backendErrorMessage || 'An unexpected error occurred. Please try again.';
+      message.error(errorMessage);
     }
   };
 
@@ -95,16 +100,13 @@ const CouponManagement: React.FC = () => {
       title: 'Are you sure you want to delete this coupon?',
       onOk: async () => {
         try {
-          await adminApi.delete(
-            `/coupons/${id}`,
-            
-          );
+          await adminApi.delete(`/coupons/${id}`);
           message.success('Coupon deleted successfully');
           fetchCoupons();
         } catch (error) {
           message.error('Failed to delete coupon');
         }
-      }
+      },
     });
   };
 
@@ -114,7 +116,7 @@ const CouponManagement: React.FC = () => {
     setVisible(true);
     form.setFieldsValue({
       ...coupon,
-      expiryDate: moment(coupon.expiryDate)
+      expiryDate: moment(coupon.expiryDate),
     });
   };
 
@@ -122,17 +124,17 @@ const CouponManagement: React.FC = () => {
     { title: 'Code', dataIndex: 'code', key: 'code' },
     { title: 'Discount', dataIndex: 'discount', key: 'discount' },
     { title: 'Type', dataIndex: 'discountType', key: 'discountType' },
-    { 
-      title: 'Expiry Date', 
-      dataIndex: 'expiryDate', 
+    {
+      title: 'Expiry Date',
+      dataIndex: 'expiryDate',
       key: 'expiryDate',
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => new Date(date).toLocaleDateString(),
     },
-    { 
-      title: 'Status', 
-      dataIndex: 'isActive', 
+    {
+      title: 'Status',
+      dataIndex: 'isActive',
       key: 'isActive',
-      render: (active: boolean) => (active ? 'Active' : 'Inactive')
+      render: (active: boolean) => (active ? 'Active' : 'Inactive'),
     },
     {
       title: 'Actions',
@@ -146,15 +148,15 @@ const CouponManagement: React.FC = () => {
             Delete
           </Button>
         </>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 16 }}>
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           onClick={() => {
             setVisible(true);
             setEditCoupon(null);
@@ -165,7 +167,8 @@ const CouponManagement: React.FC = () => {
         </Button>
         <Input.Search
           placeholder="Search by code"
-          onSearch={(value: string) => setPagination({ ...pagination, searchTerm: value, current: 1 })}
+          onSearch={handleSearch}
+          onChange={(e) => debouncedSearch(e.target.value)} // Debounce on typing
           style={{ width: 200, marginLeft: 16 }}
         />
       </div>
@@ -182,7 +185,7 @@ const CouponManagement: React.FC = () => {
         current={pagination.current}
         pageSize={pagination.pageSize}
         total={pagination.total}
-        onChange={(page: number, pageSize: number) => 
+        onChange={(page: number, pageSize: number) =>
           setPagination({ ...pagination, current: page, pageSize })
         }
         style={{ marginTop: 16, textAlign: 'right' }}
@@ -204,7 +207,7 @@ const CouponManagement: React.FC = () => {
           onFinish={handleSubmit}
           initialValues={{
             discountType: 'percentage',
-            isActive: true
+            isActive: true,
           }}
         >
           <Form.Item
@@ -250,8 +253,8 @@ const CouponManagement: React.FC = () => {
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item 
-            name="isActive" 
+          <Form.Item
+            name="isActive"
             label="Status"
             rules={[{ required: true, message: 'Please select status' }]}
           >

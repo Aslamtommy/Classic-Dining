@@ -1,4 +1,4 @@
-// src/types/reservation.ts
+ 
  
 export interface RazorpayOptions {
     key: string;

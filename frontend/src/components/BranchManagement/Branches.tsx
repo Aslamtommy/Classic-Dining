@@ -1,6 +1,6 @@
 // src/components/Branches.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Button } from "@mui/material";
@@ -8,6 +8,8 @@ import restaurentApi from "../../Axios/restaurentInstance";
 import ConfirmationDialog from "../CommonComponents/ConfirmationDialog";
 import { FaSearch } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { debounce } from "../../utils/CustomDebounce";
+
 
 const Branches = () => {
   const [branches, setBranches] = useState<any[]>([]);  
@@ -41,6 +43,20 @@ const Branches = () => {
     getBranches();
   }, []);
 
+  // Debounced search handler
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setSearchTerm(value);
+      setPage(1);  
+    }, 500), // 300ms delay
+    []
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
+  };
+
   // Filter branches by search term
   const filteredBranches = branches.filter(
     (branch: any) =>
@@ -54,12 +70,6 @@ const Branches = () => {
     (page - 1) * limit,
     page * limit
   );
-
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPage(1); // Reset to first page on search
-  };
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
@@ -108,7 +118,6 @@ const Branches = () => {
             <input
               type="text"
               placeholder="Search branches by name or email..."
-              value={searchTerm}
               onChange={handleSearchChange}
               className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white border border-[#e8e2d9] focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] text-[#2c2420] placeholder-[#8b5d3b] shadow-md transition-all duration-300"
             />

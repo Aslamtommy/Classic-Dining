@@ -1,13 +1,6 @@
 import cloudinary from "../config/cloudinary";
 
 export class CloudinaryService {
-  /**
-   * Uploads a file to Cloudinary.
-   * @param filePath - The path of the file to upload.
-   * @param folder - The folder in Cloudinary to store the file.
-   * @param publicId - (Optional) A unique identifier for the file. If not provided, Cloudinary will generate one.
-   * @returns The secure URL of the uploaded file.
-   */
   static async uploadFile(
     filePath: string,
     folder: string,
@@ -16,38 +9,30 @@ export class CloudinaryService {
     try {
       const uploadOptions: any = {
         folder,
-        resource_type: "auto", // Automatically detect the file type
-        overwrite: true, // Overwrite the file if it already exists
+        resource_type: "auto",
+        overwrite: true,
+        type: "authenticated",  
       };
 
-      // Add public_id if provided
       if (publicId) {
         uploadOptions.public_id = publicId;
       }
 
       const result = await cloudinary.uploader.upload(filePath, uploadOptions);
-      return result.secure_url;
+      return result.secure_url;  
     } catch (error: any) {
       throw new Error(`Cloudinary upload failed: ${error.message}`);
     }
   }
 
-  /**
-   * Deletes a file from Cloudinary.
-   * @param publicId - The public ID of the file to delete.
-   * @returns A success message if the file is deleted.
-   */
-  static async deleteFile(publicId: string): Promise<string> {
-    try {
-      const result = await cloudinary.uploader.destroy(publicId);
-      console.log('result',result)
-      if (result.result === "ok") {
-        return "File deleted successfully";
-      } else {
-        throw new Error("Failed to delete file from Cloudinary");
-      }
-    } catch (error: any) {
-      throw new Error(`Cloudinary delete failed: ${error.message}`);
-    }
+  // New method to generate a signed URL
+  static generateSignedUrl(publicId: string, expiresInSeconds: number = 3600): string {
+    const timestamp = Math.floor(Date.now() / 1000); // Current time in seconds
+    const expiresAt = timestamp + expiresInSeconds; // Expiration time
+
+    return cloudinary.utils.private_download_url(publicId, "jpg", {  
+      expires_at: expiresAt,
+      type: "authenticated",  
+    });
   }
 }

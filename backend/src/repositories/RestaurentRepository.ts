@@ -6,26 +6,14 @@ import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { FilterQuery } from 'mongoose';
-
-export class RestaurentRepository implements IRestaurentRepository {
-  async findByEmail(email: string): Promise<IRestaurent | null> {
-    try {
-      return await RestaurentModel.findOne({ email }).lean().exec();
-    } catch (error: unknown) {
-      console.error('Error in findByEmail:', error);
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-    }
+import { BaseRepository } from './BaseRepository/BaseRepository';
+export class RestaurentRepository extends BaseRepository<IRestaurent> implements IRestaurentRepository {
+  constructor() {
+    super(RestaurentModel);
   }
+  
 
-  async create(restaurentData: Partial<IRestaurent>): Promise<IRestaurent> {
-    try {
-      return await RestaurentModel.create(restaurentData);
-    } catch (error: unknown) {
-      console.error('Error in create:', error);
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-    }
-  }
-
+  
   async updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent | null> {
     try {
       return await RestaurentModel.findByIdAndUpdate(
@@ -43,15 +31,7 @@ export class RestaurentRepository implements IRestaurentRepository {
     }
   }
 
-  async findById(restaurentId: string): Promise<IRestaurent | null> {
-    try {
-      return await RestaurentModel.findById(restaurentId).exec();
-    } catch (error: unknown) {
-      console.error('Error in findById:', error);
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-    }
-  }
-
+  
   async save(restaurent: IRestaurent): Promise<IRestaurent> {
     try {
       return await restaurent.save();
@@ -61,15 +41,7 @@ export class RestaurentRepository implements IRestaurentRepository {
     }
   }
 
-  async findAll(filter: FilterQuery<IRestaurent>, skip: number, limit: number): Promise<IRestaurent[]> {
-    try {
-      return await RestaurentModel.find(filter).skip(skip).limit(limit).exec();
-    } catch (error: unknown) {
-      console.error('Error in findAll:', error);
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-    }
-  }
-
+  
   async countAll(filter: FilterQuery<IRestaurent>): Promise<number> {
     try {
       return await RestaurentModel.countDocuments(filter).exec();

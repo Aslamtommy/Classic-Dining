@@ -14,7 +14,7 @@ import { MessageConstants } from '../constants/MessageConstants';
 import { HttpStatus } from '../constants/HttpStatus';
 import { AppError } from '../utils/AppError';
 import { IBranch } from '../models/Restaurent/Branch/BranchModel';
-
+import { CloudinaryService } from '../utils/cloudinary.service';
 export class UserService implements IUserService {
   constructor(
     private userRepository: UserRepositoryInterface,
@@ -114,6 +114,9 @@ export class UserService implements IUserService {
         'Forgot Password Verification',
         `<p>Enter this code <b>${otp}</b> to verify your email for resetting the password.</p><p>This code expires in <b>2 Minutes</b></p>`
       );
+
+
+      console.log(otp)
       const hashedOtp = await hashOtp(otp);
       await this.otpRepository.storeOtp(hashedOtp, userData.email);
       return userData.email;
@@ -169,12 +172,14 @@ export class UserService implements IUserService {
       const result = await cloudinary.uploader.upload(filePath, {
         public_id: `user_${userId}`,
         overwrite: true,
+        type: "authenticated", // Restrict access
       });
       const updatedUser = await this.userRepository.updateProfilePicture(userId, result.secure_url);
       if (!updatedUser) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
-      return result.secure_url;
+      // Return a signed URL instead of the default secure_url
+      return CloudinaryService.generateSignedUrl(`user_${userId}`);
     } catch (error: unknown) {
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, "Failed to upload profile picture");

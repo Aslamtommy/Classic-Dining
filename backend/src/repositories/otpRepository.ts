@@ -5,7 +5,7 @@ export class OtpRepository implements IOtpRepository {
   async storeOtp(otp: string, email: string): Promise<boolean> {
     try {
       
-      await OtpModel.deleteMany({ email });
+      // await OtpModel.deleteMany({ email });
       const newOtp = new OtpModel({ email, otp });
       await newOtp.save();
       return true;

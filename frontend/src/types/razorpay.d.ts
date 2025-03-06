@@ -1,4 +1,4 @@
-// src/types/razorpay.d.ts
+ 
 import { RazorpayOptions, RazorpayErrorResponse } from './wallet';
 
 declare global {

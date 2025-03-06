@@ -1,7 +1,7 @@
-// src/types/wallet.ts
+ 
 export interface Transaction {
     _id: string;
-    userId?: string; // Optional since not always returned in frontend
+    userId?: string; 
     type: 'credit' | 'debit';
     amount: number;
     description: string;

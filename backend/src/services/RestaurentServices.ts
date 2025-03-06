@@ -78,11 +78,13 @@ export class RestaurentServices implements IRestaurentService {
 
     const accessToken = generateAccessToken(tokenPayload, );
     const refreshToken = generateRefreshToken(tokenPayload);
-
-    return { restaurent: user as IRestaurent, accessToken, refreshToken, role };
+    const plainUser = user.toObject ? user.toObject() : user;
+    return { restaurent: plainUser , accessToken, refreshToken, role };
   }
 
   async getRestaurentProfile(restaurentId: string): Promise<IRestaurent | null> {
+
+    console.log('restaureniit',restaurentId)
     const restaurent = await this.restaurentRepository.findById(restaurentId);
     if (!restaurent) {
       throw new AppError(HttpStatus.NotFound, MessageConstants.RESTAURANT_NOT_FOUND);
@@ -118,7 +120,7 @@ export class RestaurentServices implements IRestaurentService {
     if (!mailSent) {
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.OTP_SENT_FAILED);
     }
-
+console.log(otp)
     const hashedOtp = await hashOtp(otp);
     await this.otpRepository.storeOtp(hashedOtp, userData.email);
 

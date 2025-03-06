@@ -70,6 +70,8 @@ export class RestaurentController {
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
       const restaurentId = req.params.id;
+
+      console.log('resaurentparamsid',restaurentId)
       if (!restaurentId) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }

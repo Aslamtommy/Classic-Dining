@@ -1,4 +1,4 @@
-// src/utils/AppError.ts
+ 
 export class AppError extends Error {
     constructor(public status: number, message: string,public data?: any) {
       super(message);

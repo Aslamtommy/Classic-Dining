@@ -1,4 +1,4 @@
-// src/interfaces/branch/IBranchService.ts
+ 
 import { IBranch } from "../../models/Restaurent/Branch/BranchModel";
  
 export interface IBranchService {

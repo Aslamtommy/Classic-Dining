@@ -32,10 +32,7 @@ export class BranchController {
 
       sendResponse(res, HttpStatus.Created, MessageConstants.BRANCH_CREATED, branch);
     } catch (error: unknown) {
-      if (imageUrl) {
-        const publicId = `branch_images/branch_${req.body.email}`;
-        await CloudinaryService.deleteFile(publicId).catch((err) => console.error("Failed to delete image:", err));
-      }
+    
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {

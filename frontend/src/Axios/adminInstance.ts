@@ -93,7 +93,7 @@ adminApi.interceptors.response.use(
 
     // For all other errors, reject the promise
     console.error('Unhandled error in interceptor:', error);
-    toast.error('An unexpected error occurred. Please try again.');  
+    // toast.error('An unexpected error occurred. Please try again.');  
     return Promise.reject(error);
   }
 );

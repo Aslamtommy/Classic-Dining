@@ -4,8 +4,8 @@ export interface Branch {
   email: string;
   phone?: string;
   image?: string;
-  address?: string; // Add address since it's used in the UI
-  createdAt?: string; // Add fields present in the response
+  address?: string; 
+  createdAt?: string;  
   updatedAt?: string;
   parentRestaurant?: string;
   tableTypes?: string[];
@@ -15,7 +15,7 @@ export interface Branch {
 export interface BranchResponse {
   status: number;
   message: string;
-  data: Branch; // Use the updated Branch interface
+  data: Branch;  
   success: boolean;
 }
   

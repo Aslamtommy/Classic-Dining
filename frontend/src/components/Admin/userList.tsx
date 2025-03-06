@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback,   useEffect } from 'react';
 import { fetchUsers, blockUser } from '../../Api/adminApi';
 import useFetchData from '../../hooks/useFetchData';
 import DataTable from './DataTable';
@@ -17,14 +17,13 @@ const UserList: React.FC = () => {
   const [refetchKey, setRefetchKey] = useState<number>(0);
   const limit = 5;
 
-  const debouncedSearch = useMemo(
-    () => debounce((value: string) => {
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
       setSearchTerm(value);
       setPage(1);
     }, 500),
     []
   );
-
   React.useEffect(() => {
     return () => {
       debouncedSearch.cancel();

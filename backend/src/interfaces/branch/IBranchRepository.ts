@@ -6,7 +6,7 @@ export interface IBranchRepository {
   findByEmail(email: string): Promise<IBranch | null>;
   findById(branchId: string): Promise<IBranch | null>;
   findBranchesByParent(parentId: string): Promise<IBranch[]>;
-  findAll(): Promise<IBranch[]>;
+  
   addTableType(branchId: string, tableTypeId: ObjectId): Promise<IBranch | null>;
   findByIdAndUpdate(branchId: string, updateData: Partial<IBranch>): Promise<IBranch | null>;
   deleteBranch(branchId: string): Promise<void>;

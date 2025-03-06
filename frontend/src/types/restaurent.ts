@@ -1,4 +1,4 @@
-// src/types/restaurentInterfaces.ts
+ 
 export interface Restaurent {
   _id: string;
   name: string;
@@ -58,7 +58,7 @@ export interface Restaurent {
     data: Restaurent;
   }
   
-  // Error response structure
+  
   export interface ErrorResponse {
     message: string;
     status?: number;
@@ -67,7 +67,7 @@ export interface Restaurent {
     };
   }
   
-  // Login form data
+  
   export interface LoginFormData {
     email: string;
     password: string;

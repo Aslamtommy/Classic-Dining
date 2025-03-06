@@ -6,6 +6,23 @@ import { fetchBranches } from "../../Api/userApi";
 import { FaSearch, FaSortAlphaDown, FaSortAlphaUp } from "react-icons/fa";
 import { Branch } from "../../types/branch";
 
+// Custom hook for debouncing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);  
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 const RestaurantListPage: React.FC = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -16,12 +33,15 @@ const RestaurantListPage: React.FC = () => {
   const limit = 10;
   const navigate = useNavigate();
 
+  // Use the debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
+
   // Fetch branches with search term, page, and limit
   const loadBranches = async (search: string, pageNum: number) => {
     try {
       setLoading(true);
       const response = await fetchBranches(search, pageNum, limit);
-      console.log('branches',response)
+      console.log("branches", response);
       let sortedBranches = [...response.branches];
       sortedBranches.sort((a, b) =>
         sortOrder === "asc"
@@ -29,7 +49,6 @@ const RestaurantListPage: React.FC = () => {
           : b.name.localeCompare(a.name)
       );
 
-    
       setBranches(sortedBranches);
       setTotalPages(response.pages);
     } catch (error: unknown) {
@@ -44,25 +63,29 @@ const RestaurantListPage: React.FC = () => {
     const term = e.target.value;
     setSearchTerm(term);
     setPage(1); // Reset to page 1 on new search
-    loadBranches(term.trim(), 1);
   };
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    loadBranches(searchTerm.trim(), newPage);
+    loadBranches(debouncedSearchTerm.trim(), newPage);
   };
 
   // Toggle sort order
   const toggleSortOrder = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc";
     setSortOrder(newOrder);
-    loadBranches(searchTerm.trim(), page);
+    loadBranches(debouncedSearchTerm.trim(), page);
   };
+
+  // Effect to trigger loadBranches when debouncedSearchTerm changes
+  useEffect(() => {
+    loadBranches(debouncedSearchTerm.trim(), page);
+  }, [debouncedSearchTerm, page]);  
 
   // Initial load
   useEffect(() => {
-    loadBranches('', 1);
+    loadBranches("", 1);
   }, []);
 
   return (
@@ -130,7 +153,7 @@ const RestaurantListPage: React.FC = () => {
                       {branch.name}
                     </h3>
                     <p className="text-[#8b5d3b] mb-2 text-sm">{branch.email}</p>
-                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone || 'N/A'}</p>
+                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone || "N/A"}</p>
                     <button
                       onClick={() => navigate(`/book/${branch._id}`)}
                       className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"

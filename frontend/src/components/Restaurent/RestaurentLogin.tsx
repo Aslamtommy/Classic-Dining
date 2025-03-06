@@ -43,6 +43,7 @@ const RestaurentLogin: React.FC = () => {
       console.log("Login response:", response.data);
 
       const restaurentData = response.data.data;
+      console.log("Restaurent data:", restaurentData);
       dispatch(setRestaurent(restaurentData));
 
       // Handle branch role

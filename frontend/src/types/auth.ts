@@ -1,4 +1,4 @@
-// src/types/auth.ts
+ 
 export interface User {
   _id:string
   name: string;
