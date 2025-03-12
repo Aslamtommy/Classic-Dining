@@ -18,6 +18,7 @@ export interface Restaurent {
 }
   export interface RestaurentState {
     restaurent: Restaurent | null;
+    role?:string | null
     profile: Restaurent | null;
     loading: boolean;
     error: string | null;

@@ -6,7 +6,7 @@ export interface IRestaurentRepository {
   findByEmail(email: string): Promise<IRestaurent | null>;
   create(restaurentData: Partial<IRestaurent>): Promise<IRestaurent>;
   findAllPending(filter: FilterQuery<IRestaurent>, skip: number, limit: number): Promise<IRestaurent[]>;
-  updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent | null>;
+  updateRestaurentStatus(restaurentId: string, isBlocked: boolean,isApproved:boolean, blockReason?: string): Promise<IRestaurent | null>;
   findById(restaurentId: string): Promise<IRestaurent | null>;
   save(restaurent: IRestaurent): Promise<IRestaurent>;
   findAll(filter: FilterQuery<IRestaurent>, skip: number, limit: number): Promise<IRestaurent[]>;

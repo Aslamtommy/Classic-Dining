@@ -7,8 +7,8 @@ import { RootState } from "../../../redux/store";
 import restaurentApi from "../../../Axios/restaurentInstance";
 
 const Sidebar = () => {
-  const { restaurent } = useSelector((state: RootState) => state.restaurent);
-  const isBranch = restaurent?.role === "branch";
+  const { restaurent,role } = useSelector((state: RootState) => state.restaurent);
+  const isBranch =role===   "branch";
   const branchId = restaurent?._id; // Branch ID from Redux store
 
   // Restaurant-specific menu items

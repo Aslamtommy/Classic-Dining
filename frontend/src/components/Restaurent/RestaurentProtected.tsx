@@ -5,21 +5,22 @@ import { toast } from "react-hot-toast";
 import { useEffect } from "react";
 
 const RestaurentProtected: React.FC = () => {
-  const { restaurent } = useSelector((state: RootState) => state.restaurent);
+  const { restaurent, role } = useSelector((state: RootState) => state.restaurent); // Add role here
   const navigate = useNavigate();
 
-  const isRestaurant = restaurent?.role === "restaurent";
+  console.log("Role from state:", role); // Debug role
+  console.log("Restaurent object:", restaurent); // Debug restaurent
+
+  const isRestaurant = role === "restaurent"; // Use role directly
 
   useEffect(() => {
     if (!restaurent) {
-      
-      return 
+      return;
     }
     if (!isRestaurant) {
-      toast.error("You don't have permission to access this page.", {
- 
-      });
-      navigate(-1 as any, { replace: true });
+      toast.error("You don't have permission to access this page.");
+      
+       navigate("/restaurent/login");
     }
   }, [isRestaurant, navigate, restaurent]);
 

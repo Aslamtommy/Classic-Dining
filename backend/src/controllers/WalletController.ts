@@ -7,9 +7,10 @@ import Razorpay from 'razorpay';
 import { AppError } from '../utils/AppError';
 
 const razorpay = new Razorpay({
-  key_id: 'rzp_test_ihsNz6lracNIu3',
-  key_secret: 'f2SAIeZnMz9gBmhNUtCDSLwy'
+  key_id: process.env.RAZORPAY_KEY_ID as string,
+  key_secret: process.env.RAZORPAY_KEY_SECRET as string,
 });
+
 
 export class WalletController {
   constructor(private _walletService: IWalletService) {}

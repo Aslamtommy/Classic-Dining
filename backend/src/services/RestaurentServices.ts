@@ -16,9 +16,9 @@ import { TokenPayload } from "../interfaces/Restaurent/RestaurentServiceInterfac
 
 export class RestaurentServices implements IRestaurentService {
   constructor(
-    private restaurentRepository: IRestaurentRepository,
-    private otpRepository: IOtpRepository,
-    private branchRepository: IBranchRepository
+    private _restaurentRepository: IRestaurentRepository,
+    private _otpRepository: IOtpRepository,
+    private _branchRepository: IBranchRepository
   ) {}
 
   async registerRestaurent(restaurentData: Partial<IRestaurent>): Promise<IRestaurent> {
@@ -27,43 +27,51 @@ export class RestaurentServices implements IRestaurentService {
       throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
     }
 
-    const existingRestaurent = await this.restaurentRepository.findByEmail(email);
+    const existingRestaurent = await this._restaurentRepository.findByEmail(email);
     if (existingRestaurent) {
       throw new AppError(HttpStatus.Conflict, MessageConstants.USER_ALREADY_EXISTS);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    return await this.restaurentRepository.create({
+    return await this._restaurentRepository.create({
       name,
       email,
       password: hashedPassword,
       phone,
       certificate,
-      isBlocked: true,
+      isBlocked: false, // Default to false for new accounts
+      isApproved: false,
     });
   }
 
   async loginRestaurent(email: string, password: string): Promise<ILoginResponse> {
-    let user: IRestaurent | IBranch | null = await this.restaurentRepository.findByEmail(email);
+    let user: IRestaurent | IBranch | null = await this._restaurentRepository.findByEmail(email);
     let role: "restaurent" | "branch" = "restaurent";
 
     if (!user) {
-      user = await this.branchRepository.findByEmail(email);
+      user = await this._branchRepository.findByEmail(email);
       role = "branch";
       if (!user) {
         throw new AppError(HttpStatus.Unauthorized, MessageConstants.LOGIN_FAILED);
       }
     }
 
-    if (role === "restaurent" && (user as IRestaurent).isBlocked) {
-      throw new AppError(HttpStatus.Forbidden, MessageConstants.RESTAURENT_BLOCKED, {
-        reason: (user as IRestaurent).blockReason || "No reason provided",
-      });
-    }
-
     const isPasswordValid = await bcrypt.compare(password, user.password || '');
     if (!isPasswordValid) {
       throw new AppError(HttpStatus.Unauthorized, MessageConstants.INVALID_PASSWORD);
+    }
+
+    if (role === "restaurent") {
+      const restaurent = user as IRestaurent;
+      if (restaurent.isBlocked) {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.RESTAURENT_BLOCKED, {
+          reason: restaurent.blockReason || "No reason provided",
+          status: "blocked",
+        });
+      }
+      if (!restaurent.isApproved) {
+        throw new AppError(HttpStatus.Accepted, 'Approval pending', { status: 'pending' });
+      }
     }
 
     const tokenPayload: TokenPayload = {
@@ -76,16 +84,16 @@ export class RestaurentServices implements IRestaurentService {
       tokenPayload.parentRestaurantId = (user as IBranch).parentRestaurant.toString();
     }
 
-    const accessToken = generateAccessToken(tokenPayload, );
+    const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
     const plainUser = user.toObject ? user.toObject() : user;
-    return { restaurent: plainUser , accessToken, refreshToken, role };
+    return { restaurent: plainUser, accessToken, refreshToken, role, status: "approved" };
   }
 
   async getRestaurentProfile(restaurentId: string): Promise<IRestaurent | null> {
 
     console.log('restaureniit',restaurentId)
-    const restaurent = await this.restaurentRepository.findById(restaurentId);
+    const restaurent = await this._restaurentRepository.findById(restaurentId);
     if (!restaurent) {
       throw new AppError(HttpStatus.NotFound, MessageConstants.RESTAURANT_NOT_FOUND);
     }
@@ -105,7 +113,7 @@ export class RestaurentServices implements IRestaurentService {
   }
 
   async forgotPasswordVerify(email: string): Promise<IForgotPasswordResponse> {
-    const userData = await this.restaurentRepository.findByEmail(email);
+    const userData = await this._restaurentRepository.findByEmail(email);
     if (!userData) {
       return { success: false, message: MessageConstants.USER_NOT_FOUND, data: null };
     }
@@ -122,19 +130,19 @@ export class RestaurentServices implements IRestaurentService {
     }
 console.log(otp)
     const hashedOtp = await hashOtp(otp);
-    await this.otpRepository.storeOtp(hashedOtp, userData.email);
+    await this._otpRepository.storeOtp(hashedOtp, userData.email);
 
     return { success: true, message: MessageConstants.OTP_SENT, data: userData.email };
   }
 
   async resetPassword(email: string, newPassword: string): Promise<IResetPasswordResponse> {
-    const user = await this.restaurentRepository.findByEmail(email);
+    const user = await this._restaurentRepository.findByEmail(email);
     if (!user) {
       return { success: false, message: MessageConstants.USER_NOT_FOUND };
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.restaurentRepository.updatePassword(user._id.toString(), hashedPassword);
+    await this._restaurentRepository.updatePassword(user._id.toString(), hashedPassword);
 
     return { success: true, message: MessageConstants.PASSWORD_RESET_SUCCESS };
   }

@@ -1,14 +1,15 @@
+// src/components/PendingApproval.tsx
 import { useLocation } from "react-router-dom";
 
-const PendingApproval = () => {
+const PendingApproval: React.FC = () => {
   const location = useLocation();
-  const blockReason = location.state?.blockReason;
+  const { status, blockReason } = location.state || {};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full text-center">
-        {blockReason ? (
-          // Blocked state with reason
+        {status === "blocked" || blockReason ? (
+          // Blocked state
           <>
             <div className="text-red-600 mb-6">
               <svg
@@ -16,7 +17,7 @@ const PendingApproval = () => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000/svg" // SVG namespace added
               >
                 <path
                   strokeLinecap="round"
@@ -30,10 +31,12 @@ const PendingApproval = () => {
             <p className="text-gray-600 mb-6">
               Your account has been blocked by the administrator. Please contact support to resolve this issue.
             </p>
-            <div className="bg-red-50 p-4 rounded-md">
-              <h3 className="text-sm font-medium text-red-800">Block Reason:</h3>
-              <p className="mt-1 text-sm text-red-700">{blockReason}</p>
-            </div>
+            {blockReason && (
+              <div className="bg-red-50 p-4 rounded-md">
+                <h3 className="text-sm font-medium text-red-800">Block Reason:</h3>
+                <p className="mt-1 text-sm text-red-700">{blockReason}</p>
+              </div>
+            )}
           </>
         ) : (
           // Pending approval state
@@ -44,7 +47,7 @@ const PendingApproval = () => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000/svg" // SVG namespace added
               >
                 <path
                   strokeLinecap="round"
@@ -56,7 +59,7 @@ const PendingApproval = () => {
             </div>
             <h1 className="text-2xl font-bold mb-4 text-gray-800">Awaiting Approval</h1>
             <p className="text-gray-600 mb-6">
-              Your account is pending administrator approval. You'll be able to:
+              Your account is pending administrator approval. Once approved, you'll be able to:
             </p>
             <ul className="text-left list-disc list-inside space-y-2 text-gray-600">
               <li>Add branches</li>

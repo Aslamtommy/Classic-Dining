@@ -7,11 +7,15 @@ import Razorpay from 'razorpay';
 import { HttpStatus } from '../constants/HttpStatus';
 import { AppError } from '../utils/AppError';
 import { MessageConstants } from '../constants/MessageConstants';
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 const razorpay = new Razorpay({
-  key_id: 'rzp_test_ihsNz6lracNIu3',
-  key_secret: 'f2SAIeZnMz9gBmhNUtCDSLwy'
+  key_id: process.env.RAZORPAY_KEY_ID as string,
+  key_secret: process.env.RAZORPAY_KEY_SECRET as string,
 });
+
 
 export class ReservationController {
   constructor(private _reservationService: IReservationService) {}

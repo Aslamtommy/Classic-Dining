@@ -8,7 +8,7 @@ export enum HttpStatus {
     Forbidden = 403,
     NotFound = 404,
     InternalServerError = 500,
-    Conflict=409
-  
+    Conflict=409,
+    Accepted= 202
   }
   

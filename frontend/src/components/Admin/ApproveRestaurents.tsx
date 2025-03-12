@@ -58,6 +58,7 @@ const ApproveRestaurents: React.FC = () => {
       await adminApi.post('/update-status', {
         restaurentId,
         isBlocked,
+        isApproved:!isBlocked,// Approve if not blocked, keep unapproved if blocked
         blockReason: isBlocked ? blockReason : undefined,
       });
 

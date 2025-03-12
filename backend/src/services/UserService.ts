@@ -17,14 +17,14 @@ import { IBranch } from '../models/Restaurent/Branch/BranchModel';
 import { CloudinaryService } from '../utils/cloudinary.service';
 export class UserService implements IUserService {
   constructor(
-    private userRepository: UserRepositoryInterface,
-    private otpRepository: OtpRepository,
-    private branchRepository: IBranchRepository
+    private _userRepository: UserRepositoryInterface,
+    private _otpRepository: OtpRepository,
+    private _branchRepository: IBranchRepository
   ) {}
 
   async registerUser(name: string, email: string, password: string, mobile: string): Promise<IUser> {
     try {
-      const existingUser = await this.userRepository.findByEmail(email);
+      const existingUser = await this._userRepository.findByEmail(email);
       if (existingUser) {
         throw new AppError(HttpStatus.Conflict, MessageConstants.USER_ALREADY_EXISTS);
       }
@@ -37,7 +37,7 @@ export class UserService implements IUserService {
         is_verified: false,
         isBlocked: false,
       };
-      return await this.userRepository.create(userData);
+      return await this._userRepository.create(userData);
     } catch (error: unknown) {
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
@@ -46,7 +46,7 @@ export class UserService implements IUserService {
 
   async authenticateUser(email: string, password: string): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
     try {
-      const user = await this.userRepository.findByEmail(email);
+      const user = await this._userRepository.findByEmail(email);
       if (!user) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -65,13 +65,13 @@ export class UserService implements IUserService {
 
   async googleSignIn(userData: googleUserData): Promise<{ user: IUser; accessToken: string; refreshToken: string }> {
     try {
-      const existingUser = await this.userRepository.findByEmail(userData.email);
+      const existingUser = await this._userRepository.findByEmail(userData.email);
       if (existingUser) {
         const accessToken = generateAccessToken({ id: existingUser._id.toString(), role: 'user', email: existingUser.email });
         const refreshToken = generateRefreshToken({ id: existingUser._id.toString(), role: 'user' });
         return { user: existingUser, accessToken, refreshToken };
       }
-      const newUser = await this.userRepository.create({
+      const newUser = await this._userRepository.create({
         email: userData.email,
         name: userData.name || 'Unknown',
         mobile: '',
@@ -104,7 +104,7 @@ export class UserService implements IUserService {
 
   async forgotPasswordVerify(email: string): Promise<string> {
     try {
-      const userData = await this.userRepository.findByEmail(email);
+      const userData = await this._userRepository.findByEmail(email);
       if (!userData) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -118,7 +118,7 @@ export class UserService implements IUserService {
 
       console.log(otp)
       const hashedOtp = await hashOtp(otp);
-      await this.otpRepository.storeOtp(hashedOtp, userData.email);
+      await this._otpRepository.storeOtp(hashedOtp, userData.email);
       return userData.email;
     } catch (error: unknown) {
       if (error instanceof AppError) throw error;
@@ -128,7 +128,7 @@ export class UserService implements IUserService {
 
   async resetPassword(email: string, newPassword: string): Promise<void> {
     try {
-      const user = await this.userRepository.findByEmail(email);
+      const user = await this._userRepository.findByEmail(email);
       if (!user) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -137,7 +137,7 @@ export class UserService implements IUserService {
         throw new AppError(HttpStatus.BadRequest, "New password must be different from the old password");
       }
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await this.userRepository.updatePassword(user._id.toString(), hashedPassword);
+      await this._userRepository.updatePassword(user._id.toString(), hashedPassword);
     } catch (error: unknown) {
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
@@ -146,7 +146,7 @@ export class UserService implements IUserService {
 
   async getUserProfile(userId: string): Promise<{ id: string; name: string; email: string; mobile: string; profilePicture: string } | null> {
     try {
-      const user = await this.userRepository.findById(userId);
+      const user = await this._userRepository.findById(userId);
       if (!user) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -165,7 +165,7 @@ export class UserService implements IUserService {
 
   async uploadProfilePicture(userId: string, filePath: string): Promise<string> {
     try {
-      const user = await this.userRepository.findById(userId);
+      const user = await this._userRepository.findById(userId);
       if (!user) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -174,7 +174,7 @@ export class UserService implements IUserService {
         overwrite: true,
         type: "authenticated", // Restrict access
       });
-      const updatedUser = await this.userRepository.updateProfilePicture(userId, result.secure_url);
+      const updatedUser = await this._userRepository.updateProfilePicture(userId, result.secure_url);
       if (!updatedUser) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -191,7 +191,7 @@ export class UserService implements IUserService {
     updateData: { name: string; email: string; mobile: string }
   ): Promise<{ id: string; name: string; email: string; mobile: string; profilePicture: string }> {
     try {
-      const updatedUser = await this.userRepository.update(userId, updateData);
+      const updatedUser = await this._userRepository.update(userId, updateData);
       if (!updatedUser) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -214,7 +214,7 @@ export class UserService implements IUserService {
       if (typeof branchId !== 'string' || !/^[0-9a-fA-F]{24}$/.test(branchId)) {
         throw new AppError(HttpStatus.BadRequest, "Invalid branch ID format");
       }
-      const branch = await this.branchRepository.findByIdUser(branchId);
+      const branch = await this._branchRepository.findByIdUser(branchId);
       console.log('[branchservice]', branch);
       if (!branch) {
         throw new AppError(HttpStatus.NotFound, "Branch not found");
@@ -233,8 +233,8 @@ export class UserService implements IUserService {
   ): Promise<{ branches: IBranch[]; total: number; page: number; pages: number }> {
     try {
       const skip = (page - 1) * limit;
-      const branches = await this.branchRepository.searchBranches(search, skip, limit);
-      const total = await this.branchRepository.countBranches(search);
+      const branches = await this._branchRepository.searchBranches(search, skip, limit);
+      const total = await this._branchRepository.countBranches(search);
       return {
         branches,
         total,

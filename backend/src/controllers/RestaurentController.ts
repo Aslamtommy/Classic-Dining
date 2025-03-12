@@ -8,7 +8,7 @@ import { AppError } from '../utils/AppError';
 import { IRestaurentService } from '../interfaces/Restaurent/RestaurentServiceInterface';
 
 export class RestaurentController {
-  constructor(private restaurentService: IRestaurentService) {}
+  constructor(private _restaurentService: IRestaurentService) {}
 
   async registerRestaurent(req: Request, res: Response): Promise<void> {
     try {
@@ -26,7 +26,7 @@ export class RestaurentController {
         `restaurent_${email}`
       );
 
-      const restaurent = await this.restaurentService.registerRestaurent({
+      const restaurent = await this._restaurentService.registerRestaurent({
         name,
         email,
         password,
@@ -51,10 +51,16 @@ export class RestaurentController {
       if (!email || !password) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      const result = await this.restaurentService.loginRestaurent(email, password);
-      CookieManager.setAuthCookies(res, result);
+
+      const result = await this._restaurentService.loginRestaurent(email, password);
+
+      // If execution reaches here, login is successful (approved)
+      CookieManager.setAuthCookies(res, {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
-        ...result.restaurent,
+        restaurent: result.restaurent,
         role: result.role,
       });
     } catch (error: unknown) {
@@ -75,7 +81,7 @@ export class RestaurentController {
       if (!restaurentId) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      const profile = await this.restaurentService.getRestaurentProfile(restaurentId);
+      const profile = await this._restaurentService.getRestaurentProfile(restaurentId);
       if (!profile) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.RESTAURANT_NOT_FOUND);
       }
@@ -96,7 +102,7 @@ export class RestaurentController {
       if (!refreshToken) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REFRESH_TOKEN_REQUIRED);
       }
-      const tokens = await this.restaurentService.refreshAccessToken(refreshToken);
+      const tokens = await this._restaurentService.refreshAccessToken(refreshToken);
       res.cookie('accessToken', tokens.accessToken, CookieManager.getCookieOptions());
       sendResponse(res, HttpStatus.OK, MessageConstants.ACCESS_TOKEN_REFRESHED, tokens);
     } catch (error: unknown) {
@@ -115,7 +121,7 @@ export class RestaurentController {
       if (!email) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       }
-      const response = await this.restaurentService.forgotPasswordVerify(email);
+      const response = await this._restaurentService.forgotPasswordVerify(email);
       sendResponse(res, HttpStatus.OK, response.message, response.data);
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -133,7 +139,7 @@ export class RestaurentController {
       if (!email || !password) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      const response = await this.restaurentService.resetPassword(email, password);
+      const response = await this._restaurentService.resetPassword(email, password);
       sendResponse(res, HttpStatus.OK, response.message);
     } catch (error: unknown) {
       if (error instanceof AppError) {

@@ -10,7 +10,7 @@ export interface IAdminService {
     limit: number,
     searchTerm: string
   ): Promise<{ restaurents: IRestaurent[]; total: number }>;
-  updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent>;
+  updateRestaurentStatus(restaurentId: string, isBlocked: boolean,isApproved:boolean, blockReason?: string): Promise<IRestaurent>;
   getAllRestaurents(
     page: number,
     limit: number,

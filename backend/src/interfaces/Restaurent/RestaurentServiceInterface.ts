@@ -1,5 +1,5 @@
 import { IRestaurent} from "../../models/Restaurent/restaurentModel";
-
+import { IBranch } from "../../models/Restaurent/Branch/BranchModel";
 export interface IForgotPasswordResponse {
   success: boolean;
   message: string;
@@ -13,10 +13,12 @@ export interface TokenPayload {
   parentRestaurantId?: string;
 }
 export interface ILoginResponse {
-  restaurent: IRestaurent;
+  restaurent: IRestaurent | IBranch;
   accessToken: string;
   refreshToken: string;
-  role: string;
+  role?: string;
+  status: string;
+  blockReason?: string
 }
 
 export interface IResetPasswordResponse {

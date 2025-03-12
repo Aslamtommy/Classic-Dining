@@ -1,10 +1,10 @@
-// src/redux/restaurentSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
- 
-import { Restaurent, RestaurentState } from "../types/restaurent";
+import { RestaurentState } from "../types/restaurent";
+
 const initialState: RestaurentState = {
   restaurent: null,
   profile: null,
+  role: null, // Initialize role as null
   loading: false,
   error: null,
 };
@@ -16,12 +16,16 @@ const restaurentSlice = createSlice({
     setLoading: (state) => {
       state.loading = true;
     },
-    setRestaurent: (state, action: PayloadAction<Restaurent>) => {
-      state.restaurent = action.payload;
+    clearLoading: (state) => {
+      state.loading = false;
+    },
+    setRestaurent: (state, action: PayloadAction<{ restaurent: any; role: string }>) => {
+      state.restaurent = action.payload.restaurent; // Use lowercase `restaurent`
+      state.role = action.payload.role; // Save the role
       state.loading = false;
       state.error = null;
     },
-    setProfile: (state, action: PayloadAction<Restaurent>) => {
+    setProfile: (state, action: PayloadAction<any>) => {
       state.profile = action.payload;
       state.loading = false;
       state.error = null;
@@ -33,6 +37,7 @@ const restaurentSlice = createSlice({
     logoutRestaurent: (state) => {
       state.restaurent = null;
       state.profile = null;
+      state.role = null; // Reset role on logout
       state.loading = false;
       state.error = null;
     },
@@ -41,6 +46,7 @@ const restaurentSlice = createSlice({
 
 export const {
   setLoading,
+  clearLoading,
   setRestaurent,
   setProfile,
   setError,

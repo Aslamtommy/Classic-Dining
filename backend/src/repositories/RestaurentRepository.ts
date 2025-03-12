@@ -14,12 +14,13 @@ export class RestaurentRepository extends BaseRepository<IRestaurent> implements
   
 
   
-  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent | null> {
+  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean,isApproved:boolean, blockReason?: string): Promise<IRestaurent | null> {
     try {
       return await RestaurentModel.findByIdAndUpdate(
         restaurentId,
         {
           isBlocked,
+          isApproved,
           ...(isBlocked && { blockReason }),
           ...(!isBlocked && { blockReason: null }),
         },

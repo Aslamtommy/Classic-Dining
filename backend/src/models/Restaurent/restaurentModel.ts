@@ -12,6 +12,7 @@ export interface IRestaurent extends Document {
     isBranch: boolean;
     branches?: mongoose.Types.ObjectId[];
     blockReason?: string;  
+    isApproved: boolean;
     createdAt: Date;
     updatedAt: Date;
   }
@@ -23,8 +24,10 @@ const RestaurentSchema: Schema = new Schema<IRestaurent>(
     phone: { type: String, required: true },
     certificate: { type: String, required: true },
     isBlocked: { type: Boolean, default: true },  
+    isApproved:  { type: Boolean, default: false },
     blockReason: { type: String, default: null }, 
     isBranch: { type: Boolean, default: false },
+
     branches: [{ type: Schema.Types.ObjectId, ref: "Branch" }],
   },
   { timestamps: true }

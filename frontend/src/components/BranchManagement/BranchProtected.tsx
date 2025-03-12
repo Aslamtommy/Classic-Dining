@@ -5,11 +5,11 @@ import { toast } from "react-hot-toast";
 import { useEffect } from "react";
 
 const BranchProtected: React.FC = () => {
-  const { restaurent } = useSelector((state: RootState) => state.restaurent);
+  const { restaurent,role } = useSelector((state: RootState) => state.restaurent);
   const navigate = useNavigate();
 
   // Check if the user is a branch
-  const isBranch = restaurent?.role === "branch";
+  const isBranch = role === "branch";
 
   useEffect(() => {
      if (!restaurent) return; 

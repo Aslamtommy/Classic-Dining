@@ -13,14 +13,14 @@ import { IUser } from "../models/User/userModel";
 
 export class AdminService implements IAdminService {
   constructor(
-    private adminRepository: IAdminRepository,
-    private restaurentRepository: IRestaurentRepository,
-    private userRepository: UserRepositoryInterface
+    private _adminRepository: IAdminRepository,
+    private _restaurentRepository: IRestaurentRepository,
+    private _userRepository: UserRepositoryInterface
   ) {}
 
   async adminLogin(email: string, password: string): Promise<{ admin: IAdmin; accessToken: string; refreshToken: string }> {
     try {
-      const admin = await this.adminRepository.findByEmail(email);
+      const admin = await this._adminRepository.findByEmail(email);
       if (!admin) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -61,15 +61,15 @@ export class AdminService implements IAdminService {
     try {
       const skip = (page - 1) * limit;
       const filter = { 
-        isBlocked: true,
+        isApproved: false,
         $or: [
           { name: { $regex: searchTerm, $options: 'i' } },
           { email: { $regex: searchTerm, $options: 'i' } }
         ]
       };
       const [restaurents, total] = await Promise.all([
-        this.restaurentRepository.findAllPending(filter, skip, limit),
-        this.restaurentRepository.countAllPending(filter),
+        this._restaurentRepository.findAllPending(filter, skip, limit),
+        this._restaurentRepository.countAllPending(filter),
       ]);
       return { restaurents, total };
     } catch (error: unknown) {
@@ -78,9 +78,9 @@ export class AdminService implements IAdminService {
     }
   }
 
-  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean, blockReason?: string): Promise<IRestaurent> {
+  async updateRestaurentStatus(restaurentId: string, isBlocked: boolean,isApproved:boolean, blockReason?: string): Promise<IRestaurent> {
     try {
-      const updated = await this.restaurentRepository.updateRestaurentStatus(restaurentId, isBlocked, blockReason);
+      const updated = await this._restaurentRepository.updateRestaurentStatus(restaurentId, isBlocked,isApproved, blockReason);
       if (!updated) {
         throw new AppError(HttpStatus.NotFound, "Restaurant not found");
       }
@@ -110,8 +110,8 @@ export class AdminService implements IAdminService {
       else if (isBlocked === 'active') filter.isBlocked = false;
 
       const [restaurents, total] = await Promise.all([
-        this.restaurentRepository.findAll(filter, skip, limit),
-        this.restaurentRepository.countAll(filter),
+        this._restaurentRepository.findAll(filter, skip, limit),
+        this._restaurentRepository.countAll(filter),
       ]);
       return { restaurents, total };
     } catch (error: unknown) {
@@ -142,8 +142,8 @@ export class AdminService implements IAdminService {
       else if (isBlocked === 'active') filter.isBlocked = false;
 
       const [users, total] = await Promise.all([
-        this.userRepository.findAll(filter, skip, limit),
-        this.userRepository.countAll(filter),
+        this._userRepository.findAll(filter, skip, limit),
+        this._userRepository.countAll(filter),
       ]);
       return { users, total };
     } catch (error: unknown) {
@@ -154,12 +154,12 @@ export class AdminService implements IAdminService {
 
   async restaurentBlock(restaurentId: string, isBlocked: boolean): Promise<IRestaurent> {
     try {
-      const restaurent = await this.restaurentRepository.findById(restaurentId);
+      const restaurent = await this._restaurentRepository.findById(restaurentId);
       if (!restaurent) {
         throw new AppError(HttpStatus.NotFound, "Restaurant not found");
       }
       restaurent.isBlocked = isBlocked;
-      return await this.restaurentRepository.save(restaurent);
+      return await this._restaurentRepository.save(restaurent);
     } catch (error: unknown) {
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, "Failed to block/unblock restaurant");
@@ -168,12 +168,12 @@ export class AdminService implements IAdminService {
 
   async blockUser(userId: string, isBlocked: boolean): Promise<IUser> {
     try {
-      const user = await this.userRepository.findById(userId);
+      const user = await this._userRepository.findById(userId);
       if (!user) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
       user.isBlocked = isBlocked;
-      return await this.userRepository.save(user);
+      return await this._userRepository.save(user);
     } catch (error: unknown) {
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, "Failed to block/unblock user");

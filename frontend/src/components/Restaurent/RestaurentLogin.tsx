@@ -1,18 +1,13 @@
 // src/components/RestaurentLogin.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import restaurentApi from "../../Axios/restaurentInstance";
 import { useDispatch, useSelector } from "react-redux";
-import { setRestaurent, setError, setLoading } from "../../redux/restaurentSlice";
+import { setRestaurent, setError, setLoading, clearLoading } from "../../redux/restaurentSlice";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal";
 import { RootState } from "../../redux/store";
-import {
-  LoginFormData,
-  LoginResponse,
-  RestaurentState,
-   
-} from "../../types/restaurent";
+import { LoginFormData, RestaurentState } from "../../types/restaurent";
 
 const RestaurentLogin: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -23,9 +18,12 @@ const RestaurentLogin: React.FC = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading: reduxLoading } = useSelector<RootState, RestaurentState>(
-    (state) => state.restaurent
-  );
+  const { loading: reduxLoading } = useSelector<RootState, RestaurentState>((state) => state.restaurent);
+
+  useEffect(() => {
+    setLoadingState(false);
+    dispatch(clearLoading());
+  }, [dispatch]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,61 +34,53 @@ const RestaurentLogin: React.FC = () => {
     const loginData: LoginFormData = { email, password };
 
     try {
-      const response = await restaurentApi.post<LoginResponse>(
-        "/login",
-        loginData
-      );
-      console.log("Login response:", response.data);
+      const response :any= await restaurentApi.post("/login", loginData); // Ensure endpoint matches backend
+      console.log("Login response:", response);
 
-      const restaurentData = response.data.data;
-      console.log("Restaurent data:", restaurentData);
-      dispatch(setRestaurent(restaurentData));
-
-      // Handle branch role
-      if (restaurentData.role === "branch") {
-        navigate("/restaurent/home", { replace: true });
-        toast.success("Branch login successful!");
-        return;
+      if (response.status === 200) {
+        const { restaurent, role } = response.data.data;
+        
+        dispatch(setRestaurent({restaurent,role}));
+        if (role === "branch") {
+          navigate("/restaurent/home", { replace: true });
+          toast.success("Branch login successful!");
+        } else {
+          navigate("/restaurent/home", { replace: true });
+          toast.success("Login successful!");
+        }
+      } else if (response.status === 202) {
+        // Handle pending approval
+        const pendingStatus = response.data.data?.status;
+        if (pendingStatus === "pending") {
+          navigate("/restaurent/pending-approval", { state: { status: "pending" } });
+        }
       }
-
-      // Handle restaurant approval status
-      if (restaurentData.isBlocked) {
-        navigate("/restaurent/pending-approval", {
-          state: { blockReason: restaurentData.blockReason },
-          replace: true,
-        });
-        return;
-      }
-
-      navigate("/restaurent/home", { replace: true });
-      toast.success("Login successful!");
     } catch (err: any) {
       console.log("Full error object:", err);
       console.log("Error response data:", err.response?.data);
-  
+
       let errorMsg = "Something went wrong.";
-  
-      // Handle blocked account error
+
       if (err.response?.status === 403) {
-        const blockReason = err.response?.data?.data?.reason  
+        const blockReason = err.response?.data?.data?.reason;
         navigate("/restaurent/pending-approval", {
-          state: { blockReason },
-          replace: true
+          state: { status: "blocked", blockReason },
         });
-        return; // Exit early after handling block
+        return;
       }
-  
-      // Handle invalid credentials
-      if (err.response?.data?.message === "Wrong Password.") {
+
+      if (err.response?.status === 401) {
         errorMsg = "Invalid email or password.";
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
       }
-  
-      // Set error state only if not already handled
+
       setErrorState(errorMsg);
       dispatch(setError(errorMsg));
       toast.error(errorMsg);
     } finally {
       setLoadingState(false);
+      dispatch(clearLoading());
     }
   };
 
@@ -101,10 +91,7 @@ const RestaurentLogin: React.FC = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
@@ -118,10 +105,7 @@ const RestaurentLogin: React.FC = () => {
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -137,7 +121,7 @@ const RestaurentLogin: React.FC = () => {
           <button
             type="submit"
             className={`w-full py-2 px-4 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 ${
-              loading || reduxLoading ? "opacity-50" : ""
+              loading || reduxLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={loading || reduxLoading}
           >
@@ -153,7 +137,6 @@ const RestaurentLogin: React.FC = () => {
           </button>
         </div>
       </div>
-
       <ForgotPasswordModal
         show={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}

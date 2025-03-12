@@ -41,6 +41,7 @@ export const MessageConstants = {
   BOOKING_NOT_FOUND: "Booking not found.",
   BOOKING_CANCELLED: "Booking cancelled successfully.",
   RESTAURANT_NOT_FOUND: "Restaurant not found", // Added for clarity
+  RESTAURENT_PENDING_APPROVAL: "Restaurant is pending approval",
   // New constants for Branch operations
   BRANCH_CREATED: "Branch created successfully",
   BRANCH_ALREADY_EXISTS: "Branch with this email already exists",
@@ -51,6 +52,7 @@ export const MessageConstants = {
   PARENT_RESTAURANT_REQUIRED: "Parent restaurant ID is required",
   IMAGE_UPLOAD_FAILED: "Failed to upload branch image",
   PASSWORD_HASHING_FAILED: "Failed to hash password",
+  PENDING_APPROVAL: "Your account is pending approval.",
   // New constants for Coupon operations
   COUPON_CREATED: "Coupon created successfully",
   COUPON_ALREADY_EXISTS: "Coupon with this code already exists",

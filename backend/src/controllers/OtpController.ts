@@ -7,7 +7,7 @@ import { sendResponse, sendError } from "../utils/responseUtils";
 import { AppError } from "../utils/AppError";
 
 export class OtpController {
-  constructor(private otpService: IOtpService) {}
+  constructor(private _otpService: IOtpService) {}
 
   async sendOtp(req: Request, res: Response): Promise<void> {
     try {
@@ -15,7 +15,7 @@ export class OtpController {
       if (!email) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       }
-      await this.otpService.sendOtp(email);
+      await this._otpService.sendOtp(email);
       sendResponse(res, HttpStatus.OK, MessageConstants.OTP_SENT);
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -34,7 +34,7 @@ export class OtpController {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
 
-      const isOtpValid = await this.otpService.verifyOtp(email, otp);
+      const isOtpValid = await this._otpService.verifyOtp(email, otp);
       if (!isOtpValid) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_OTP);
       }
@@ -57,7 +57,7 @@ export class OtpController {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       }
 
-      await this.otpService.resendOtp(email);
+      await this._otpService.resendOtp(email);
       sendResponse(res, HttpStatus.OK, MessageConstants.OTP_SENT);
     } catch (error: unknown) {
       if (error instanceof Error) {

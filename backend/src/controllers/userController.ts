@@ -11,8 +11,8 @@ import { AppError } from "../utils/AppError";
 
 export class Usercontroller {
   constructor(
-    private userService: IUserService,
-    private couponService: ICouponService
+    private _userService: IUserService,
+    private _couponService: ICouponService
   ) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
@@ -21,7 +21,7 @@ export class Usercontroller {
       if (!name || !email || !password || !mobile) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      const newUser = await this.userService.registerUser(name, email, password, mobile);
+      const newUser = await this._userService.registerUser(name, email, password, mobile);
       const responseData = {
         user: {
           id: newUser._id,
@@ -46,7 +46,7 @@ export class Usercontroller {
       if (!email || !password) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      const { user, accessToken, refreshToken } = await this.userService.authenticateUser(email, password);
+      const { user, accessToken, refreshToken } = await this._userService.authenticateUser(email, password);
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
         user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile },
@@ -73,7 +73,7 @@ export class Usercontroller {
         email_verified: decodedToken.email_verified!,
         name: decodedToken.name || "Unknown",
       };
-      const { user, accessToken, refreshToken } = await this.userService.googleSignIn(userData);
+      const { user, accessToken, refreshToken } = await this._userService.googleSignIn(userData);
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
       const responseData = {
         user: { id: user._id, name: user.name, email: user.email },
@@ -94,7 +94,7 @@ export class Usercontroller {
       if (!refreshToken) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REFRESH_TOKEN_REQUIRED);
       }
-      const tokens = await this.userService.refreshAccessToken(refreshToken);
+      const tokens = await this._userService.refreshAccessToken(refreshToken);
       res.cookie("accessToken", tokens.accessToken, CookieManager.getCookieOptions());
       sendResponse(res, HttpStatus.OK, MessageConstants.ACCESS_TOKEN_REFRESHED, {
         accessToken: tokens.accessToken,
@@ -114,7 +114,7 @@ export class Usercontroller {
       if (!userId) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
       }
-      const userProfile = await this.userService.getUserProfile(userId);
+      const userProfile = await this._userService.getUserProfile(userId);
       if (!userProfile) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -134,7 +134,7 @@ export class Usercontroller {
       if (!email) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       }
-      const emailSent = await this.userService.forgotPasswordVerify(email);
+      const emailSent = await this._userService.forgotPasswordVerify(email);
       sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS, { email: emailSent });
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -151,7 +151,7 @@ export class Usercontroller {
       if (!email || !password) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      await this.userService.resetPassword(email, password);
+      await this._userService.resetPassword(email, password);
       sendResponse(res, HttpStatus.OK, MessageConstants.PASSWORD_RESET_SUCCESS);
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -171,7 +171,7 @@ export class Usercontroller {
       if (!req.file?.path) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.FILE_NOT_UPLOADED);
       }
-      const profilePicture = await this.userService.uploadProfilePicture(userId, req.file.path);
+      const profilePicture = await this._userService.uploadProfilePicture(userId, req.file.path);
       sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_PICTURE_UPLOADED, { profilePicture });
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -198,7 +198,7 @@ export class Usercontroller {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.USER_ID_NOT_FOUND);
       }
       const { name, email, mobile } = req.body;
-      const updatedUser = await this.userService.updateUserProfile(userId, { name, email, mobile });
+      const updatedUser = await this._userService.updateUserProfile(userId, { name, email, mobile });
       if (!updatedUser) {
         throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
       }
@@ -217,7 +217,7 @@ export class Usercontroller {
       const search = (req.query.search as string) || '';
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const result = await this.userService.getAllBranches(search, page, limit);
+      const result = await this._userService.getAllBranches(search, page, limit);
       sendResponse(res, HttpStatus.OK, "Branches fetched successfully", result);
     } catch (error: unknown) {
       if (error instanceof AppError) {
@@ -234,7 +234,7 @@ export class Usercontroller {
       if (!branchId) {
         throw new AppError(HttpStatus.BadRequest, "Branch ID is required");
       }
-      const branch = await this.userService.getBranchDetails(branchId);
+      const branch = await this._userService.getBranchDetails(branchId);
       if (!branch) {
         throw new AppError(HttpStatus.NotFound, "Branch not found");
       }
@@ -250,7 +250,7 @@ export class Usercontroller {
 
   async getAvailableCoupons(req: Request, res: Response): Promise<void> {
     try {
-      const coupons = await this.couponService.getAvailableCoupons();
+      const coupons = await this._couponService.getAvailableCoupons();
       sendResponse(res, HttpStatus.OK, "Available coupons retrieved successfully", coupons);
     } catch (error: unknown) {
       if (error instanceof AppError) {

@@ -8,7 +8,7 @@ export const startCronJobs = () => {
   // Runs every minute
   cron.schedule('* * * * *', async () => {
     try {
-      const expiredReservations :any= await reservationRepo.findExpiredPendingReservations(1);  
+      const expiredReservations :any= await reservationRepo.findExpiredPendingReservations(5);  
       for (const reservation of expiredReservations) {
         await reservationRepo.updateStatus(reservation._id.toString(), ReservationStatus.CANCELLED);
         console.log(`Cancelled expired reservation: ${reservation._id}`);
