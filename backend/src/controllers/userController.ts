@@ -16,6 +16,7 @@ export class Usercontroller {
   ) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
+    let count=0
     try {
       const { name, email, password, mobile } = req.body;
       if (!name || !email || !password || !mobile) {
