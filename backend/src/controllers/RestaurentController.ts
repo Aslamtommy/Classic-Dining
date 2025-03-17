@@ -62,6 +62,8 @@ export class RestaurentController {
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
         restaurent: result.restaurent,
         role: result.role,
+        accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
       });
     } catch (error: unknown) {
       if (error instanceof AppError) {

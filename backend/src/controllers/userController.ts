@@ -16,7 +16,7 @@ export class Usercontroller {
   ) {}
 
   async registerUser(req: Request, res: Response): Promise<void> {
-    let count=0
+    
     try {
       const { name, email, password, mobile } = req.body;
       if (!name || !email || !password || !mobile) {
@@ -51,6 +51,8 @@ export class Usercontroller {
       CookieManager.setAuthCookies(res, { accessToken, refreshToken });
       sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, {
         user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile },
+        accessToken,
+        refreshToken
       });
     } catch (error: unknown) {
       if (error instanceof AppError) {

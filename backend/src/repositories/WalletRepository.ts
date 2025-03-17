@@ -10,7 +10,7 @@ export class WalletRepository {
     try {
       const user = await userModel.findById(userId).select('walletBalance').exec();
       if (!user) throw new AppError(HttpStatus.NotFound, MessageConstants.USER_NOT_FOUND);
-      return user.walletBalance || 0; // Default to 0 if walletBalance is undefined
+      return user.walletBalance || 0; 
     } catch (error) {
       console.error('Error in getWalletBalance:', error);
       if (error instanceof AppError) throw error;

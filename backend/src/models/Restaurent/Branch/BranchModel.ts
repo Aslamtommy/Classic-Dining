@@ -8,6 +8,7 @@ export interface IBranch extends Document {
   password: string;
   phone: string;
   image?: string;
+  address: string;
   isBranch: boolean;
   parentRestaurant: mongoose.Types.ObjectId; // Reference to the main restaurant
   tableTypes: mongoose.Types.ObjectId[]

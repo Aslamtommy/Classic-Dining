@@ -32,7 +32,7 @@ export function sendResponse(res: Response, statusCode: number, message: string,
   const response = new CommonResponse(message, data);
 
   // // Log the success response
-   logger.info(`Success Response - Status: ${statusCode}, Message: ${message}, Data: ${JSON.stringify(data)}`);
+  //  logger.info(`Success Response - Status: ${statusCode}, Message: ${message}, Data: ${JSON.stringify(data)}`);
 
   res.status(statusCode).json(response);
 }
@@ -53,7 +53,7 @@ export function sendError(
     errorResponse.data = additionalData; // Store additional data in 'data' field
   }
 
-  logger.error(`Error Response - Status: ${statusCode}, Message: ${message}`);
+  // logger.error(`Error Response - Status: ${statusCode}, Message: ${message}`);
   res.status(statusCode).json(errorResponse);
 }
 

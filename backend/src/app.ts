@@ -1,14 +1,24 @@
-import express, { Application } from 'express';
-import userRoute from './routes/userRoutes';
-import otpRoute from './routes/OtpRoutes';
-import connectDB from './config/db';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import path from 'path'; // Import path for static file handling
-import adminRoute from './routes/adminRoutes';
-import restaurentRoute from './routes/restaurentRoutes';
- import { startCronJobs } from './cronJobs';
- declare global {
+// src/index.ts
+import express, { Application } from "express";
+import { createServer, Server as HttpServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
+import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { initializeSocket } from "./socket";
+import connectDB from "./config/db";
+import userRoute from "./routes/userRoutes";
+import otpRoute from "./routes/OtpRoutes";
+import adminRoute from "./routes/adminRoutes";
+import restaurentRoute from "./routes/restaurentRoutes";
+import { startCronJobs } from "./cronJobs";
+
+// Load environment variables
+dotenv.config();
+
+// Declare custom Request interface
+declare global {
   namespace Express {
     export interface Request {
       data?: {
@@ -19,40 +29,55 @@ import restaurentRoute from './routes/restaurentRoutes';
     }
   }
 }
+
+// Initialize Express app and HTTP server
 const app: Application = express();
+const httpServer: HttpServer = createServer(app);
+const io: SocketIOServer = initializeSocket(httpServer); // Attach Socket.IO to HTTP server
 
 // Middleware
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// CORS configuration
+const corsOptions = {
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
+// Serve static files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Database connection
 connectDB();
- 
+
 // Start cron jobs
 startCronJobs();
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
- 
-
-// CORS configuration
-const corsOptions = {
-  origin: 'http://localhost:5173', // Frontend origin
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'], // Allow necessary headers
-  credentials: true, // Allow cookies or authentication headers
-};
-app.use(cors(corsOptions)); 
-
 // Routes
-app.use('/users', userRoute);
-app.use('/users/otp', otpRoute);
-app.use('/admin',adminRoute)
-app.use('/restaurent', restaurentRoute)
+app.use("/users", userRoute);
+app.use("/users/otp", otpRoute);
+app.use("/admin", adminRoute);
+app.use("/restaurent", restaurentRoute);
 
- 
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Endpoint not found' });
+// Catch-all route for 404
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "Endpoint not found" });
+});
+
+// Test route to verify server is running
+app.get("/", (req, res) => {
+  res.send("Server is running!");
+});
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+httpServer.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 
 export default app;

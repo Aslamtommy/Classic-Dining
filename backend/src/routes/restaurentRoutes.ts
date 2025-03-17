@@ -50,6 +50,9 @@ const restaurentService = new RestaurentServices(restaurentRepository, otpReposi
 const restaurentController = new RestaurentController(restaurentService);
 const tabletypeController = new TableTypeController(tableTypeService);
 
+
+import { ChatController } from '../controllers/chatController';
+const chatController = new ChatController();
 // Routes
 restaurentRoute.post('/signup', upload.single('certificate'), (req, res) => restaurentController.registerRestaurent(req, res));
 restaurentRoute.post('/login', (req, res) => restaurentController.loginRestaurent(req, res));
@@ -73,4 +76,6 @@ restaurentRoute.delete('/tables/:tableTypeId', (req, res) => tabletypeController
 restaurentRoute.get('/branches/:branchId/reservations', authenticateToken('branch'), (req, res) => reservationController.getBranchReservations(req, res));
 restaurentRoute.put('/reservations/:reservationId/status', authenticateToken('branch'), (req, res) => reservationController.updateBranchReservationStatus(req, res));
 
+
+restaurentRoute.get('/chats/users/:branchId', authenticateToken('branch'), (req, res) => chatController.getUsersWhoMessaged(req, res));
 export default restaurentRoute;

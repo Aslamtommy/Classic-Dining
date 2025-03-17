@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    "dev": "nodemon src/app.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/app.js"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +27,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "razorpay": "^2.9.5",
+    "socket.io": "^4.8.1",
     "uuid": "^11.0.5",
     "winston": "^3.17.0"
   },
@@ -42,6 +43,7 @@
     "@types/node": "^22.10.5",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
+    "@types/socket.io": "^3.0.1",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
