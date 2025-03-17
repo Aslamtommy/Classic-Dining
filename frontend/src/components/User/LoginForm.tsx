@@ -1,3 +1,4 @@
+// src/components/LoginForm.tsx
 import React, { FormEvent } from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -28,17 +29,20 @@ const LoginForm: React.FC = () => {
 
     dispatch(setLoading());
     try {
-      const response = await api.post<LoginResponse>(
-        "/login",
+      const response :any= await api.post<LoginResponse>(
+        "/login", // Adjusted endpoint to match your backend route
         { email, password },
         { withCredentials: true }
       );
 
-      const { user } = response.data.data;
-      dispatch(setUser({ 
-        name: user.name, 
-        email: user.email, 
-        mobile: user.mobile || "" // Provide default value if undefined
+      const { user, accessToken, refreshToken } = response.data.data;
+      dispatch(setUser({
+        id:user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile || "",
+        accessToken, // Store accessToken
+        refreshToken, // Store refreshToken
       }));
       toast.success("Login successful");
       navigate("/");
@@ -62,17 +66,20 @@ const LoginForm: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
 
-      const response = await api.post<GoogleSignInResponse>(
-        "/google",
+      const response:any = await api.post<GoogleSignInResponse>(
+        "/users/google", // Adjusted endpoint to match your backend route
         { idToken },
         { withCredentials: true }
       );
 
-      const user = response.data.data;
-      dispatch(setUser({ 
-        name: user.name, 
-        email: user.email, 
-        mobile: user.mobile || "" // Provide default value if undefined
+      const { user, accessToken, refreshToken } = response.data.data; // Assuming GoogleSignInResponse includes tokens
+      dispatch(setUser({
+        id:user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile || "",
+        accessToken, // Store accessToken
+        refreshToken, // Store refreshToken
       }));
       toast.success("Google Sign-In successful!");
       navigate("/");

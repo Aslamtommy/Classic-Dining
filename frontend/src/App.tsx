@@ -30,7 +30,7 @@ import BranchDetails from './components/BranchManagement/BranchDetails';
 import BranchBookings from './components/BranchManagement/BranchBookings';
 import EditBranch from './components/BranchManagement/EditBranch';
 import BranchProtected from './components/BranchManagement/BranchProtected';
-
+import BranchChatPage from './components/BranchManagement/BranchChatPage';
 // Admin Components
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -85,6 +85,7 @@ const App: React.FC = () => {
       <Route element={<BranchProtected />}>
           <Route element={<Layout />}> {/* Reusing Layout; replace with BranchLayout if exists */}
             <Route path="/branches/:branchId/bookings" element={<BranchBookings />} />
+            <Route path="/branches/:branchId/chat" element={<BranchChatPage />} />
           </Route>
         </Route>
 

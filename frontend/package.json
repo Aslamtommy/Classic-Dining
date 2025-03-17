@@ -37,6 +37,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.1",
     "redux-persist": "^6.0.0",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "yup": "^1.6.1"
@@ -47,6 +48,7 @@
     "@types/lodash": "^4.17.15",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/socket.io-client": "^1.4.36",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "globals": "^15.14.0",

@@ -1,58 +1,62 @@
-// src/pages/RestaurantListPage.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { FaSearch, FaSortAlphaDown, FaSortAlphaUp, FaComments } from "react-icons/fa";
 import { fetchBranches } from "../../Api/userApi";
-import { FaSearch, FaSortAlphaDown, FaSortAlphaUp } from "react-icons/fa";
 import { Branch } from "../../types/branch";
+import ChatWidget from "../CommonComponents/ChatWidget";
+import { RootState } from "../../redux/store";
 
-// Custom hook for debouncing
+// Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);  
-    };
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
   }, [value, delay]);
 
   return debouncedValue;
 }
 
-const RestaurantListPage: React.FC = () => {
+// Define props for better type safety (optional since it's a page component)
+interface RestaurantListPageProps {}
+
+const RestaurantListPage: React.FC<RestaurantListPageProps> = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+
   const limit = 10;
   const navigate = useNavigate();
+  const userId = useSelector((state: RootState) => state.user.user?.id);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Use the debounced search term
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms delay
+  // Log userId on mount
+  useEffect(() => {
+    console.log("RestaurantListPage mounted - userId from Redux:", userId);
+  }, [userId]);
 
-  // Fetch branches with search term, page, and limit
+  // Load branches with error handling
   const loadBranches = async (search: string, pageNum: number) => {
     try {
       setLoading(true);
       const response = await fetchBranches(search, pageNum, limit);
-      console.log("branches", response);
-      let sortedBranches = [...response.branches];
-      sortedBranches.sort((a, b) =>
+      const sortedBranches = [...response.branches].sort((a, b) =>
         sortOrder === "asc"
           ? a.name.localeCompare(b.name)
           : b.name.localeCompare(a.name)
       );
-
       setBranches(sortedBranches);
       setTotalPages(response.pages);
     } catch (error: unknown) {
       console.error("Error loading branches:", error);
+      setBranches([]); // Reset branches on error
     } finally {
       setLoading(false);
     }
@@ -60,12 +64,11 @@ const RestaurantListPage: React.FC = () => {
 
   // Handle search input change
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    setPage(1); // Reset to page 1 on new search
+    setSearchTerm(e.target.value);
+    setPage(1);
   };
 
-  // Handle page change
+  // Handle pagination
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     loadBranches(debouncedSearchTerm.trim(), newPage);
@@ -73,25 +76,42 @@ const RestaurantListPage: React.FC = () => {
 
   // Toggle sort order
   const toggleSortOrder = () => {
-    const newOrder = sortOrder === "asc" ? "desc" : "asc";
-    setSortOrder(newOrder);
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     loadBranches(debouncedSearchTerm.trim(), page);
   };
 
-  // Effect to trigger loadBranches when debouncedSearchTerm changes
+  // Load branches on search or page change
   useEffect(() => {
     loadBranches(debouncedSearchTerm.trim(), page);
-  }, [debouncedSearchTerm, page]);  
+  }, [debouncedSearchTerm, page]);
 
   // Initial load
   useEffect(() => {
     loadBranches("", 1);
   }, []);
 
+  // Handle chat button click
+  const handleChatClick = (branchId: string) => {
+    console.log("Chat button clicked - Selected branchId:", branchId, "userId:", userId);
+    setSelectedBranchId(branchId);
+  };
+
+  // Handle closing the chat widget
+  const handleCloseChat = () => {
+    console.log("Closing ChatWidget for branchId:", selectedBranchId);
+    setSelectedBranchId(null);
+  };
+
+  // Log ChatWidget props
+  useEffect(() => {
+    if (selectedBranchId && userId) {
+      console.log("ChatWidget will render with:", { userId, branchId: selectedBranchId });
+    }
+  }, [selectedBranchId, userId]);
+
   return (
     <section className="min-h-screen bg-[#faf7f2] pt-16 pb-20">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -101,7 +121,7 @@ const RestaurantListPage: React.FC = () => {
           Discover Our Restaurants
         </motion.h1>
 
-        {/* Search Bar and Sort Toggle */}
+        {/* Search and Sort */}
         <div className="mb-12 flex flex-col sm:flex-row justify-center items-center gap-6">
           <div className="relative w-full max-w-lg">
             <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#8b5d3b] text-lg" />
@@ -125,7 +145,7 @@ const RestaurantListPage: React.FC = () => {
         {/* Branches Grid */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="w-12 h-12 border-4 border-[#8b5d3b] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#8b5d3b] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : branches.length === 0 ? (
           <p className="text-center text-[#8b5d3b] text-lg font-medium">No branches found.</p>
@@ -154,16 +174,25 @@ const RestaurantListPage: React.FC = () => {
                     </h3>
                     <p className="text-[#8b5d3b] mb-2 text-sm">{branch.email}</p>
                     <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone || "N/A"}</p>
-                    <button
-                      onClick={() => navigate(`/book/${branch._id}`)}
-                      className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
-                    >
-                      Book Now
-                    </button>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={() => navigate(`/book/${branch._id}`)}
+                        className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
+                      >
+                        Book Now
+                      </button>
+                      <button
+                        onClick={() => handleChatClick(branch._id)}
+                        className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
+                      >
+                        <FaComments className="inline-block mr-2" /> Chat
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
             </div>
+
             {/* Pagination */}
             <div className="mt-12 flex justify-center items-center gap-6">
               <button
@@ -185,6 +214,15 @@ const RestaurantListPage: React.FC = () => {
               </button>
             </div>
           </>
+        )}
+
+        {/* Chat Widget */}
+        {selectedBranchId && userId && (
+          <ChatWidget
+            userId={userId}
+            branchId={selectedBranchId}
+            onClose={handleCloseChat}
+          />
         )}
       </div>
     </section>

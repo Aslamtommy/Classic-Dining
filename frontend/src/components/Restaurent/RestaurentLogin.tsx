@@ -2,12 +2,36 @@
 import React, { useState, useEffect } from "react";
 import restaurentApi from "../../Axios/restaurentInstance";
 import { useDispatch, useSelector } from "react-redux";
-import { setRestaurent, setError, setLoading, clearLoading } from "../../redux/restaurentSlice";
+import {
+  setRestaurent,
+  setError,
+  setLoading,
+  clearLoading,
+} from "../../redux/restaurentSlice";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal";
 import { RootState } from "../../redux/store";
-import { LoginFormData, RestaurentState } from "../../types/restaurent";
+import { LoginFormData } from "../../types/restaurent";
+
+interface LoginResponse {
+  status: string;
+  message: string;
+  data: {
+    restaurent: {
+      id: string;
+      name: string;
+      email: string;
+      phone?: string;
+      certificate?: string;
+      [key: string]: any;
+    };
+    status: string;
+    role: string;
+    accessToken: string;
+    refreshToken: string;
+  };
+}
 
 const RestaurentLogin: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -18,7 +42,9 @@ const RestaurentLogin: React.FC = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading: reduxLoading } = useSelector<RootState, RestaurentState>((state) => state.restaurent);
+  const { loading: reduxLoading } = useSelector<RootState,any>(
+    (state) => state.restaurent
+  );
 
   useEffect(() => {
     setLoadingState(false);
@@ -34,13 +60,23 @@ const RestaurentLogin: React.FC = () => {
     const loginData: LoginFormData = { email, password };
 
     try {
-      const response :any= await restaurentApi.post("/login", loginData); // Ensure endpoint matches backend
+      const response = await restaurentApi.post<LoginResponse>(
+        "/login", // Adjusted to match your backend route
+        loginData,
+        { withCredentials: true }
+      );
       console.log("Login response:", response);
 
       if (response.status === 200) {
-        const { restaurent, role } = response.data.data;
-        
-        dispatch(setRestaurent({restaurent,role}));
+        const { restaurent, role, accessToken, refreshToken } = response.data.data;
+        dispatch(
+          setRestaurent({
+            restaurent,
+            role,
+            accessToken, // Store accessToken
+            refreshToken, // Store refreshToken
+          })
+        );
         if (role === "branch") {
           navigate("/restaurent/home", { replace: true });
           toast.success("Branch login successful!");

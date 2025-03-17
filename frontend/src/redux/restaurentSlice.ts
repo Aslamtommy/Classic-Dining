@@ -1,10 +1,30 @@
+// src/redux/restaurentSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RestaurentState } from "../types/restaurent";
+ 
+
+interface Restaurent {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  certificate?: string;
+  accessToken?: string; // Add accessToken
+  refreshToken?: string; // Add refreshToken
+  [key: string]: any; // Allow additional fields from backend
+}
+
+export interface RestaurentState {
+  restaurent: Restaurent | null;
+  profile: any | null; // Adjust type as needed
+  role: string | null; // e.g., "restaurent" or "branch"
+  loading: boolean;
+  error: string | null;
+}
 
 const initialState: RestaurentState = {
   restaurent: null,
   profile: null,
-  role: null, // Initialize role as null
+  role: null,
   loading: false,
   error: null,
 };
@@ -19,9 +39,16 @@ const restaurentSlice = createSlice({
     clearLoading: (state) => {
       state.loading = false;
     },
-    setRestaurent: (state, action: PayloadAction<{ restaurent: any; role: string }>) => {
-      state.restaurent = action.payload.restaurent; // Use lowercase `restaurent`
-      state.role = action.payload.role; // Save the role
+    setRestaurent: (
+      state,
+      action: PayloadAction<any>
+    ) => {
+      state.restaurent = {
+        ...action.payload.restaurent,
+        accessToken: action.payload.accessToken,
+        refreshToken: action.payload.refreshToken,
+      };
+      state.role = action.payload.role;
       state.loading = false;
       state.error = null;
     },
@@ -37,7 +64,7 @@ const restaurentSlice = createSlice({
     logoutRestaurent: (state) => {
       state.restaurent = null;
       state.profile = null;
-      state.role = null; // Reset role on logout
+      state.role = null;
       state.loading = false;
       state.error = null;
     },
