@@ -16,9 +16,11 @@ export class BranchService implements IBranchService {
 
   async createBranch(branchData: Partial<IBranch>): Promise<IBranch> {
     try {
-      const { email, password, parentRestaurant } = branchData;
+      const { email, password, address, location, parentRestaurant } = branchData;
       if (!email) throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       if (!password) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      if (!address) throw new AppError(HttpStatus.BadRequest, "Address is required");
+      if (!location || !location.coordinates) throw new AppError(HttpStatus.BadRequest, "Location coordinates are required");
       if (!parentRestaurant) throw new AppError(HttpStatus.BadRequest, MessageConstants.PARENT_RESTAURANT_REQUIRED);
 
       const existingBranch = await this._branchRepository.findByEmail(email);

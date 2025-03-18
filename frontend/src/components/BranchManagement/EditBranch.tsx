@@ -1,4 +1,4 @@
-import React, {  useEffect } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -10,24 +10,20 @@ const EditBranch = () => {
   const navigate = useNavigate();
 
   const validationSchema = Yup.object({
-    name: Yup.string()
-    .required("Name is required")
-    .min(4, "Name must be at least 4 characters"),
+    name: Yup.string().required("Name is required").min(4, "Name must be at least 4 characters"),
     email: Yup.string().email("Invalid email address").required("Email is required"),
-    phone: Yup.string()
-      .matches(/^\d{10}$/, "Phone number must be 10 digits")
-      .required("Phone is required"),
+    phone: Yup.string().matches(/^\d{10}$/, "Phone number must be 10 digits").required("Phone is required"),
+    address: Yup.string().required("Address is required"),
+    longitude: Yup.number().required("Longitude is required").min(-180).max(180),
+    latitude: Yup.number().required("Latitude is required").min(-90).max(90),
     password: Yup.string().min(6, "Password must be at least 6 characters").optional(),
-    image: Yup.mixed()
-    .nullable()
-    .test("fileSize", "File size must be less than 5MB", (value) => {
+    image: Yup.mixed().nullable().test("fileSize", "File size must be less than 5MB", (value) => {
       if (value) {
         const file = value as File;
-        return file.size <= 5 * 1024 * 1024; // 5MB
+        return file.size <= 5 * 1024 * 1024;
       }
-      return true; // Allow empty image
+      return true;
     }),
-  
   });
 
   const formik = useFormik({
@@ -35,6 +31,9 @@ const EditBranch = () => {
       name: "",
       email: "",
       phone: "",
+      address: "",
+      longitude: "",
+      latitude: "",
       password: "",
       image: null as File | null,
       currentImage: "",
@@ -45,6 +44,9 @@ const EditBranch = () => {
       formDataToSend.append("name", values.name);
       formDataToSend.append("email", values.email);
       formDataToSend.append("phone", values.phone);
+      formDataToSend.append("address", values.address);
+      formDataToSend.append("longitude", values.longitude.toString());
+      formDataToSend.append("latitude", values.latitude.toString());
       if (values.password) formDataToSend.append("password", values.password);
       if (values.image) formDataToSend.append("image", values.image);
 
@@ -64,11 +66,14 @@ const EditBranch = () => {
     const fetchBranch = async () => {
       try {
         const response: any = await restaurentApi.get(`/branches/${branchId}`);
-        const { name, email, phone, image } = response.data.data;
+        const { name, email, phone, address, location, image } = response.data.data;
         formik.setValues({
           name,
           email,
           phone,
+          address: address || "",
+          longitude: location?.coordinates[0] || "",
+          latitude: location?.coordinates[1] || "",
           password: "",
           image: null,
           currentImage: image,
@@ -90,7 +95,6 @@ const EditBranch = () => {
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
         <h2 className="text-3xl font-bold text-gray-800 mb-8">Edit Branch</h2>
         <form onSubmit={formik.handleSubmit} className="space-y-6">
-          {/* Current Image */}
           {formik.values.currentImage && (
             <div className="mb-6">
               <img
@@ -101,7 +105,6 @@ const EditBranch = () => {
             </div>
           )}
 
-          {/* Name Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
             <input
@@ -113,12 +116,11 @@ const EditBranch = () => {
               onBlur={formik.handleBlur}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
-            {formik.touched.name && formik.errors.name ? (
+            {formik.touched.name && formik.errors.name && (
               <div className="text-red-500 text-sm mt-1">{formik.errors.name}</div>
-            ) : null}
+            )}
           </div>
 
-          {/* Email Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input
@@ -130,12 +132,11 @@ const EditBranch = () => {
               onBlur={formik.handleBlur}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
-            {formik.touched.email && formik.errors.email ? (
+            {formik.touched.email && formik.errors.email && (
               <div className="text-red-500 text-sm mt-1">{formik.errors.email}</div>
-            ) : null}
+            )}
           </div>
 
-          {/* Phone Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
             <input
@@ -147,12 +148,59 @@ const EditBranch = () => {
               onBlur={formik.handleBlur}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
-            {formik.touched.phone && formik.errors.phone ? (
+            {formik.touched.phone && formik.errors.phone && (
               <div className="text-red-500 text-sm mt-1">{formik.errors.phone}</div>
-            ) : null}
+            )}
           </div>
 
-          {/* Password Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <input
+              type="text"
+              placeholder="Enter branch address"
+              name="address"
+              value={formik.values.address}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            {formik.touched.address && formik.errors.address && (
+              <div className="text-red-500 text-sm mt-1">{formik.errors.address}</div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+            <input
+              type="number"
+              placeholder="Enter longitude (e.g., -73.935242)"
+              name="longitude"
+              value={formik.values.longitude}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            {formik.touched.longitude && formik.errors.longitude && (
+              <div className="text-red-500 text-sm mt-1">{formik.errors.longitude}</div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+            <input
+              type="number"
+              placeholder="Enter latitude (e.g., 40.730610)"
+              name="latitude"
+              value={formik.values.latitude}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            {formik.touched.latitude && formik.errors.latitude && (
+              <div className="text-red-500 text-sm mt-1">{formik.errors.latitude}</div>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
             <input
@@ -164,12 +212,11 @@ const EditBranch = () => {
               onBlur={formik.handleBlur}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
-            {formik.touched.password && formik.errors.password ? (
+            {formik.touched.password && formik.errors.password && (
               <div className="text-red-500 text-sm mt-1">{formik.errors.password}</div>
-            ) : null}
+            )}
           </div>
 
-          {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Branch Image</label>
             <input
@@ -178,12 +225,11 @@ const EditBranch = () => {
               onChange={handleImageChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
-            {formik.touched.image && formik.errors.image ? (
+            {formik.touched.image && formik.errors.image && (
               <div className="text-red-500 text-sm mt-1">{formik.errors.image}</div>
-            ) : null}
+            )}
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-4">
             <button
               type="submit"

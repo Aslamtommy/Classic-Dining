@@ -59,5 +59,5 @@ const ReservationSchema: Schema = new Schema({
   discountApplied: { type: Number, default: 0 }, 
   finalAmount: { type: Number },
 }, { timestamps: true });
-
+ReservationSchema.index({ reservationDate: 1 });
 export default mongoose.model<IReservation>('Reservation', ReservationSchema);

@@ -12,8 +12,8 @@ export class BranchController {
   async createBranch(req: Request, res: Response): Promise<void> {
     let imageUrl = "";
     try {
-      const { name, email, password, phone, parentRestaurant } = req.body;
-      if (!name || !email || !password || !phone || !parentRestaurant) {
+      const { name, email, password, phone, address, longitude, latitude, parentRestaurant } = req.body;
+      if (!name || !email || !password || !phone || !address || !longitude || !latitude || !parentRestaurant) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
 
@@ -26,13 +26,14 @@ export class BranchController {
         email,
         password,
         phone,
+        address,
+        location: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
         image: imageUrl,
         parentRestaurant,
       });
 
       sendResponse(res, HttpStatus.Created, MessageConstants.BRANCH_CREATED, branch);
     } catch (error: unknown) {
-    
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
@@ -86,9 +87,12 @@ export class BranchController {
       if (!branchId) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      const updateData = req.body;
+      const { name, email, password, phone, address, longitude, latitude } = req.body;
+      const updateData: any = { name, email, password, phone, address };
+      if (longitude && latitude) {
+        updateData.location = { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] };
+      }
       const imageUrl = req.file ? await this._branchService.handleImageUpload(req.file, branchId) : undefined;
-      
       if (imageUrl) updateData.image = imageUrl;
       if (updateData.password) updateData.password = await this._branchService.hashPassword(updateData.password);
 

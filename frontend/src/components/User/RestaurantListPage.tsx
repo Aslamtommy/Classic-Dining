@@ -174,6 +174,7 @@ const RestaurantListPage: React.FC<RestaurantListPageProps> = () => {
                     </h3>
                     <p className="text-[#8b5d3b] mb-2 text-sm">{branch.email}</p>
                     <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone || "N/A"}</p>
+                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.address || "N/A"}</p>
                     <div className="flex justify-center gap-4">
                       <button
                         onClick={() => navigate(`/book/${branch._id}`)}

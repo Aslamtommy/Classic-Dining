@@ -1,5 +1,3 @@
-// src/components/Branches.tsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -10,18 +8,16 @@ import { FaSearch } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { debounce } from "../../utils/CustomDebounce";
 
-
 const Branches = () => {
-  const [branches, setBranches] = useState<any[]>([]);  
+  const [branches, setBranches] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const limit = 6;  
+  const limit = 6;
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Fetch branches on mount
   useEffect(() => {
     const getBranches = async () => {
       try {
@@ -43,46 +39,36 @@ const Branches = () => {
     getBranches();
   }, []);
 
-  // Debounced search handler
   const debouncedSearch = useCallback(
     debounce((value: string) => {
       setSearchTerm(value);
-      setPage(1);  
-    }, 500), // 300ms delay
+      setPage(1);
+    }, 500),
     []
   );
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedSearch(e.target.value);
   };
 
-  // Filter branches by search term
   const filteredBranches = branches.filter(
     (branch: any) =>
       branch.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
       branch.email.toLowerCase().includes(searchTerm.trim().toLowerCase())
   );
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredBranches.length / limit);
-  const currentBranches = filteredBranches.slice(
-    (page - 1) * limit,
-    page * limit
-  );
+  const currentBranches = filteredBranches.slice((page - 1) * limit, page * limit);
 
-  // Handle page change
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
 
-  // Handle delete click
   const handleDeleteClick = (branchId: string) => {
     setSelectedBranchId(branchId);
     setOpenDialog(true);
   };
 
-  // Confirm delete
   const handleConfirmDelete = async () => {
     if (selectedBranchId) {
       try {
@@ -101,7 +87,6 @@ const Branches = () => {
   return (
     <section className="min-h-screen bg-[#faf7f2] pt-16 pb-20">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
         <motion.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -111,7 +96,6 @@ const Branches = () => {
           Your Branches
         </motion.h2>
 
-        {/* Search Bar and Add New Branch */}
         <div className="mb-12 flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="relative w-full max-w-lg">
             <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#8b5d3b] text-lg" />
@@ -133,17 +117,13 @@ const Branches = () => {
               textTransform: "uppercase",
               fontWeight: "bold",
               boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              "&:hover": {
-                background: "linear-gradient(to right, #2c2420, #8b5d3b)",
-                opacity: 0.9,
-              },
+              "&:hover": { background: "linear-gradient(to right, #2c2420, #8b5d3b)", opacity: 0.9 },
             }}
           >
             Add New Branch
           </Button>
         </div>
 
-        {/* Branches Grid */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="w-12 h-12 border-4 border-[#8b5d3b] border-t-transparent rounded-full animate-spin"></div>
@@ -186,12 +166,12 @@ const Branches = () => {
                       {branch.name}
                     </h3>
                     <p className="text-[#8b5d3b] mb-2 text-sm">{branch.email}</p>
-                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.phone}</p>
+                    <p className="text-[#8b5d3b] mb-2 text-sm">{branch.phone}</p>
+                    <p className="text-[#8b5d3b] mb-4 text-sm">{branch.address}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
-            {/* Pagination */}
             <div className="mt-12 flex justify-center items-center gap-6">
               <Button
                 onClick={() => handlePageChange(page - 1)}
@@ -205,14 +185,8 @@ const Branches = () => {
                   textTransform: "uppercase",
                   fontWeight: "bold",
                   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                  "&:hover": {
-                    background: "linear-gradient(to right, #2c2420, #8b5d3b)",
-                    opacity: 0.9,
-                  },
-                  "&.Mui-disabled": {
-                    background: "#e8e2d9",
-                    color: "#8b5d3b",
-                  },
+                  "&:hover": { background: "linear-gradient(to right, #2c2420, #8b5d3b)", opacity: 0.9 },
+                  "&.Mui-disabled": { background: "#e8e2d9", color: "#8b5d3b" },
                 }}
               >
                 Previous
@@ -232,14 +206,8 @@ const Branches = () => {
                   textTransform: "uppercase",
                   fontWeight: "bold",
                   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                  "&:hover": {
-                    background: "linear-gradient(to right, #2c2420, #8b5d3b)",
-                    opacity: 0.9,
-                  },
-                  "&.Mui-disabled": {
-                    background: "#e8e2d9",
-                    color: "#8b5d3b",
-                  },
+                  "&:hover": { background: "linear-gradient(to right, #2c2420, #8b5d3b)", opacity: 0.9 },
+                  "&.Mui-disabled": { background: "#e8e2d9", color: "#8b5d3b" },
                 }}
               >
                 Next
@@ -248,7 +216,6 @@ const Branches = () => {
           </>
         )}
 
-        {/* Confirmation Dialog */}
         <ConfirmationDialog
           open={openDialog}
           onClose={() => setOpenDialog(false)}

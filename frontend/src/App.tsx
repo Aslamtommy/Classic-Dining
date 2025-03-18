@@ -13,7 +13,7 @@ import SuccessPage from './components/User/SuccessPage';
 import RestaurantListPage from './components/User/RestaurantListPage';
 import UserLayout from './components/User/Home/UserLayout';
 import UserProtected from './components/User/UserProtected';
-
+import RestaurantSearch from './components/User/RestaurentSearch';
 // Restaurant Components
 import RestaurentSignup from './components/Restaurent/restaurentSignup';
 import RestaurentLogin from './components/Restaurent/RestaurentLogin';
@@ -31,6 +31,7 @@ import BranchBookings from './components/BranchManagement/BranchBookings';
 import EditBranch from './components/BranchManagement/EditBranch';
 import BranchProtected from './components/BranchManagement/BranchProtected';
 import BranchChatPage from './components/BranchManagement/BranchChatPage';
+import BranchDashboard from './components/BranchManagement/BranchDashboard';
 // Admin Components
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -40,7 +41,7 @@ import UserList from './components/Admin/userList';
 import CouponManagement from './components/Admin/CouponManagement';
 import { AdminLayout } from './components/Admin/Home/AdminLayout';
 import AdminProtected from './components/Admin/AdminProtected';
-
+ 
 const App: React.FC = () => {
   return (
     <Router>
@@ -66,6 +67,7 @@ const App: React.FC = () => {
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/restaurentList" element={<RestaurantListPage />} />
+            <Route path="/search" element={<RestaurantSearch />} />
           </Route>
         </Route>
 
@@ -86,13 +88,15 @@ const App: React.FC = () => {
           <Route element={<Layout />}> {/* Reusing Layout; replace with BranchLayout if exists */}
             <Route path="/branches/:branchId/bookings" element={<BranchBookings />} />
             <Route path="/branches/:branchId/chat" element={<BranchChatPage />} />
+            <Route path="/branches/dashboard" element={<BranchDashboard />} />
           </Route>
         </Route>
 
         {/* Admin Routes */}
         <Route element={<AdminProtected />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      
           <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/approvals" element={<ApproveRestaurents />} />
             <Route path="/admin/restaurents" element={<RestaurentList />} />
             <Route path="/admin/users" element={<UserList />} />

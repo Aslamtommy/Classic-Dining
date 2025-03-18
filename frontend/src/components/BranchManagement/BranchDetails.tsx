@@ -7,8 +7,9 @@ import { Button, CircularProgress } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmationDialog from "../CommonComponents/ConfirmationDialog";
-import { Branch } from "../../types/branch";  
+import { Branch } from "../../types/branch";
 import { BranchResponse } from "../../types/branch";
+
 const BranchDetails: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
   const [branch, setBranch] = useState<Branch | null>(null);
@@ -66,18 +67,11 @@ const BranchDetails: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">{branch.name}</h1>
-              {branch.address && <p className="text-gray-600 mt-2">{branch.address}</p>}
+              <p className="text-gray-600 mt-2">{branch.address}</p>
               <div className="mt-4 space-y-2 text-gray-700">
-                <p>
-                  <strong>Email:</strong> {branch.email}
-                </p>
-                <p>
-                  <strong>Phone:</strong> {branch.phone || "Not provided"}
-                </p>
-                <p>
-                  <strong>Created At:</strong>{" "}
-                  {new Date(branch.createdAt!).toLocaleDateString()}
-                </p>
+                <p><strong>Email:</strong> {branch.email}</p>
+                <p><strong>Phone:</strong> {branch.phone || "Not provided"}</p>
+                <p><strong>Created At:</strong> {new Date(branch.createdAt!).toLocaleDateString()}</p>
               </div>
             </div>
             <div className="flex gap-2 mt-4 md:mt-0">

@@ -18,7 +18,12 @@ import { TableTypeRepository } from '../repositories/TableRepository';
 import { WalletRepository } from '../repositories/WalletRepository';
 import { CouponRepository } from '../repositories/CouponRepository';
 import { TableTypeService } from '../services/TableServices';
-
+import { BranchDashboardController } from '../controllers/BranchDashboardController';
+import { BranchDashboardService } from '../services/BranchDashboardService';
+import { BranchDashboardRepository } from '../repositories/BracnDashboardRepository';
+const dashboardRepo = new BranchDashboardRepository();
+const dashboardService = new BranchDashboardService(dashboardRepo);
+const dashboardController = new BranchDashboardController(dashboardService);
 const restaurentRoute: Router = express.Router();
 
 // Instantiate repositories
@@ -73,9 +78,14 @@ restaurentRoute.get('/branches/:branchId/tables', (req, res) => tabletypeControl
 restaurentRoute.put('/tables/:tableTypeId/quantity', (req, res) => tabletypeController.updateTableTypeQuantity(req, res));
 restaurentRoute.delete('/tables/:tableTypeId', (req, res) => tabletypeController.deleteTableType(req, res));
 
+restaurentRoute.get('/dashboard',authenticateToken('branch'), (req, res) => dashboardController.getDashboard(req, res));  
+
+
 restaurentRoute.get('/branches/:branchId/reservations', authenticateToken('branch'), (req, res) => reservationController.getBranchReservations(req, res));
 restaurentRoute.put('/reservations/:reservationId/status', authenticateToken('branch'), (req, res) => reservationController.updateBranchReservationStatus(req, res));
 
 
 restaurentRoute.get('/chats/users/:branchId', authenticateToken('branch'), (req, res) => chatController.getUsersWhoMessaged(req, res));
+
+
 export default restaurentRoute;
