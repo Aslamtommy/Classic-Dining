@@ -7,12 +7,12 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage' 
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-
+import locationReducer from './locationSlice'
 // Persist config for user data and admin data
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['user', 'admin','restaurent'],  
+  whitelist: ['user', 'admin','restaurent','location'],  
 };
 
 // Combine all reducers into a rootReducer
@@ -20,7 +20,8 @@ const rootReducer = combineReducers({
   user: userReducer,
   otp: otpReducer,
   admin: adminReducer,
-  restaurent:restaurentReducer
+  restaurent:restaurentReducer,
+  location: locationReducer,
  
 });
 

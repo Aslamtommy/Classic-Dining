@@ -23,7 +23,7 @@ interface DashboardData {
   reservationTrends: Array<{ date: string; count: number; revenue: number }>;
   tableUtilization: Array<{ tableType: string; totalBookings: number }>;
   topCustomers: Array<{ userId: string; name: string; totalBookings: number; totalSpent: number }>;
-  couponUsage: Array<{ code: string; timesUsed: number; totalDiscount: number }>;
+ 
 }
 
 const BranchDashboard: React.FC = () => {
@@ -234,20 +234,7 @@ const BranchDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 col-span-1 md:col-span-2 lg:col-span-3">
-            <div className="p-4">
-              <h2 className="text-lg font-medium text-gray-700 mb-2">Coupon Usage</h2>
-              {data.couponUsage.length > 0 ? (
-                data.couponUsage.map((coupon) => (
-                  <p key={coupon.code} className="text-gray-600">
-                    {coupon.code}: Used {coupon.timesUsed} times, ₹{coupon.totalDiscount.toLocaleString()} discount
-                  </p>
-                ))
-              ) : (
-                <p className="text-gray-600">No coupons used yet.</p>
-              )}
-            </div>
-          </div>
+      
         </div>
       </div>
     </div>

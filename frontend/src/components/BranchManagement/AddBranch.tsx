@@ -8,10 +8,11 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU"; // Replace with your API key
+const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
 
 const AddBranch = () => {
-  const [image, setImage] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [interiorImagesPreview, setInteriorImagesPreview] = useState<string[]>([]);
   const { restaurent } = useSelector((state: RootState) => state.restaurent);
   const navigate = useNavigate();
 
@@ -23,13 +24,28 @@ const AddBranch = () => {
     address: Yup.string().required("Address is required"),
     longitude: Yup.number().required("Longitude is required").min(-180).max(180),
     latitude: Yup.number().required("Latitude is required").min(-90).max(90),
-    image: Yup.mixed().required("Image is required").test("fileSize", "File size must be less than 5MB", (value) => {
-      if (value) {
-        const file = value as File;
-        return file.size <= 5 * 1024 * 1024;
-      }
-      return false;
-    }),
+    mainImage: Yup.mixed()
+      .required("Main image is required")
+      .test("fileSize", "File size must be less than 5MB", (value) => {
+        if (value) {
+          const file = value as File;
+          return file.size <= 5 * 1024 * 1024;
+        }
+        return false;
+      }),
+    interiorImages: Yup.array()
+      .of(
+        Yup.mixed()
+          .test("fileSize", "Each file must be less than 5MB", (value) => {
+            if (value) {
+              const file = value as File;
+              return file.size <= 5 * 1024 * 1024;
+            }
+            return true;
+          })
+         
+      )
+      .max(3, "You can upload up to 3 interior images"),
   });
 
   const formik = useFormik({
@@ -41,7 +57,8 @@ const AddBranch = () => {
       address: "",
       longitude: "",
       latitude: "",
-      image: null as File | null,
+      mainImage: null as File | null,
+      interiorImages: [] as File[],
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -54,9 +71,12 @@ const AddBranch = () => {
       formData.append("longitude", values.longitude.toString());
       formData.append("latitude", values.latitude.toString());
       formData.append("parentRestaurant", restaurent?._id || "");
-      if (values.image) {
-        formData.append("image", values.image);
+      if (values.mainImage) {
+        formData.append("mainImage", values.mainImage);
       }
+      values.interiorImages.forEach((image) => {
+        formData.append("interiorImages", image);
+      });
 
       try {
         const response = await restaurentApi.post("/branches", formData, {
@@ -70,19 +90,38 @@ const AddBranch = () => {
     },
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    setImage(file);
-    formik.setFieldValue("image", file);
+    if (file) {
+      setMainImagePreview(URL.createObjectURL(file));
+      formik.setFieldValue("mainImage", file);
+    }
   };
 
-  // Geocode address to get longitude and latitude
+  const handleInteriorImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length + formik.values.interiorImages.length > 3) {
+      toast.error("You can upload up to 3 interior images.");
+      return;
+    }
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setInteriorImagesPreview((prev) => [...prev, ...newPreviews]);
+    formik.setFieldValue("interiorImages", [...formik.values.interiorImages, ...files]);
+  };
+
+  const removeInteriorImage = (index: number) => {
+    const updatedImages = formik.values.interiorImages.filter((_, i) => i !== index);
+    const updatedPreviews = interiorImagesPreview.filter((_, i) => i !== index);
+    setInteriorImagesPreview(updatedPreviews);
+    formik.setFieldValue("interiorImages", updatedImages);
+  };
+
   const handleAddressBlur = async () => {
     const address = formik.values.address.trim();
     if (!address) return;
 
     try {
-      const response:any = await axios.get(
+      const response: any = await axios.get(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`
       );
       const results = response.data.results;
@@ -100,149 +139,208 @@ const AddBranch = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 min-h-screen">
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8">Add Branch</h2>
-        <form onSubmit={formik.handleSubmit} className="space-y-6">
+    <div className="p-8 bg-[#f8f1ea] min-h-screen font-sans">
+      <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-xl border border-[#e8e2d9]">
+        <h2 className="text-4xl font-playfair text-[#2c2420] font-bold mb-8 tracking-tight">Add New Branch</h2>
+        <form onSubmit={formik.handleSubmit} className="space-y-8">
+          {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Branch Name</label>
             <input
               type="text"
-              placeholder="Enter branch name"
               name="name"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Enter branch name"
+              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
             />
             {formik.touched.name && formik.errors.name && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.name}</div>
+              <div className="text-red-600 text-sm mt-1">{formik.errors.name}</div>
             )}
           </div>
 
+          {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Email</label>
             <input
               type="email"
-              placeholder="Enter branch email"
               name="email"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Enter branch email"
+              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
             />
             {formik.touched.email && formik.errors.email && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.email}</div>
+              <div className="text-red-600 text-sm mt-1">{formik.errors.email}</div>
             )}
           </div>
 
+          {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Phone</label>
             <input
               type="text"
-              placeholder="Enter branch phone"
               name="phone"
               value={formik.values.phone}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Enter 10-digit phone number"
+              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
             />
             {formik.touched.phone && formik.errors.phone && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.phone}</div>
+              <div className="text-red-600 text-sm mt-1">{formik.errors.phone}</div>
             )}
           </div>
 
+          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Password</label>
             <input
               type="password"
-              placeholder="Enter branch password"
               name="password"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Enter branch password"
+              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
             />
             {formik.touched.password && formik.errors.password && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.password}</div>
+              <div className="text-red-600 text-sm mt-1">{formik.errors.password}</div>
             )}
           </div>
 
+          {/* Address */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Address</label>
             <input
               type="text"
-              placeholder="Enter branch address (e.g., 123 Main St, New York, NY)"
               name="address"
               value={formik.values.address}
               onChange={formik.handleChange}
               onBlur={(e) => {
                 formik.handleBlur(e);
-                handleAddressBlur(); // Trigger geocoding on blur
+                handleAddressBlur();
               }}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Enter branch address"
+              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
             />
             {formik.touched.address && formik.errors.address && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.address}</div>
+              <div className="text-red-600 text-sm mt-1">{formik.errors.address}</div>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
-            <input
-              type="number"
-              placeholder="Auto-filled from address"
-              name="longitude"
-              value={formik.values.longitude}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              readOnly // Optional: Make it read-only since it’s auto-filled
-            />
-            {formik.touched.longitude && formik.errors.longitude && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.longitude}</div>
-            )}
+          {/* Coordinates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#2c2420] mb-2">Longitude</label>
+              <input
+                type="number"
+                name="longitude"
+                value={formik.values.longitude}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                placeholder="Auto-filled from address"
+                readOnly
+                className="w-full p-3 border border-[#e8e2d9] rounded-lg bg-[#f0ede8] text-[#2c2420] cursor-not-allowed"
+              />
+              {formik.touched.longitude && formik.errors.longitude && (
+                <div className="text-red-600 text-sm mt-1">{formik.errors.longitude}</div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#2c2420] mb-2">Latitude</label>
+              <input
+                type="number"
+                name="latitude"
+                value={formik.values.latitude}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                placeholder="Auto-filled from address"
+                readOnly
+                className="w-full p-3 border border-[#e8e2d9] rounded-lg bg-[#f0ede8] text-[#2c2420] cursor-not-allowed"
+              />
+              {formik.touched.latitude && formik.errors.latitude && (
+                <div className="text-red-600 text-sm mt-1">{formik.errors.latitude}</div>
+              )}
+            </div>
           </div>
 
+          {/* Main Image */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
-            <input
-              type="number"
-              placeholder="Auto-filled from address"
-              name="latitude"
-              value={formik.values.latitude}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              readOnly // Optional: Make it read-only since it’s auto-filled
-            />
-            {formik.touched.latitude && formik.errors.latitude && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.latitude}</div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Branch Image</label>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Main Image</label>
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
-                <div className="flex flex-col items-center justify-center">
-                  <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  <span className="text-sm text-gray-500">{image ? image.name : "Upload an image"}</span>
-                </div>
-                <input type="file" name="image" onChange={handleImageChange} className="hidden" />
+              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#e8e2d9] rounded-lg cursor-pointer hover:border-[#8b5d3b] transition-all bg-[#faf7f2]">
+                {mainImagePreview ? (
+                  <img src={mainImagePreview} alt="Main Preview" className="h-full w-full object-cover rounded-lg" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <svg className="w-8 h-8 text-[#8b5d3b] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span className="text-sm text-[#8b5d3b]">Upload main image</span>
+                  </div>
+                )}
+                <input type="file" name="mainImage" onChange={handleMainImageChange} className="hidden" accept="image/*" />
               </label>
             </div>
-            {formik.touched.image && formik.errors.image && (
-              <div className="text-red-500 text-sm mt-1">{formik.errors.image}</div>
+            {formik.touched.mainImage && formik.errors.mainImage && (
+              <div className="text-red-600 text-sm mt-1">{formik.errors.mainImage}</div>
             )}
           </div>
 
+          {/* Interior Images */}
+          <div>
+            <label className="block text-sm font-medium text-[#2c2420] mb-2">Interior Images (up to 3)</label>
+            <div className="flex items-center justify-center w-full">
+              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#e8e2d9] rounded-lg cursor-pointer hover:border-[#8b5d3b] transition-all bg-[#faf7f2]">
+                <div className="flex flex-col items-center justify-center">
+                  <svg className="w-8 h-8 text-[#8b5d3b] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span className="text-sm text-[#8b5d3b]">Upload interior images</span>
+                </div>
+                <input
+                  type="file"
+                  multiple
+                  name="interiorImages"
+                  onChange={handleInteriorImagesChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </label>
+            </div>
+            {interiorImagesPreview.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                {interiorImagesPreview.map((preview, index) => (
+                  <div key={index} className="relative">
+                    <img src={preview} alt={`Interior ${index + 1}`} className="h-24 w-full object-cover rounded-lg shadow-md" />
+                    <button
+                      type="button"
+                      onClick={() => removeInteriorImage(index)}
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 transition-all"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {formik.touched.interiorImages && formik.errors.interiorImages && (
+              <div className="text-red-600 text-sm mt-1">
+                {Array.isArray(formik.errors.interiorImages)
+                  ? formik.errors.interiorImages.filter(Boolean).join(", ")
+                  : formik.errors.interiorImages}
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button */}
           <div>
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+              className="w-full bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white p-3 rounded-lg hover:from-[#2c2420] hover:to-[#8b5d3b] focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] transition-all shadow-md"
             >
               Add Branch
             </button>

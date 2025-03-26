@@ -2,19 +2,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { FaComments } from "react-icons/fa";
 import api from "../../Axios/userInstance";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api"; // Fallback to Marker
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import ChatWidget from "../CommonComponents/ChatWidget";
-import { RootState } from "../../redux/store"; // Adjust path to your store
-
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
+import { RootState } from "../../redux/store";
 
 const mapContainerStyle = {
-  width: "100%", // Full width within its container
-  height: "500px", // Professional height
+  width: "100%",
+  height: "500px",
 };
 
 const RestaurantSearch = () => {
@@ -25,30 +23,49 @@ const RestaurantSearch = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [branchesLoaded, setBranchesLoaded] = useState<boolean>(false);
+  const [mapVisible, setMapVisible] = useState<boolean>(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const userId = useSelector((state: RootState) => state.user.user?.id);
-
-  // Fetch all branches on component mount
+  const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
   useEffect(() => {
     const fetchBranches = async () => {
       try {
+        setLoading(true);
         const response: any = await api.get("/branches");
-        console.log("Branches Response:", response.data);
         const branches = Array.isArray(response.data.data?.branches) ? response.data.data.branches : [];
         setAllBranches(branches);
+        setBranchesLoaded(true);
       } catch (error: any) {
-        toast.error("Failed to load branches.");
-        console.error("Error:", error.response?.data || error);
+        toast.error("Failed to load branch data. Please try again.");
         setAllBranches([]);
+        setBranchesLoaded(false);
+      } finally {
+        setLoading(false);
       }
     };
     fetchBranches();
-  }, []);
+  }, [location.search]);
 
-  // Calculate distance between two lat/lng points (in kilometers)
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    if (query.get("nearMe") === "true" && branchesLoaded) {
+      if (allBranches.length > 0) {
+        handleNearMeSearch();
+      } else {
+        toast.error("No branches available to search.");
+      }
+    } else {
+      setMapVisible(false);
+      setRestaurants([]);
+      setMapCenter(null);
+    }
+  }, [branchesLoaded, location.search, allBranches.length]);
+
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
@@ -58,7 +75,6 @@ const RestaurantSearch = () => {
     return R * c;
   };
 
-  // Get user's current location
   const getUserLocation = () => {
     if (navigator.geolocation) {
       setLoading(true);
@@ -69,60 +85,85 @@ const RestaurantSearch = () => {
           searchByLocation(latitude, longitude);
         },
         (error) => {
-          toast.error("Failed to get your location. Please enable permissions.");
-          console.error(error);
+          toast.error("Failed to get your location.");
           setLoading(false);
-        }
+          navigate('/search');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
-      toast.error("Geolocation is not supported by your browser.");
+      toast.error("Geolocation not supported.");
+      setLoading(false);
     }
   };
 
-  // Search branches by user's location
+  const handleNearMeSearch = () => {
+    if (!branchesLoaded) {
+      toast.error("Branch data is still loading.");
+      return;
+    }
+    if (navigator.geolocation) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          searchByLocation(latitude, longitude);
+          setMapVisible(true);
+        },
+        (error) => {
+          toast.error("Failed to get location.");
+          setLoading(false);
+          navigate('/search');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      toast.error("Geolocation not supported.");
+      setLoading(false);
+    }
+  };
+
   const searchByLocation = (lat: number, lng: number) => {
-    if (!Array.isArray(allBranches)) {
-      toast.error("Branch data is invalid.");
+    if (!branchesLoaded || !Array.isArray(allBranches) || allBranches.length === 0) {
+      toast.error("No branch data available.");
       setRestaurants([]);
       setLoading(false);
       return;
     }
-
     const nearby = allBranches
-      .map((branch) => ({
-        ...branch,
-        distance: calculateDistance(lat, lng, branch.location.coordinates[1], branch.location.coordinates[0]),
-      }))
-      .filter((branch) => branch.distance <= 5)
+      .map((branch) => {
+        const distance = calculateDistance(lat, lng, branch.location.coordinates[1], branch.location.coordinates[0]);
+        return { ...branch, distance };
+      })
+      .filter((branch) => branch.distance <= 10)
       .sort((a, b) => a.distance - b.distance);
+
     setRestaurants(nearby);
     setMapCenter({ lat, lng });
     setLoading(false);
     if (nearby.length === 0) {
-      toast.error("No branches found near your location.");
+      toast.error("No restaurants found within 10km.");
+    } else {
+      toast.success(`Found ${nearby.length} restaurants near you!`);
     }
   };
 
-  // Search branches by address (string match with geocode fallback)
   const handleAddressSearch = async () => {
     if (!searchQuery.trim()) {
       setRestaurants([]);
       return;
     }
-
     setLoading(true);
-    console.log("allBranches before filter:", allBranches);
-    if (!Array.isArray(allBranches)) {
-      toast.error("Branch data is invalid.");
+    if (!branchesLoaded || !Array.isArray(allBranches)) {
+      toast.error("Branch data not available.");
       setRestaurants([]);
       setLoading(false);
       return;
     }
-
     const filtered = allBranches.filter((branch) =>
       branch.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    console.log("Filtered branches:", filtered);
 
     if (filtered.length > 0) {
       setRestaurants(filtered);
@@ -130,55 +171,40 @@ const RestaurantSearch = () => {
         lat: filtered[0].location.coordinates[1],
         lng: filtered[0].location.coordinates[0],
       });
+      setMapVisible(true);
+      setLoading(false);
     } else {
       try {
         const geocodeResponse: any = await axios.get(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery)}&key=${GOOGLE_MAPS_API_KEY}`
         );
-        console.log("Geocode Response:", geocodeResponse.data);
-
         if (geocodeResponse.data.status === "OK" && geocodeResponse.data.results.length > 0) {
           const { lat, lng } = geocodeResponse.data.results[0].geometry.location;
-          const nearby = allBranches
-            .map((branch) => ({
-              ...branch,
-              distance: calculateDistance(lat, lng, branch.location.coordinates[1], branch.location.coordinates[0]),
-            }))
-            .filter((branch) => branch.distance <= 5)
-            .sort((a, b) => a.distance - b.distance);
-          setRestaurants(nearby);
-          setMapCenter({ lat, lng });
-          if (nearby.length === 0) {
-            toast.error("No branches found near this address.");
-          }
+          searchByLocation(lat, lng);
+          setMapVisible(true);
         } else {
           toast.error("Could not find this address.");
           setRestaurants([]);
+          setLoading(false);
         }
       } catch (error: any) {
         toast.error("Failed to search address.");
-        console.error("Error:", error.response?.data || error);
         setRestaurants([]);
+        setLoading(false);
       }
     }
-    setLoading(false);
   };
 
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleAddressSearch();
   };
 
-  // Handle chat button click
   const handleChatClick = (branchId: string) => {
-    console.log("Chat button clicked - Selected branchId:", branchId, "userId:", userId);
     setSelectedBranchId(branchId);
   };
 
-  // Handle closing the chat widget
   const handleCloseChat = () => {
-    console.log("Closing ChatWidget for branchId:", selectedBranchId);
     setSelectedBranchId(null);
   };
 
@@ -191,15 +217,14 @@ const RestaurantSearch = () => {
           transition={{ duration: 0.8 }}
           className="font-playfair text-5xl md:text-6xl text-[#2c2420] font-extrabold tracking-tight text-center mb-12"
         >
-          Find Our Branches
+          Find Restaurants Near You
         </motion.h1>
 
-        {/* Search Form */}
         <form onSubmit={handleSubmit} className="mb-12 flex flex-col sm:flex-row justify-center items-center gap-6">
           <div className="relative w-full max-w-lg">
             <input
               type="text"
-              placeholder="Enter an address (e.g., new york)"
+              placeholder="Enter an address (e.g., New York)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-4 pr-4 py-3 rounded-2xl bg-white border border-[#e8e2d9] focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] text-[#2c2420] placeholder-[#8b5d3b] shadow-md transition-all duration-300"
@@ -208,7 +233,7 @@ const RestaurantSearch = () => {
           <div className="flex space-x-4">
             <button
               type="submit"
-              disabled={loading || allBranches.length === 0}
+              disabled={loading || !branchesLoaded || allBranches.length === 0}
               className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-md disabled:bg-[#e8e2d9] disabled:text-[#8b5d3b]"
             >
               {loading ? "Searching..." : "Search by Address"}
@@ -216,7 +241,7 @@ const RestaurantSearch = () => {
             <button
               type="button"
               onClick={getUserLocation}
-              disabled={loading || allBranches.length === 0}
+              disabled={loading || !branchesLoaded || allBranches.length === 0}
               className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-md disabled:bg-[#e8e2d9] disabled:text-[#8b5d3b]"
             >
               {loading ? "Locating..." : "Use My Location"}
@@ -224,9 +249,7 @@ const RestaurantSearch = () => {
           </div>
         </form>
 
-        {/* Main Content: Branches and Map */}
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Branch List */}
           <div className="lg:w-3/5">
             {loading ? (
               <div className="flex justify-center items-center h-64">
@@ -277,50 +300,50 @@ const RestaurantSearch = () => {
                 ))}
               </div>
             ) : searchQuery && !loading ? (
-              <p className="text-center text-[#8b5d3b] text-lg font-medium">No branches found for this address.</p>
+              <p className="text-center text-[#8b5d3b] text-lg font-medium">No restaurants found for this address.</p>
             ) : !loading && (
-              <p className="text-center text-[#8b5d3b] text-lg font-medium">No branches available yet.</p>
+              <p className="text-center text-[#8b5d3b] text-lg font-medium">
+                {branchesLoaded && allBranches.length === 0
+                  ? "No branches available at the moment."
+                  : "Search for restaurants near you!"}
+              </p>
             )}
           </div>
 
-          {/* Map Display */}
-          {restaurants.length > 0 && mapCenter && (
+          {mapVisible && restaurants.length > 0 && mapCenter && (
             <div className="lg:w-2/5">
               <div className="bg-white rounded-2xl shadow-lg border border-[#e8e2d9] p-4">
                 <h3 className="text-xl font-semibold text-[#2c2420] mb-4 text-center">Location Map</h3>
-                <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
-                  <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={mapCenter}
-                    zoom={12}
-                  >
-                    {restaurants.map((branch) => (
-                      <Marker
-                        key={branch._id}
-                        position={{
-                          lat: branch.location.coordinates[1],
-                          lng: branch.location.coordinates[0],
-                        }}
-                        title={branch.name}
-                      />
-                    ))}
-                    {userLocation && (
-                      <Marker
-                        position={userLocation}
-                        title="Your Location"
-                        icon={{
-                          url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-                        }}
-                      />
-                    )}
-                  </GoogleMap>
-                </LoadScript>
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={12}
+                >
+                  {restaurants.map((branch) => (
+                    <Marker
+                      key={branch._id}
+                      position={{
+                        lat: branch.location.coordinates[1],
+                        lng: branch.location.coordinates[0],
+                      }}
+                      title={branch.name}
+                    />
+                  ))}
+                  {userLocation && (
+                    <Marker
+                      position={userLocation}
+                      title="Your Location"
+                      icon={{
+                        url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                      }}
+                    />
+                  )}
+                </GoogleMap>
               </div>
             </div>
           )}
         </div>
 
-        {/* Chat Widget */}
         {selectedBranchId && userId && (
           <ChatWidget
             userId={userId}

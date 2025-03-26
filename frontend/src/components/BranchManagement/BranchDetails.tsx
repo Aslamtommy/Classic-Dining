@@ -9,6 +9,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmationDialog from "../CommonComponents/ConfirmationDialog";
 import { Branch } from "../../types/branch";
 import { BranchResponse } from "../../types/branch";
+import Carousel from "react-material-ui-carousel";
 
 const BranchDetails: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
@@ -54,6 +55,11 @@ const BranchDetails: React.FC = () => {
   );
   if (!branch) return <div className="p-6 text-red-500">Branch not found</div>;
 
+  const images = [
+    branch.mainImage || "/placeholder-branch.jpg",
+    ...(branch.interiorImages || []),
+  ];
+
   return (
     <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -93,13 +99,23 @@ const BranchDetails: React.FC = () => {
               </Button>
             </div>
           </div>
-          {branch.image && (
+          {images.length > 0 && (
             <div className="mt-6">
-              <img
-                src={branch.image}
-                alt={branch.name}
-                className="rounded-lg w-full max-h-96 object-cover shadow-md"
-              />
+              <Carousel
+                autoPlay={false}
+                navButtonsAlwaysVisible
+                indicators={images.length > 1}
+                className="rounded-lg shadow-md"
+              >
+                {images.map((imgSrc, index) => (
+                  <img
+                    key={index}
+                    src={imgSrc}
+                    alt={`${branch.name} Image ${index + 1}`}
+                    className="w-full max-h-96 object-cover rounded-lg"
+                  />
+                ))}
+              </Carousel>
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-// src/redux/restaurentSlice.ts
+ 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
  
 
@@ -8,15 +8,15 @@ interface Restaurent {
   email: string;
   phone?: string;
   certificate?: string;
-  accessToken?: string; // Add accessToken
-  refreshToken?: string; // Add refreshToken
-  [key: string]: any; // Allow additional fields from backend
+  accessToken?: string; 
+  refreshToken?: string; 
+  [key: string]: any;  
 }
 
 export interface RestaurentState {
   restaurent: Restaurent | null;
-  profile: any | null; // Adjust type as needed
-  role: string | null; // e.g., "restaurent" or "branch"
+  profile: any | null;  
+  role: string | null; 
   loading: boolean;
   error: string | null;
 }

@@ -8,11 +8,15 @@ import Divider from '../../components/User/Home/Divider';
 import Footer from '../../components/User/Home/Footer';
 
 const UserHomePage: React.FC = () => {
+ 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf7f2] text-[#2c2420]">
+      
       <Header />
       <main className="flex-grow">
+
         <Hero />
+      
         <Divider />
         <Gallery />
       </main>

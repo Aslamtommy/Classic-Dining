@@ -5,7 +5,7 @@ import { RootState } from "../../redux/store";
 const UserProtected: React.FC = () => {
     const user = useSelector((state: RootState) => state.user.user);
 
-    return user?  <Outlet /> : <Navigate to="/login" />;
+    return user ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default UserProtected;

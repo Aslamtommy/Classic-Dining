@@ -2,14 +2,19 @@ import React, { useEffect, useState } from "react";
 import { fetchBranches } from "../../../Api/userApi";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+ 
 
 export const Gallery: React.FC = () => {
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+ 
+
+
 
   useEffect(() => {
+   
     const loadBranches = async () => {
       try {
         setLoading(true);

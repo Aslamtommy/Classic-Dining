@@ -2,13 +2,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
-  id: string;
+  id?: string;
   name: string;
   email: string;
   mobile: string;
   profilePicture?: string | null;
-  accessToken?: string; // Already present but ensure it’s used
-  refreshToken?: string; // Add refreshToken
+  accessToken?: string;  
+  refreshToken?: string; 
 }
 
 export interface UserState {

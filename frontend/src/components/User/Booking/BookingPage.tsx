@@ -204,7 +204,7 @@ const BookingPage: React.FC = () => {
           >
             <div className="relative w-full h-72 md:h-96">
               <img
-                src={branch.image || 'https://via.placeholder.com/150'}
+                src={branch.mainImage || 'https://via.placeholder.com/150'}
                 alt={branch.name}
                 className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                 onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}

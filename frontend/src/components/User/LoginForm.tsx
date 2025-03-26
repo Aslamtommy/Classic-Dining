@@ -30,14 +30,15 @@ const LoginForm: React.FC = () => {
     dispatch(setLoading());
     try {
       const response :any= await api.post<LoginResponse>(
-        "/login", // Adjusted endpoint to match your backend route
+        "/login", 
         { email, password },
         { withCredentials: true }
       );
 
       const { user, accessToken, refreshToken } = response.data.data;
+      console.log(user)
       dispatch(setUser({
-        id:user._id,
+        id:user. id,
         name: user.name,
         email: user.email,
         mobile: user.mobile || "",

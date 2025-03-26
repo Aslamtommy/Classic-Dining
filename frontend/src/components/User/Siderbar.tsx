@@ -37,8 +37,8 @@ const Sidebar = () => {
             { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Profile' },
             { to: '/bookings', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
             { to: '/wallet', icon: <Wallet className="w-5 h-5" />, text: 'Wallet' },
-            { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' }, // Added Restaurants
-            { to: '/settings', icon: <Settings className="w-5 h-5" />, text: 'Settings' },
+            { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' },  
+            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurents' },
           ].map((link, index) => (
             <NavLink
               key={index}

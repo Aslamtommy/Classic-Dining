@@ -27,7 +27,7 @@ interface DashboardData {
   pendingApprovals: number;
   topCustomers: Array<{ _id: string; name: string; email: string; totalBookings: number; totalSpent: number }>;
   userGrowth: Array<{ date: string; count: number }>;
-  systemHealth: { pendingIssues: number; couponUsage: Array<{ code: string; timesUsed: number; totalDiscount: number }> };
+ 
 }
 
 const AdminDashboard: React.FC = () => {
@@ -38,7 +38,6 @@ const AdminDashboard: React.FC = () => {
   const [endDate, setEndDate] = useState<string>("");
 
   useEffect(() => {
-    // Fetch data automatically only for non-custom filters
     if (filter !== "custom") {
       fetchData();
     }
@@ -54,9 +53,7 @@ const AdminDashboard: React.FC = () => {
       } else if (filter !== "custom") {
         params.filter = filter;
       }
-      console.log("Fetching data with params:", params); // Debug API params
       const response: any = await adminApi.get("/dashboard", { params });
-      console.log("API Response:", response.data); // Debug API response
       setData(response.data.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -67,7 +64,6 @@ const AdminDashboard: React.FC = () => {
 
   const handleFilterChange = (newFilter: "daily" | "monthly" | "yearly" | "custom") => {
     setFilter(newFilter);
-    console.log("Filter changed to:", newFilter); // Debug filter change
     if (newFilter !== "custom") {
       setStartDate("");
       setEndDate("");
@@ -77,17 +73,30 @@ const AdminDashboard: React.FC = () => {
   const handleCustomDateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (startDate && endDate) {
-      console.log("Submitting custom dates:", { startDate, endDate }); // Debug custom date submission
       fetchData();
     } else {
       alert("Please select both start and end dates.");
     }
   };
 
+  const handleLogout = async () => {
+    try {
+       
+      await adminApi.post('/logout');
+    
+      
+   
+      window.location.href = '/admin/login'; 
+    } catch (error) {
+      console.error("Error during logout:", error);
+      alert("Failed to logout. Please try again.");
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-screen text-gray-500 text-lg">Loading...</div>;
   if (!data) return <div className="flex items-center justify-center h-screen text-red-500 text-lg">No data available</div>;
 
-  // Chart Data
+  // Chart Data (unchanged)
   const reservationStatsData = {
     labels: ["Pending", "Confirmed", "Completed", "Cancelled"],
     datasets: [
@@ -126,7 +135,7 @@ const AdminDashboard: React.FC = () => {
     datasets: [{ label: "New Users", data: data.userGrowth.map((u) => u.count), borderColor: "#4CAF50", fill: false }],
   };
 
-  // Chart Options with Proper Typing
+  // Chart Options (unchanged)
   const lineChartOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -190,7 +199,15 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-8">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-semibold text-gray-800">Admin Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          className="px-5 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+        >
+          Logout
+        </button>
+      </div>
 
       {/* Filter Controls */}
       <div className="flex flex-col sm:flex-row justify-start gap-4 mb-8">
@@ -270,7 +287,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts */}
+      {/* Charts (unchanged) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md h-[400px]">
           <Line data={reservationTrendsData} options={lineChartOptions} />
@@ -299,7 +316,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Additional Info */}
+      {/* Additional Info (unchanged) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Top Customers</h2>
@@ -315,22 +332,7 @@ const AdminDashboard: React.FC = () => {
             )}
           </ul>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">System Health</h2>
-          <p className="text-gray-700">Pending Issues: <span className="font-medium">{data.systemHealth.pendingIssues}</span></p>
-          <h3 className="text-md font-semibold text-gray-800 mt-4 mb-2">Coupon Usage</h3>
-          <ul className="space-y-2">
-            {data.systemHealth.couponUsage.length > 0 ? (
-              data.systemHealth.couponUsage.map((coupon) => (
-                <li key={coupon.code} className="text-gray-700">
-                  <span className="font-medium">{coupon.code}</span>: {coupon.timesUsed} uses, ₹{coupon.totalDiscount.toLocaleString()}
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-700">No coupon usage data available.</li>
-            )}
-          </ul>
-        </div>
+       
       </div>
     </div>
   );

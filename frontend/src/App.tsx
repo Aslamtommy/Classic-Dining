@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // User Components
 import SignupForm from './components/User/SignupForm';
-import LoginForm from './components/User/LoginForm';
+ 
 import UserHomePage from './pages/User/UserHomePage';
 import UserProfile from './components/User/UserProfile';
 import WalletPage from './components/User/Wallet';
@@ -14,6 +14,8 @@ import RestaurantListPage from './components/User/RestaurantListPage';
 import UserLayout from './components/User/Home/UserLayout';
 import UserProtected from './components/User/UserProtected';
 import RestaurantSearch from './components/User/RestaurentSearch';
+import ProtectedLogin from './components/User/ProtectedLogin';
+import RestaurantDetailPage from './components/User/RestaurentDetailPage';
 // Restaurant Components
 import RestaurentSignup from './components/Restaurent/restaurentSignup';
 import RestaurentLogin from './components/Restaurent/RestaurentLogin';
@@ -48,7 +50,7 @@ const App: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/signup" element={<SignupForm />} />
-        <Route path="/login" element={<LoginForm />} />
+        <Route path="/login" element={<ProtectedLogin />} />
         <Route path="/restaurent/signup" element={<RestaurentSignup />} />
         <Route path="/restaurent/login" element={<RestaurentLogin />} />
         <Route path="/restaurent/pending-approval" element={<PendingApproval />} />
@@ -62,6 +64,7 @@ const App: React.FC = () => {
           <Route path="/confirmation" element={<ConfirmationPage />} />
           <Route path="/confirmation/:reservationId" element={<ConfirmationPage />} />
           <Route path="/success" element={<SuccessPage />} />
+          <Route path="/restaurant/:branchId" element={<RestaurantDetailPage />} />
           <Route element={<UserLayout />}>
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/wallet" element={<WalletPage />} />

@@ -8,22 +8,16 @@ import { Branch } from "../../types/branch";
 import ChatWidget from "../CommonComponents/ChatWidget";
 import { RootState } from "../../redux/store";
 
-// Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedValue(value), delay);
     return () => clearTimeout(timer);
   }, [value, delay]);
-
   return debouncedValue;
 }
 
-// Define props for better type safety (optional since it's a page component)
-interface RestaurantListPageProps {}
-
-const RestaurantListPage: React.FC<RestaurantListPageProps> = () => {
+const RestaurantListPage: React.FC = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -32,82 +26,58 @@ const RestaurantListPage: React.FC<RestaurantListPageProps> = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
 
-  const limit = 10;
+  const limit = 3;
   const navigate = useNavigate();
   const userId = useSelector((state: RootState) => state.user.user?.id);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Log userId on mount
-  useEffect(() => {
-    console.log("RestaurantListPage mounted - userId from Redux:", userId);
-  }, [userId]);
-
-  // Load branches with error handling
   const loadBranches = async (search: string, pageNum: number) => {
     try {
       setLoading(true);
       const response = await fetchBranches(search, pageNum, limit);
       const sortedBranches = [...response.branches].sort((a, b) =>
-        sortOrder === "asc"
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name)
+        sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
       );
       setBranches(sortedBranches);
       setTotalPages(response.pages);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error loading branches:", error);
-      setBranches([]); // Reset branches on error
+      setBranches([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle search input change
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setPage(1);
   };
 
-  // Handle pagination
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     loadBranches(debouncedSearchTerm.trim(), newPage);
   };
 
-  // Toggle sort order
   const toggleSortOrder = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     loadBranches(debouncedSearchTerm.trim(), page);
   };
 
-  // Load branches on search or page change
+  const handleChatClick = (branchId: string) => {
+    setSelectedBranchId(branchId);
+  };
+
+  const handleCloseChat = () => {
+    setSelectedBranchId(null);
+  };
+
   useEffect(() => {
     loadBranches(debouncedSearchTerm.trim(), page);
   }, [debouncedSearchTerm, page]);
 
-  // Initial load
   useEffect(() => {
     loadBranches("", 1);
   }, []);
-
-  // Handle chat button click
-  const handleChatClick = (branchId: string) => {
-    console.log("Chat button clicked - Selected branchId:", branchId, "userId:", userId);
-    setSelectedBranchId(branchId);
-  };
-
-  // Handle closing the chat widget
-  const handleCloseChat = () => {
-    console.log("Closing ChatWidget for branchId:", selectedBranchId);
-    setSelectedBranchId(null);
-  };
-
-  // Log ChatWidget props
-  useEffect(() => {
-    if (selectedBranchId && userId) {
-      console.log("ChatWidget will render with:", { userId, branchId: selectedBranchId });
-    }
-  }, [selectedBranchId, userId]);
 
   return (
     <section className="min-h-screen bg-[#faf7f2] pt-16 pb-20">
@@ -155,21 +125,24 @@ const RestaurantListPage: React.FC<RestaurantListPageProps> = () => {
               {branches.map((branch, index) => (
                 <motion.div
                   key={branch._id}
-                  className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 cursor-pointer border border-[#e8e2d9]"
+                  className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 border border-[#e8e2d9]"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
                   <div className="relative h-64">
                     <img
-                      src={branch.image || "/placeholder-branch.jpg"}
+                      src={branch.mainImage || "/placeholder-branch.jpg"}
                       alt={branch.name}
                       className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#2c2420]/60 to-transparent opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
                   </div>
                   <div className="p-6 text-center">
-                    <h3 className="text-2xl font-playfair text-[#2c2420] mb-3 font-semibold tracking-tight">
+                    <h3
+                      className="text-2xl font-playfair text-[#2c2420] mb-3 font-semibold tracking-tight cursor-pointer hover:text-[#8b5d3b] transition-colors"
+                      onClick={() => navigate(`/restaurant/${branch._id}`)}
+                    >
                       {branch.name}
                     </h3>
                     <p className="text-[#8b5d3b] mb-2 text-sm">{branch.email}</p>
@@ -217,13 +190,8 @@ const RestaurantListPage: React.FC<RestaurantListPageProps> = () => {
           </>
         )}
 
-        {/* Chat Widget */}
         {selectedBranchId && userId && (
-          <ChatWidget
-            userId={userId}
-            branchId={selectedBranchId}
-            onClose={handleCloseChat}
-          />
+          <ChatWidget userId={userId} branchId={selectedBranchId} onClose={handleCloseChat} />
         )}
       </div>
     </section>
