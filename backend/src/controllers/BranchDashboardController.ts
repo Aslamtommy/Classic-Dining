@@ -13,7 +13,7 @@ export class BranchDashboardController {
 
   async getDashboard(req: Request, res: Response): Promise<void> {
     try {
-      const branchId = req.data?.id; // Assumes auth middleware sets branch ID
+      const branchId = req.data?.id;  
       if (!branchId) {
         throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
       }

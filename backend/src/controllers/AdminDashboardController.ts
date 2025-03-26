@@ -12,13 +12,11 @@ export class AdminDashboardController   {
   async getDashboardData(req: Request, res: Response): Promise<void> {
     try {
       const { startDate, endDate, filter, restaurantId, branchId } = req.query;
-
-      // Validate admin role (assuming req.data is set by auth middleware)
+ 
       if (!req.data?.role || req.data.role !== "admin") {
         throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
       }
-
-      // Validate filter
+ 
       const validFilters = ["daily", "monthly", "yearly"];
       const filterValue = (filter as string) || "daily";
       if (!validFilters.includes(filterValue)) {

@@ -12,7 +12,7 @@ interface RevenueStatRaw { _id: string; totalAmount: number; }
 interface ReservationTrendRaw { _id: string; count: number; revenue: number; }
 interface TableUtilizationRaw { _id: string; totalBookings: number; }
 interface TopCustomerRaw { userId: string; name: string; totalBookings: number; totalSpent: number; }
-interface CouponUsageRaw { _id: string; timesUsed: number; totalDiscount: number; }
+ 
 
 interface DashboardData {
   reservationStats: { totalPending: number; totalConfirmed: number; totalCompleted: number; totalCancelled: number };
@@ -20,7 +20,7 @@ interface DashboardData {
   reservationTrends: Array<{ date: string; count: number; revenue: number }>;
   tableUtilization: Array<{ tableType: string; totalBookings: number }>;
   topCustomers: Array<{ userId: string; name: string; totalBookings: number; totalSpent: number }>;
-  couponUsage: Array<{ code: string; timesUsed: number; totalDiscount: number }>;
+   
 }
 
 export class BranchDashboardService {
@@ -58,14 +58,14 @@ export class BranchDashboardService {
         reservationTrendsRaw,
         tableUtilizationRaw,
         topCustomers,
-        couponUsage,
+     
       ] = await Promise.all([
         this.dashboardRepo.getReservationStats(branchId, dateFilter),
         this.dashboardRepo.getRevenueStats(branchId, dateFilter),
         this.dashboardRepo.getReservationTrends(branchId, dateFilter),
         this.dashboardRepo.getTableUtilization(branchId, dateFilter),
         this.dashboardRepo.getTopCustomers(branchId, dateFilter),
-        this.dashboardRepo.getCouponUsage(branchId, dateFilter),
+   
       ]);
 
       const reservationStats = {
@@ -93,11 +93,7 @@ export class BranchDashboardService {
         return { tableType: tableType ? tableType.name : 'Unknown', totalBookings: util.totalBookings };
       });
 
-      const couponUsageFormatted = couponUsage.map((usage: CouponUsageRaw) => ({
-        code: usage._id || 'Unknown',
-        timesUsed: usage.timesUsed || 0,
-        totalDiscount: usage.totalDiscount || 0,
-      }));
+   
 
       return {
         reservationStats,
@@ -105,7 +101,7 @@ export class BranchDashboardService {
         reservationTrends,
         tableUtilization,
         topCustomers,
-        couponUsage: couponUsageFormatted,
+    
       };
     } catch (error) {
       if (error instanceof AppError) throw error;

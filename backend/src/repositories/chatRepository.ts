@@ -23,8 +23,8 @@ export class ChatRepository {
       return users.map((user) => ({
         id: user._id.toString(),
         name: user.name,
-       mobile: user.mobile || undefined, // Optional, fallback to undefined if not present
-        profilePicture: user.profilePicture || undefined, // Optional, fallback to undefined if not present
+       mobile: user.mobile || undefined,  
+        profilePicture: user.profilePicture || undefined, 
       }));
     } catch (error) {
       throw new AppError(

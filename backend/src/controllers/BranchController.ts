@@ -10,15 +10,37 @@ export class BranchController {
   constructor(private _branchService: IBranchService) {}
 
   async createBranch(req: Request, res: Response): Promise<void> {
-    let imageUrl = "";
     try {
       const { name, email, password, phone, address, longitude, latitude, parentRestaurant } = req.body;
       if (!name || !email || !password || !phone || !address || !longitude || !latitude || !parentRestaurant) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
 
-      if (req.file) {
-        imageUrl = await CloudinaryService.uploadFile(req.file.path, "branch_images", `branch_${email}`);
+      // Handle file uploads (assuming multer is configured with fields)
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      let mainImageUrl = "";
+      let interiorImageUrls: string[] = [];
+
+      if (files) {
+        if (files["mainImage"] && files["mainImage"][0]) {
+          mainImageUrl = await CloudinaryService.uploadFile(
+            files["mainImage"][0].path,
+            "branch_images",
+            `branch_${email}_main`
+          );
+        } else {
+          throw new AppError(HttpStatus.BadRequest, "Main image is required");
+        }
+
+        if (files["interiorImages"]) {
+          interiorImageUrls = await Promise.all(
+            files["interiorImages"].map((file, index) =>
+              CloudinaryService.uploadFile(file.path, "branch_images", `branch_${email}_interior_${index}`)
+            )
+          );
+        }
+      } else {
+        throw new AppError(HttpStatus.BadRequest, "Main image is required");
       }
 
       const branch = await this._branchService.createBranch({
@@ -28,7 +50,8 @@ export class BranchController {
         phone,
         address,
         location: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
-        image: imageUrl,
+        mainImage: mainImageUrl,
+        interiorImages: interiorImageUrls,
         parentRestaurant,
       });
 
@@ -92,9 +115,30 @@ export class BranchController {
       if (longitude && latitude) {
         updateData.location = { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] };
       }
-      const imageUrl = req.file ? await this._branchService.handleImageUpload(req.file, branchId) : undefined;
-      if (imageUrl) updateData.image = imageUrl;
-      if (updateData.password) updateData.password = await this._branchService.hashPassword(updateData.password);
+
+      // Handle file uploads
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      if (files) {
+        if (files["mainImage"] && files["mainImage"][0]) {
+          updateData.mainImage = await CloudinaryService.uploadFile(
+            files["mainImage"][0].path,
+            "branch_images",
+            `branch_${email || branchId}_main`
+          );
+        }
+        if (files["interiorImages"]) {
+          const newInteriorImages = await Promise.all(
+            files["interiorImages"].map((file, index) =>
+              CloudinaryService.uploadFile(file.path, "branch_images", `branch_${email || branchId}_interior_${index}`)
+            )
+          );
+          updateData.interiorImages = newInteriorImages; // Replace existing interior images
+        }
+      }
+
+      if (updateData.password) {
+        updateData.password = await this._branchService.hashPassword(updateData.password);
+      }
 
       const updatedBranch = await this._branchService.updateBranch(branchId, updateData);
       if (!updatedBranch) {

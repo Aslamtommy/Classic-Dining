@@ -6,12 +6,13 @@ export interface IBranch extends Document {
   email: string;
   password: string;
   phone: string;
-  image?: string;
-  address: string; // New field: human-readable address
+  mainImage?: string; // Main image URL
+  interiorImages?: string[]; // Array of interior image URLs
+  address: string;
   location: {
     type: "Point";
     coordinates: [number, number]; // [longitude, latitude]
-  }; // New field: GeoJSON Point for geospatial queries
+  };
   isBranch: boolean;
   parentRestaurant: mongoose.Types.ObjectId;
   tableTypes: mongoose.Types.ObjectId[];
@@ -25,13 +26,14 @@ const BranchSchema: Schema = new Schema<IBranch>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
-    address: { type: String, required: true }, // New field
+    address: { type: String, required: true },
     location: {
       type: { type: String, enum: ["Point"], default: "Point" },
       coordinates: { type: [Number], required: true }, // [longitude, latitude]
-    }, // New field
+    },
     isBranch: { type: Boolean, default: true },
-    image: { type: String },
+    mainImage: { type: String }, // Single main image URL
+    interiorImages: [{ type: String }], // Array of interior image URLs
     parentRestaurant: {
       type: Schema.Types.ObjectId,
       ref: "Restaurent",

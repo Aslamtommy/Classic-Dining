@@ -14,7 +14,7 @@ export class ChatService {
     try {
       const userIds = await this.chatRepository.getUsersWhoMessaged(branchId);
       if (!userIds.length) {
-        return []; // Return empty array if no users found
+        return []; 
       }
       const users = await this.chatRepository.getUserDetails(userIds);
       return users;

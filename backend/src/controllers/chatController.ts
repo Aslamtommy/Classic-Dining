@@ -16,7 +16,7 @@ export class ChatController {
     try {
       const { branchId } = req.params;
 
-      // Verify branch authorization (req.data set by auth middleware)
+      
       if (!req.data?.id || req.data.id !== branchId) {
         throw new AppError(HttpStatus.Forbidden, MessageConstants.UNAUTHORIZED);
       }

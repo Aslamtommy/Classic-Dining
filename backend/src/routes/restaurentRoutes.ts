@@ -67,10 +67,16 @@ restaurentRoute.post('/forgot-password', (req, res) => restaurentController.forg
 restaurentRoute.post('/logout', (req, res) => restaurentController.logout(req, res));
 restaurentRoute.post('/reset-password', (req, res) => restaurentController.resetPassword(req, res));
 
-restaurentRoute.post('/branches', authenticateToken('restaurent'), checkApproved, upload.single('image'), (req, res) => branchController.createBranch(req, res));
+restaurentRoute.post('/branches', authenticateToken('restaurent'), checkApproved, upload.fields([
+  { name: "mainImage", maxCount: 1 },
+  { name: "interiorImages", maxCount: 3 },
+]),(req, res) => branchController.createBranch(req, res));
 restaurentRoute.get('/allbranches', authenticateToken('restaurent'), checkApproved, (req, res) => branchController.getBranches(req, res));
 restaurentRoute.get('/branches/:branchId', authenticateToken('restaurent'), (req, res) => branchController.getBranchDetails(req, res));
-restaurentRoute.put('/branches/:branchId', authenticateToken('restaurent'), upload.single('image'), (req, res) => branchController.updateBranch(req, res));
+restaurentRoute.put('/branches/:branchId', authenticateToken('restaurent'), upload.fields([
+  { name: "mainImage", maxCount: 1 },
+  { name: "interiorImages", maxCount: 3 },
+]), (req, res) => branchController.updateBranch(req, res));
 restaurentRoute.delete('/branches/:branchId', authenticateToken('restaurent'), (req, res) => branchController.deleteBranch(req, res));
 
 restaurentRoute.post('/branches/:branchId/tables', (req, res) => tabletypeController.createTableType(req, res));

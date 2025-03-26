@@ -50,13 +50,5 @@ export class BranchDashboardRepository {
     ]);
   }
 
-  async getCouponUsage(branchId: string, dateFilter?: { $gte: Date; $lte: Date }): Promise<any> {
-    const match: any = { branch: new mongoose.Types.ObjectId(branchId), couponCode: { $ne: null } };
-    if (dateFilter) match.reservationDate = dateFilter;
-    return await Reservation.aggregate([
-      { $match: match },
-      { $group: { _id: '$couponCode', timesUsed: { $sum: 1 }, totalDiscount: { $sum: '$discountApplied' } } },
-      { $sort: { timesUsed: -1 } },
-    ]);
-  }
+ 
 }

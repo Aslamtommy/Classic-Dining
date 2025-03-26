@@ -16,12 +16,13 @@ export class BranchService implements IBranchService {
 
   async createBranch(branchData: Partial<IBranch>): Promise<IBranch> {
     try {
-      const { email, password, address, location, parentRestaurant } = branchData;
+      const { email, password, address, location, parentRestaurant, mainImage, interiorImages } = branchData;
       if (!email) throw new AppError(HttpStatus.BadRequest, MessageConstants.EMAIL_REQUIRED);
       if (!password) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       if (!address) throw new AppError(HttpStatus.BadRequest, "Address is required");
       if (!location || !location.coordinates) throw new AppError(HttpStatus.BadRequest, "Location coordinates are required");
       if (!parentRestaurant) throw new AppError(HttpStatus.BadRequest, MessageConstants.PARENT_RESTAURANT_REQUIRED);
+      if (!mainImage) throw new AppError(HttpStatus.BadRequest, "Main image is required");
 
       const existingBranch = await this._branchRepository.findByEmail(email);
       if (existingBranch) {
@@ -34,6 +35,8 @@ export class BranchService implements IBranchService {
         password: hashedPassword,
         isBranch: true,
         parentRestaurant,
+        mainImage,
+        interiorImages: interiorImages || [],
       });
 
       await this._restaurentRepository.addBranchToRestaurant(parentRestaurant.toString(), branch._id.toString());
@@ -70,11 +73,18 @@ export class BranchService implements IBranchService {
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.PASSWORD_HASHING_FAILED);
     }
   }
-
   async updateBranch(branchId: string, updateData: Partial<IBranch>): Promise<IBranch | null> {
     try {
       const branch = await this._branchRepository.findById(branchId);
       if (!branch) throw new AppError(HttpStatus.NotFound, MessageConstants.BRANCH_NOT_FOUND);
+
+      // If interiorImages are provided, replace the existing ones
+      if (updateData.interiorImages) {
+        updateData.interiorImages = updateData.interiorImages;
+      } else {
+        delete updateData.interiorImages; // Don't overwrite with undefined
+      }
+
       return await this._branchRepository.findByIdAndUpdate(branchId, updateData);
     } catch (error) {
       if (error instanceof AppError) throw error;

@@ -26,7 +26,7 @@ export const authenticateToken = (requiredRole?: string) => {
         id: decoded.id,
         role: decoded.role,
         parentRestaurantId: decoded.parentRestaurantId,
-        email: decoded.email, // Include email here
+        email: decoded.email,  
       } as {
         id: string;
         role: string;
