@@ -7,6 +7,7 @@ export interface BaseTableType {
     position?: string;
     minPartySize?: number;
     maxPartySize?: number;
+    features: string[];
   }
   
  

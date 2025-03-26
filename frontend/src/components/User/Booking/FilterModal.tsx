@@ -4,22 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface FilterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  priceRange: number[];
-  setPriceRange: (range: number[]) => void;
-  maxPrice: number;
-  sortOrder: 'asc' | 'desc' | null;
-  setSortOrder: (order: 'asc' | 'desc' | null) => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (order: 'asc' | 'desc') => void;
 }
 
-const FilterModal: React.FC<FilterModalProps> = ({
-  isOpen,
-  onClose,
-  priceRange,
-  setPriceRange,
-  maxPrice,
-  sortOrder,
-  setSortOrder,
-}) => (
+const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, sortOrder, setSortOrder }) => (
   <AnimatePresence>
     {isOpen && (
       <motion.div
@@ -36,7 +25,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           transition={{ duration: 0.3 }}
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-[#2c2420]">Filter by Price</h2>
+            <h2 className="text-xl font-semibold text-[#2c2420]">Sort by Price</h2>
             <button
               onClick={onClose}
               className="text-[#2c2420] hover:text-[#8b5d3b] text-lg"
@@ -45,28 +34,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </button>
           </div>
           <div className="space-y-6">
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-[#2c2420]">₹{priceRange[0]}</span>
-                <span className="text-sm text-[#2c2420]">₹{priceRange[1]}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={maxPrice}
-                value={priceRange[0]}
-                onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                className="w-full h-2 bg-[#e8e2d9] rounded-lg appearance-none cursor-pointer accent-[#8b5d3b]"
-              />
-              <input
-                type="range"
-                min={0}
-                max={maxPrice}
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                className="w-full h-2 bg-[#e8e2d9] rounded-lg appearance-none cursor-pointer accent-[#8b5d3b] mt-2"
-              />
-            </div>
             <div className="flex gap-4">
               <motion.button
                 onClick={() => setSortOrder('asc')}
@@ -99,7 +66,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Apply Filters
+              Apply Sorting
             </motion.button>
           </div>
         </motion.div>

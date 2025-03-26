@@ -8,7 +8,6 @@ import { Reservation, PaymentResponse, RazorpayOptions, RazorpayResponse, Razorp
 
 const ConfirmationPage: React.FC = () => {
   const { reservationId } = useParams<{ reservationId: string }>();
-  console.log('reservationId:', reservationId);
   const location = useLocation();
   const navigate = useNavigate();
   const [reservation, setReservation] = useState<Reservation | null>(null);
@@ -20,30 +19,28 @@ const ConfirmationPage: React.FC = () => {
   // Load reservation details
   useEffect(() => {
     const loadReservation = async () => {
-        try {
-          console.log(';hi')
-            setLoading(true);
-            if (reservationId) {
-              console.log(';fvhi')
-                const data = await fetchReservation(reservationId);
-                console.log('Reservation Data:', data); // Log the reservation data
-                setReservation(data);
-            } else if (location.state?.reservation) {
-                console.log('Reservation from Location State:', location.state.reservation); // Log the reservation data
-                setReservation(location.state.reservation as Reservation);
-            } else {
-                navigate('/');
-            }
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Failed to load reservation details';
-            toast.error(message, { duration: 4000, position: 'top-center' });
-            navigate('/booking');
-        } finally {
-            setLoading(false);
+      try {
+        setLoading(true);
+        if (reservationId) {
+          const data = await fetchReservation(reservationId);
+          console.log('Reservation Data:', data);
+          setReservation(data);
+        } else if (location.state?.reservation) {
+          console.log('Reservation from Location State:', location.state.reservation);
+          setReservation(location.state.reservation as Reservation);
+        } else {
+          navigate('/');
         }
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Failed to load reservation details';
+        toast.error(message, { duration: 4000, position: 'top-center' });
+        navigate('/booking');
+      } finally {
+        setLoading(false);
+      }
     };
     loadReservation();
-}, [reservationId, location, navigate]);
+  }, [reservationId, location, navigate]);
 
   // Fetch wallet balance when reservation is loaded
   useEffect(() => {
@@ -185,7 +182,6 @@ const ConfirmationPage: React.FC = () => {
 
     try {
       const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.tableType.price;
-      console.log('reservationid', reservation._id);
       await api.post(`/reservations/${reservation._id}/confirm-wallet`);
       setPaymentSuccess(true);
       toast.success('Payment successful! Reservation confirmed.', {
@@ -230,6 +226,7 @@ const ConfirmationPage: React.FC = () => {
             Confirm Your Reservation
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Left Column */}
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Branch</h3>
@@ -245,7 +242,20 @@ const ConfirmationPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-[#2c2420]">Party Size</h3>
                 <p className="text-[#8b5d3b]">{reservation.partySize} people</p>
               </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#2c2420]">Tables Booked</h3>
+                <p className="text-[#8b5d3b]">{reservation.tableQuantity}</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#2c2420]">Preferences</h3>
+                <p className="text-[#8b5d3b]">
+                  {reservation.preferences && reservation.preferences.length > 0
+                    ? reservation.preferences.map((p) => p.replace(/([A-Z])/g, ' $1').trim()).join(', ')
+                    : 'None'}
+                </p>
+              </div>
             </div>
+            {/* Right Column */}
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Selected Table</h3>
@@ -256,27 +266,49 @@ const ConfirmationPage: React.FC = () => {
                 <p className="text-[#8b5d3b]">{reservation.specialRequests || 'No special requests'}</p>
               </div>
               <div>
+                <h3 className="text-lg font-semibold text-[#2c2420]">Reservation Status</h3>
+                <p className="text-[#8b5d3b] capitalize">{reservation.status}</p>
+              </div>
+              <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Payment Details</h3>
                 {reservation.couponCode ? (
                   <>
                     <p className="text-[#8b5d3b] text-sm">
-                      Original Price: ₹{reservation.tableType.price}
+                      Original Price: ₹{(reservation.tableType.price * reservation.tableQuantity).toFixed(2)}
                     </p>
                     <p className="text-[#8b5d3b] text-sm">
-                      Coupon Applied: {reservation.couponCode} (-₹{reservation.discountApplied})
+                      Coupon Applied: {reservation.couponCode} (-₹{reservation.discountApplied?.toFixed(2) || 0})
                     </p>
                     <p className="text-2xl text-[#8b5d3b] font-bold">
-                      Final Amount: ₹{paymentAmount}
+                      Final Amount: ₹{paymentAmount.toFixed(2)}
                     </p>
                   </>
                 ) : (
-                  <p className="text-2xl text-[#8b5d3b] font-bold">₹{paymentAmount}</p>
+                  <p className="text-2xl text-[#8b5d3b] font-bold">
+                    ₹{(reservation.tableType.price * reservation.tableQuantity).toFixed(2)}
+                  </p>
+                )}
+                {reservation.paymentId && (
+                  <p className="text-[#8b5d3b] text-sm">
+                    Payment ID: {reservation.paymentId}
+                  </p>
+                )}
+                {reservation.paymentMethod && (
+                  <p className="text-[#8b5d3b] text-sm">
+                    Payment Method: {reservation.paymentMethod}
+                  </p>
                 )}
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#2c2420]">Wallet Balance</h3>
                 <p className="text-2xl text-[#8b5d3b] font-bold">
-                  {walletBalance !== null ? `₹${walletBalance}` : 'Loading...'}
+                  {walletBalance !== null ? `₹${walletBalance.toFixed(2)}` : 'Loading...'}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#2c2420]">Reservation Created</h3>
+                <p className="text-[#8b5d3b]">
+                  {new Date(reservation.createdAt).toLocaleString()}
                 </p>
               </div>
             </div>

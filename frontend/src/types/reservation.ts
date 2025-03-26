@@ -52,14 +52,15 @@ export enum ReservationStatus {
 }
 
 export interface TableType {
-    _id: string;
-    name: string;
-    price: number;
-    capacity: number;
-    quantity: number;
-    branch?: string; 
-    description?: string;  
-  }
+  _id: string;
+  name: string;
+  price: number;
+  capacity: number;
+  quantity: number;
+  branch?: string;
+  description?: string;
+  features: string[]; // Added to support preferences
+}
 
 export interface Reservation {
   _id: string;
@@ -79,6 +80,8 @@ export interface Reservation {
   paymentMethod?: 'razorpay' | 'wallet';
   specialRequests?: string;
   couponCode?: string;
+  preferences?: string[];
+  tableQuantity: number;
   discountApplied?: number;
   finalAmount?: number;
   createdAt: string;

@@ -1,16 +1,17 @@
-import   { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { tableTypeApi } from '../../Api/restaurentApi';
-import { FaRupeeSign } from "react-icons/fa";
+import { FaRupeeSign } from 'react-icons/fa';
 
 interface TableType {
   _id: string;
   name: string;
   capacity: number;
   quantity: number;
-  price:number;
+  price: number;
   description?: string;
+  features: string[]; // Added features field
 }
 
 const TableManagement = ({ branchId }: { branchId: string }) => {
@@ -21,15 +22,11 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
   // Validation Schema
   const validationSchema = Yup.object({
     name: Yup.string().required('Table name is required'),
-    capacity: Yup.number()
-      .min(1, 'Capacity must be at least 1')
-      .required('Capacity is required'),
-    quantity: Yup.number()
-      .min(1, 'Quantity must be at least 1')
-      .required('Quantity is required'),
-      price:Yup.number().min(0,'Price must be at leaset 0'),
+    capacity: Yup.number().min(1, 'Capacity must be at least 1').required('Capacity is required'),
+    quantity: Yup.number().min(1, 'Quantity must be at least 1').required('Quantity is required'),
+    price: Yup.number().min(0, 'Price must be at least 0').required('Price is required'),
     description: Yup.string().optional(),
-
+    features: Yup.array().of(Yup.string()).optional(), // Validate features as an array of strings
   });
 
   // Formik Initialization
@@ -38,16 +35,17 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
       name: '',
       capacity: 2,
       quantity: 1,
-      price:0,
+      price: 0,
       description: '',
+      features: [] as string[], // Initialize features as an empty array
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
         setLoading(true);
-        const response  = await tableTypeApi.createTableType(branchId, values);
-        setTableTypes([...tableTypes, response ]);
-        formik.resetForm(); 
+        const response = await tableTypeApi.createTableType(branchId, values);
+        setTableTypes([...tableTypes, response]);
+        formik.resetForm();
       } catch (err) {
         setError('Failed to create table type');
       } finally {
@@ -60,8 +58,8 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
     const loadTableTypes = async () => {
       try {
         setLoading(true);
-        const response  = await tableTypeApi.getTableTypes(branchId);
-        setTableTypes(response );
+        const response = await tableTypeApi.getTableTypes(branchId);
+        setTableTypes(response);
       } catch (err) {
         setError('Failed to fetch table types');
       } finally {
@@ -74,7 +72,7 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
   const handleUpdateQuantity = async (tableTypeId: string, quantity: number) => {
     try {
       setLoading(true);
-      const updatedTable  = await tableTypeApi.updateTableTypeQuantity(tableTypeId, quantity);
+      const updatedTable = await tableTypeApi.updateTableTypeQuantity(tableTypeId, quantity);
       setTableTypes((prev) =>
         prev.map((table) =>
           table._id === tableTypeId ? { ...table, quantity: updatedTable.quantity } : table
@@ -99,15 +97,23 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
     }
   };
 
+  // Predefined feature options
+  const featureOptions = [
+    'windowView',
+    'outdoor',
+    'accessible',
+    'quiet',
+    'booth',
+    'private',
+  ];
+
   return (
     <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-xl">
       <h2 className="text-3xl font-bold text-gray-800 mb-8">Table Management</h2>
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
-          {error}
-        </div>
+        <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">{error}</div>
       )}
 
       {/* Add New Table Form */}
@@ -163,23 +169,50 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
               <div className="text-red-500 text-sm mt-1">{formik.errors.quantity}</div>
             ) : null}
           </div>
+
+          {/* Price */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Price</label>
+            <input
+              type="number"
+              name="price"
+              min="0"
+              value={formik.values.price}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            {formik.touched.price && formik.errors.price ? (
+              <div className="text-red-500 text-sm mt-1">{formik.errors.price}</div>
+            ) : null}
+          </div>
+
+          {/* Features */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Features</label>
+            <select
+              multiple
+              name="features"
+              value={formik.values.features}
+              onChange={(e) => {
+                const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+                formik.setFieldValue('features', selectedOptions);
+              }}
+              onBlur={formik.handleBlur}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            >
+              {featureOptions.map((feature) => (
+                <option key={feature} value={feature}>
+                  {feature.charAt(0).toUpperCase() + feature.slice(1).replace(/([A-Z])/g, ' $1')}
+                </option>
+              ))}
+            </select>
+            {formik.touched.features && formik.errors.features ? (
+              <div className="text-red-500 text-sm mt-1">{formik.errors.features}</div>
+            ) : null}
+          </div>
         </div>
-        <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">Price</label>
-      <input
-        type="number"
-        name="price"
-        min="0"
-        value={formik.values.price}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-      />
-      {formik.touched.price && formik.errors.price ? (
-        <div className="text-red-500 text-sm mt-1">{formik.errors.price}</div>
-      ) : null}
-    </div>
-   
+
         {/* Description */}
         <div className="mt-6 space-y-2">
           <label className="block text-sm font-medium text-gray-700">Description</label>
@@ -232,14 +265,25 @@ const TableManagement = ({ branchId }: { branchId: string }) => {
                         {table.quantity}
                       </span>
                     </p>
-
                     <p className="text-gray-600 flex items-center gap-2">
-                <span className="font-medium">Price:</span>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center">
-    <FaRupeeSign className="mr-1" /> {table.price}
-</span>
-              </p>
-
+                      <span className="font-medium">Price:</span>
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center">
+                        <FaRupeeSign className="mr-1" /> {table.price}
+                      </span>
+                    </p>
+                    {table.features.length > 0 && (
+                      <p className="text-gray-600 flex flex-wrap items-center gap-2">
+                        <span className="font-medium">Features:</span>
+                        {table.features.map((feature) => (
+                          <span
+                            key={feature}
+                            className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm"
+                          >
+                            {feature.charAt(0).toUpperCase() + feature.slice(1).replace(/([A-Z])/g, ' $1')}
+                          </span>
+                        ))}
+                      </p>
+                    )}
                     {table.description && (
                       <p className="text-gray-600 text-sm mt-2">{table.description}</p>
                     )}

@@ -16,6 +16,7 @@ import UserProtected from './components/User/UserProtected';
 import RestaurantSearch from './components/User/RestaurentSearch';
 import ProtectedLogin from './components/User/ProtectedLogin';
 import RestaurantDetailPage from './components/User/RestaurentDetailPage';
+import ReservationDetails from './components/User/ReservationDetails';
 // Restaurant Components
 import RestaurentSignup from './components/Restaurent/restaurentSignup';
 import RestaurentLogin from './components/Restaurent/RestaurentLogin';
@@ -84,6 +85,7 @@ const App: React.FC = () => {
             <Route path="/restaurent/branches/:branchId" element={<BranchDetails />} />
             <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
           </Route>
+          <Route path="/bookings/:id" element={<ReservationDetails />} />
         </Route>
 
       {/* Branch Routes */}

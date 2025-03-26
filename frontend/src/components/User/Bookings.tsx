@@ -4,12 +4,12 @@ import { fetchUserReservations, cancelReservation } from '../../Api/userApi';
 import toast, { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { Reservation } from '../../types/reservation';
- 
+
 const Bookings: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(10); // Fixed limit, can be made configurable
+  const [limit] = useState<number>(10);
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,6 @@ const Bookings: React.FC = () => {
   };
 
   const handleCancel = (reservationId: string) => {
-    // Show a toast with confirmation buttons
     toast(
       (t) => (
         <div className="flex flex-col items-center">
@@ -52,7 +51,7 @@ const Bookings: React.FC = () => {
                   const data = await fetchUserReservations(page, limit, status);
                   setReservations(data.reservations);
                   setTotal(data.total);
-                  toast.dismiss(t.id); // Dismiss the confirmation toast
+                  toast.dismiss(t.id);
                   toast.success('Reservation cancelled successfully', {
                     duration: 4000,
                     position: 'top-center',
@@ -76,10 +75,14 @@ const Bookings: React.FC = () => {
         </div>
       ),
       {
-        duration: Infinity, // Keeps the toast open until dismissed
+        duration: Infinity,
         position: 'top-center',
       }
     );
+  };
+
+  const handleViewDetails = (reservationId: string) => {
+    navigate(`/bookings/${reservationId}`);
   };
 
   if (loading) {
@@ -122,7 +125,7 @@ const Bookings: React.FC = () => {
             onChange={(e) => {
               const newStatus = e.target.value === 'all' ? undefined : e.target.value;
               setStatus(newStatus);
-              setPage(1); // Reset to page 1 when status changes
+              setPage(1);
             }}
             className="p-2 border rounded text-[#8b5d3b]"
           >
@@ -131,7 +134,6 @@ const Bookings: React.FC = () => {
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
             <option value="payment_failed">Payment Failed</option>
-            {/* Add more statuses if defined in ReservationStatus */}
           </select>
         </div>
 
@@ -145,10 +147,11 @@ const Bookings: React.FC = () => {
             {reservations.map((res) => (
               <motion.div
                 key={res._id}
-                className="bg-white rounded-lg shadow-md p-4 flex justify-between items-center"
+                className="bg-white rounded-lg shadow-md p-4 flex justify-between items-center cursor-pointer hover:shadow-lg transition-shadow"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
+                onClick={() => handleViewDetails(res._id)} // Make the card clickable
               >
                 <div>
                   <h2 className="text-lg font-semibold text-[#2c2420]">
@@ -199,10 +202,13 @@ const Bookings: React.FC = () => {
                     Status: {res.status.toUpperCase()}
                   </p>
                 </div>
-                <div className="space-x-2">
+                <div className="space-x-2 flex items-center">
                   {(res.status === 'pending' || res.status === 'payment_failed') && (
                     <button
-                      onClick={() => handlePayNow(res._id)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering card click
+                        handlePayNow(res._id);
+                      }}
                       className="px-4 py-2 bg-[#8b5d3b] text-white rounded-full hover:bg-[#2c2420] transition-colors text-sm"
                     >
                       Pay Now
@@ -210,12 +216,24 @@ const Bookings: React.FC = () => {
                   )}
                   {res.status === 'confirmed' && (
                     <button
-                      onClick={() => handleCancel(res._id)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering card click
+                        handleCancel(res._id);
+                      }}
                       className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors text-sm"
                     >
                       Cancel
                     </button>
                   )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering card click
+                      handleViewDetails(res._id);
+                    }}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-full hover:bg-gray-400 transition-colors text-sm"
+                  >
+                    View Details
+                  </button>
                 </div>
               </motion.div>
             ))}
