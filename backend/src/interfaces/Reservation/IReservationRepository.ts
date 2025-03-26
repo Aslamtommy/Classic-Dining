@@ -27,4 +27,5 @@ export interface IReservationRepository {
     status?: ReservationStatus
   ): Promise<IReservation[]>;
   countByUserId(userId: string, status?: ReservationStatus): Promise<number>;
+  getReservedQuantity(branchId: string, tableTypeId: string, date: Date, timeSlot: string): Promise<number>
 }

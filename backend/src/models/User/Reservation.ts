@@ -24,14 +24,22 @@ export interface IReservation extends Document {
   timeSlot: string;
   partySize: number;
   status:ReservationStatus
+  tableQuantity: number; // New: Number of tables booked
+  
+  preferences: string[]
   paymentId?: string;
   paymentMethod?: 'razorpay' | 'wallet';
-  specialRequests?: string;
+  
   couponCode?: string;          
   discountApplied?: number;    
   finalAmount?: number;
+  
   createdAt: Date;
   updatedAt: Date;
+  specialRequests?: string;
+ 
+ 
+
 }
 
 const ReservationSchema: Schema = new Schema({
@@ -47,6 +55,8 @@ const ReservationSchema: Schema = new Schema({
   reservationDate: { type: Date, required: true },
   timeSlot: { type: String, required: true   },
   partySize: { type: Number, required: true },
+  tableQuantity: { type: Number, default: 1 }, // Default to 1 table
+  preferences: [{ type: String, enum: ['windowView', 'outdoor', 'accessible', 'quiet', 'booth', 'private'] }],
   status: {
     type: String,
     enum: Object.values(ReservationStatus),

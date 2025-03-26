@@ -6,19 +6,19 @@ import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { BaseRepository } from './BaseRepository/BaseRepository';
-export class ReservationRepository extends BaseRepository<IReservation> implements IReservationRepository {
-   constructor() {
-      super(Reservation);
-    }
-   
+import { Types } from 'mongoose';
 
+export class ReservationRepository extends BaseRepository<IReservation> implements IReservationRepository {
+  constructor() {
+    super(Reservation);
+  }
 
   async findById(id: string): Promise<IReservation | null> {
     try {
       return await Reservation.findById(id)
-      .populate('branch', 'name')
-      .populate('tableType', 'name capacity price')
-      .exec();
+        .populate('branch', 'name')
+        .populate('tableType', 'name capacity price features')
+        .exec();
     } catch (error) {
       console.error('Error in findById:', error);
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
@@ -34,28 +34,40 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
     }
   }
 
-   
-
-  async findAvailability(branchId: string, tableTypeId: string, date: Date, timeSlot: string): Promise<number> {
+  async getReservedQuantity(branchId: string, tableTypeId: string, date: Date, timeSlot: string): Promise<number> {
     try {
       const startOfDay = new Date(date);
       startOfDay.setUTCHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setUTCHours(23, 59, 59, 999);
 
-      const query = {
-        branch: branchId,
-        tableType: tableTypeId,
-        reservationDate: { $gte: startOfDay, $lte: endOfDay },
-        timeSlot,
-        status: { $in: [ReservationStatus.CONFIRMED, ReservationStatus.PENDING] },
-      };
+      const result = await Reservation.aggregate([
+        {
+          $match: {
+            branch: new Types.ObjectId(branchId),
+            tableType: new Types.ObjectId(tableTypeId),
+            reservationDate: { $gte: startOfDay, $lte: endOfDay },
+            timeSlot,
+            status: { $in: [ReservationStatus.CONFIRMED, ReservationStatus.PENDING] },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: '$tableQuantity' },
+          },
+        },
+      ]);
 
-      return await Reservation.countDocuments(query);
+      return result.length > 0 ? result[0].totalQuantity : 0;
     } catch (error) {
-      console.error('Error in findAvailability:', error);
+      console.error('Error in getReservedQuantity:', error);
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async findAvailability(branchId: string, tableTypeId: string, date: Date, timeSlot: string): Promise<number> {
+    return this.getReservedQuantity(branchId, tableTypeId, date, timeSlot);
   }
 
   async findAvailableTables(branchId: string, date: Date, timeSlot: string): Promise<string[]> {
@@ -66,13 +78,13 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
       endOfDay.setUTCHours(23, 59, 59, 999);
 
       const query = {
-        branch: branchId,
+        branch: new Types.ObjectId(branchId),
         reservationDate: { $gte: startOfDay, $lte: endOfDay },
         timeSlot,
         status: { $in: [ReservationStatus.CONFIRMED, ReservationStatus.PENDING] },
       };
 
-      const reservations = await Reservation.find(query).select('tableType').exec();
+      const reservations = await Reservation.find(query).select('tableType tableQuantity').exec();
       return reservations.map((res) => res.tableType.toString());
     } catch (error) {
       console.error('Error in findAvailableTables:', error);
@@ -97,7 +109,7 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
     try {
       return await Reservation.find({ userId })
         .populate('branch', 'name')
-        .populate('tableType', 'name capacity price')
+        .populate('tableType', 'name capacity price features')
         .sort({ reservationDate: -1 })
         .exec();
     } catch (error) {
@@ -116,7 +128,7 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
       const query = { branch: branchId, ...(status && { status }) };
       return await Reservation.find(query)
         .populate('userId', 'name email phone')
-        .populate('tableType', 'name capacity price')
+        .populate('tableType', 'name capacity price features')
         .sort({ reservationDate: -1 })
         .skip(skip)
         .limit(limit)
@@ -144,16 +156,15 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
     status?: ReservationStatus
   ): Promise<IReservation[]> {
     try {
-      const query :any = { userId };
+      const query: any = { userId };
       if (status) query.status = status;
       return await Reservation.find(query)
-        .populate('branch')
-        .populate('tableType')
+        .populate('branch', 'name')
+        .populate('tableType', 'name capacity price features')
         .sort({ reservationDate: -1 })
         .skip(skip)
         .limit(limit)
         .exec();
-        
     } catch (error) {
       console.error('Error in findByUserIdWithPagination:', error);
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
