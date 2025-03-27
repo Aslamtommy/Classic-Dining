@@ -57,7 +57,17 @@ export class BaseRepository<T extends Document> {
 
   async update(id: string, data: Partial<T>): Promise<T | null> {
     try {
-      return await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+      console.log('Update Data Sent to MongoDB:', data); // Debug what’s being sent
+      const updatedDoc = await this.model.findByIdAndUpdate(
+        id,
+        { $set: data }, // Use $set to explicitly replace the fields
+        { new: true, runValidators: true } // Return the updated doc and enforce schema validation
+      ).exec();
+      console.log('Updated Doc from MongoDB:', updatedDoc); // Debug what’s returned
+      if (!updatedDoc) {
+        throw new AppError(HttpStatus.NotFound, `${this.model.modelName} not found`);
+      }
+      return updatedDoc;
     } catch (error) {
       console.error('Error in update:', error);
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);

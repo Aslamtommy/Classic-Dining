@@ -2,7 +2,7 @@
 import { IReservation } from '../../models/User/Reservation';
 import { ReservationStatus } from '../../models/User/Reservation';
 import { ITableType } from '../../models/Restaurent/TableModel'; // Import ITableType
-
+import { IReview } from '../../models/User/Reservation';
 export interface IReservationService {
     createReservation(reservationData: Partial<IReservation>): Promise<IReservation>;
     getReservation(id: string): Promise<IReservation>;
@@ -28,4 +28,6 @@ export interface IReservationService {
         status: 'completed' | 'cancelled',
         branchId: string
     ): Promise<IReservation | null>;
+    submitReview(reservationId: string, userId: string, review: { rating: number; comment?: string }): Promise<IReservation> 
+    getBranchReviews(branchId: string): Promise<IReview[]> 
 }

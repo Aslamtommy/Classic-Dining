@@ -253,4 +253,49 @@ export class ReservationController {
       }
     }
   }
+
+  async submitReview(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.data?.id;
+      if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      
+      const { reservationId } = req.params;
+      const { rating, comment } = req.body;
+console.log('comment',comment)
+      if (!reservationId || !rating) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+
+      if (rating < 1 || rating > 5) {
+        throw new AppError(HttpStatus.BadRequest, 'Rating must be between 1 and 5');
+      }
+
+      const reservation = await this._reservationService.submitReview(reservationId, userId, { rating, comment });
+      sendResponse(res, HttpStatus.OK, 'Review submitted successfully', reservation);
+    } catch (error: unknown) {
+      console.error('Review submission error:', error instanceof Error ? error.message : 'Unknown error');
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+ // controllers/ReservationController.ts
+async getBranchReviews(req: Request, res: Response): Promise<void> {
+  try {
+    const { branchId } = req.params;
+    if (!branchId) {
+      throw new AppError(HttpStatus.BadRequest, 'Branch ID is required');
+    }
+    const reviews = await this._reservationService.getBranchReviews(branchId);
+    sendResponse(res, HttpStatus.OK, 'Reviews fetched successfully', reviews);
+  } catch (error: unknown) {
+    if (error instanceof AppError) {
+      sendError(res, error.status, error.message);
+    } else {
+      sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
+  }
+}
 }

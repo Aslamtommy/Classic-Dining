@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { Reservation } from '../../types/reservation';
 
 const Bookings: React.FC = () => {
+
+  
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
@@ -102,7 +104,7 @@ const Bookings: React.FC = () => {
   }
 
   return (
-    <div className="bg-[#faf7f2] min-h-screen pt-16">
+    <div className="bg-[#faf7f2] min-h-screen pt-15">
       <Toaster />
       <div className="max-w-5xl mx-auto px-4">
         <motion.h1

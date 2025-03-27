@@ -50,7 +50,7 @@ userRoute.post('/register', (req: Request, res: Response) => {
 });
 
 // User login
-userRoute.post('/login', (req: Request, res: Response) => {
+userRoute.post('/login',  blockedUserMiddleware,(req: Request, res: Response) => {
   userController.signIn(req, res);
 });
 
@@ -84,8 +84,8 @@ userRoute.post('/uploadProfilePicture', authenticateToken('user'), upload.single
 userRoute.post('/logout', (req, res) => userController.logout(req, res));
 userRoute.put('/updateProfile', authenticateToken('user'), (req, res) => userController.updateProfile(req, res));
 
-userRoute.get('/branches', (req, res) => userController.getAllBranches(req, res));
-userRoute.get('/branches/:branchId', (req, res) => userController.getBranchDetails(req, res));
+userRoute.get('/branches', blockedUserMiddleware, (req, res) => userController.getAllBranches(req, res));
+userRoute.get('/branches/:branchId', blockedUserMiddleware, (req, res) => userController.getBranchDetails(req, res));
 
 // Reservation routes
 userRoute.post('/reservations', authenticateToken('user'), (req, res) => reservationController.createReservation(req, res));
@@ -98,8 +98,15 @@ userRoute.post('/payments/create-order', authenticateToken('user'), (req, res) =
 userRoute.post('/reservations/:id/confirm-wallet', authenticateToken('user'), (req, res) => {
   reservationController.confirmWithWallet(req, res);
 });
+ 
+userRoute.post('/reservations/:reservationId/review', authenticateToken('user'), (req, res) => {
+  reservationController.submitReview(req, res);
+});
 userRoute.get('/reservations', authenticateToken('user'), (req, res) => reservationController.getUserReservations(req, res));
-
+ 
+userRoute.get('/branches/:branchId/reviews', authenticateToken('user'), (req, res) => {
+  reservationController.getBranchReviews(req, res);
+});
 // Wallet routes
 userRoute.get('/wallet', authenticateToken('user'), (req, res) => walletController.getWalletData(req, res));
 userRoute.post('/wallet/create-order', authenticateToken('user'), (req, res) => walletController.createAddMoneyOrder(req, res));

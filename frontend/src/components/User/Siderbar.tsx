@@ -1,14 +1,15 @@
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { User, Calendar, Wallet, Settings, LogOut, Utensils } from 'lucide-react'; // Added Utensils for Restaurants
-import { useSelector } from 'react-redux';
+import { User, Calendar, Wallet, Settings, LogOut, Utensils } from 'lucide-react';
+import { useSelector } from 'react-redux'; // Corrected from 'redux' to 'react-redux'
+
 const Sidebar = () => {
   const profile = useSelector((state: any) => state.user.user);
   console.log(profile);
 
   return (
     <motion.div
-      className="bg-white h-screen w-72 fixed left-0 top-0 shadow-xl overflow-hidden border-r border-[#e8e2d9]"
+      className="bg-white h-[calc(100vh-4rem)] w-72 fixed left-0 top-16 shadow-xl overflow-y-auto border-r border-[#e8e2d9]" // Adjusted top and height
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
@@ -21,13 +22,13 @@ const Sidebar = () => {
           whileTap={{ scale: 0.95 }}
         >
           <img
-            src={profile.profilePicture}
+            src={profile?.profilePicture || '/default-profile.jpg'} // Fallback for missing profile picture
             alt="Profile"
             className="w-14 h-14 rounded-full border-4 border-[#e8e2d9] object-cover shadow-lg"
           />
           <div>
-            <h3 className="text-[#2c2420] font-semibold text-lg">{profile.name}</h3>
-            <p className="text-[#8b5d3b] text-sm">{profile.email}</p>
+            <h3 className="text-[#2c2420] font-semibold text-lg">{profile?.name || 'User'}</h3>
+            <p className="text-[#8b5d3b] text-sm">{profile?.email || 'email@example.com'}</p>
           </div>
         </motion.div>
 
@@ -37,8 +38,8 @@ const Sidebar = () => {
             { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Profile' },
             { to: '/bookings', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
             { to: '/wallet', icon: <Wallet className="w-5 h-5" />, text: 'Wallet' },
-            { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' },  
-            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurents' },
+            { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' },
+            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurants' }, // Fixed typo in 'Restaurants'
           ].map((link, index) => (
             <NavLink
               key={index}

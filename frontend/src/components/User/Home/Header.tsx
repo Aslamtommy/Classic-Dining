@@ -97,7 +97,7 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-8">
             <a href="/" className="text-sm text-[#2c2420] hover:text-[#8b5d3b] transition-colors">Home</a>
             <a href="/menu" className="text-sm text-[#2c2420] hover:text-[#8b5d3b] transition-colors">Menu</a>
-            <a href="/reservations" className="text-sm text-[#2c2420] hover:text-[#8b5d3b] transition-colors">Reservations</a>
+            <a href="/restaurentList" className="text-sm text-[#2c2420] hover:text-[#8b5d3b] transition-colors">Restaurants</a>
 
             <button
               onClick={handleNearMeClick}
@@ -179,7 +179,7 @@ const Header: React.FC = () => {
                           <Wallet className="w-4 h-4 mr-2" />
                           Wallet
                         </a>
-                        <a href="/booking" className="flex items-center px-4 py-2 text-sm text-[#2c2420] hover:bg-[#faf7f2] hover:text-[#8b5d3b] transition-colors">
+                        <a href="/bookings" className="flex items-center px-4 py-2 text-sm text-[#2c2420] hover:bg-[#faf7f2] hover:text-[#8b5d3b] transition-colors">
                           <Calendar className="w-4 h-4 mr-2" />
                           Bookings
                         </a>

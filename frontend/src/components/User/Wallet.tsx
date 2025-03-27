@@ -143,7 +143,7 @@ const WalletPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-[#faf7f2] min-h-screen pt-16">
+    <div className="bg-[#faf7f2] min-h-screen pt-15">
       <div className="max-w-4xl mx-auto px-4">
         <motion.div
           className="bg-white rounded-lg shadow-md p-6"

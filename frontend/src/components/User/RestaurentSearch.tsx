@@ -209,7 +209,7 @@ const RestaurantSearch = () => {
   };
 
   return (
-    <section className="min-h-screen bg-[#faf7f2] pt-16 pb-20">
+    <section className="min-h-screen bg-[#faf7f2] pt-15 pb-20">
       <div className="max-w-7xl mx-auto px-6">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}

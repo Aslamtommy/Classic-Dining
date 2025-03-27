@@ -119,7 +119,7 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#faf7f2] min-h-screen pt-24">
+    <div className="bg-[#faf7f2] min-h-screen pt-15">
       <div className="max-w-7xl mx-auto px-6">
         {/* Profile Header */}
         <div className="text-center mb-16">

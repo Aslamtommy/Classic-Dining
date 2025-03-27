@@ -21,6 +21,7 @@ import { TableTypeService } from '../services/TableServices';
 import { BranchDashboardController } from '../controllers/BranchDashboardController';
 import { BranchDashboardService } from '../services/BranchDashboardService';
 import { BranchDashboardRepository } from '../repositories/BracnDashboardRepository';
+import blockedUserMiddleware from '../middlewares/blockedUserMiddleware';
 const dashboardRepo = new BranchDashboardRepository();
 const dashboardService = new BranchDashboardService(dashboardRepo);
 const dashboardController = new BranchDashboardController(dashboardService);
@@ -71,9 +72,9 @@ restaurentRoute.post('/branches', authenticateToken('restaurent'), checkApproved
   { name: "mainImage", maxCount: 1 },
   { name: "interiorImages", maxCount: 3 },
 ]),(req, res) => branchController.createBranch(req, res));
-restaurentRoute.get('/allbranches', authenticateToken('restaurent'), checkApproved, (req, res) => branchController.getBranches(req, res));
-restaurentRoute.get('/branches/:branchId', authenticateToken('restaurent'), (req, res) => branchController.getBranchDetails(req, res));
-restaurentRoute.put('/branches/:branchId', authenticateToken('restaurent'), upload.fields([
+restaurentRoute.get('/allbranches', authenticateToken('restaurent'),blockedUserMiddleware, checkApproved, (req, res) => branchController.getBranches(req, res));
+restaurentRoute.get('/branches/:branchId', authenticateToken('restaurent'),blockedUserMiddleware, (req, res) => branchController.getBranchDetails(req, res));
+restaurentRoute.put('/branches/:branchId', authenticateToken('restaurent'), blockedUserMiddleware,upload.fields([
   { name: "mainImage", maxCount: 1 },
   { name: "interiorImages", maxCount: 3 },
 ]), (req, res) => branchController.updateBranch(req, res));

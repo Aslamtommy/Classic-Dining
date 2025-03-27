@@ -20,21 +20,28 @@ interface UserState {
   } | null;
 }
 
+interface ExtendedBranch extends Branch {
+  operatingHours?: {
+    open: string; // e.g., "17:00"
+    close: string; // e.g., "23:00"
+  };
+}
+
 const BookingPage: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
   const navigate = useNavigate();
-  const [branch, setBranch] = useState<Branch | null>(null);
+  const [branch, setBranch] = useState<ExtendedBranch | null>(null);
   const [availableTables, setAvailableTables] = useState<TableType[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [partySize, setPartySize] = useState<number | string>(2);
   const [selectedTable, setSelectedTable] = useState<TableType | null>(null);
-  const [timeSlots] = useState<string[]>(['18:00', '19:00', '20:00', '21:00']);
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState<string>('');
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Default to ascending
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [preferences, setPreferences] = useState<string[]>([]);
@@ -52,6 +59,7 @@ const BookingPage: React.FC = () => {
         ]);
         setBranch(branchData);
         setAvailableCoupons(couponData || []);
+        generateTimeSlots(branchData);
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Failed to load data';
         setError(message);
@@ -69,6 +77,31 @@ const BookingPage: React.FC = () => {
     }
   }, [selectedDate, selectedTime, branchId, partySize]);
 
+  const generateTimeSlots = (branchData: ExtendedBranch) => {
+    const operatingHours = branchData.operatingHours || { open: '17:00', close: '23:00' };
+    const [openHour, openMinute] = operatingHours.open.split(':').map(Number);
+    const [closeHour, closeMinute] = operatingHours.close.split(':').map(Number);
+
+    const slots: string[] = [];
+    let currentTime = new Date();
+    currentTime.setHours(openHour, openMinute, 0, 0);
+
+    const closeTime = new Date();
+    closeTime.setHours(closeHour, closeMinute, 0, 0);
+
+    while (currentTime <= closeTime) {
+      const timeString = currentTime.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      slots.push(timeString);
+      currentTime.setMinutes(currentTime.getMinutes() + 30);
+    }
+    setTimeSlots(slots);
+    setSelectedTime('');
+  };
+
   const fetchAvailability = async () => {
     try {
       const formattedDate = selectedDate!.toISOString().split('T')[0];
@@ -85,36 +118,35 @@ const BookingPage: React.FC = () => {
 
   const filteredTables = (availableTables || [])
     .filter((table) => {
-      // Filter by preferences only (price range removed)
       const matchesPreferences =
         preferences.length === 0 ||
         preferences.every((pref) => table.features?.includes(pref));
       return matchesPreferences;
     })
-    .sort((a, b) => {
-      // Sort by price: 'asc' for low to high, 'desc' for high to low
-      return sortOrder === 'asc' ? (a.price || 0) - (b.price || 0) : (b.price || 0) - (a.price || 0);
-    });
+    .sort((a, b) => (sortOrder === 'asc' ? (a.price || 0) - (b.price || 0) : (b.price || 0) - (a.price || 0)));
 
   const handleTimeSlotClick = (time: string) => setSelectedTime(time);
 
   const applyCoupon = (code: string) => {
     setCouponCode(code);
     setIsCouponModalOpen(false);
-    toast.success(`Coupon "${code}" Applied!`);
+    toast.success(`Coupon "${code}" applied successfully`);
   };
 
   const cancelCoupon = () => {
     setCouponCode('');
-    toast.success('Coupon Removed!');
+    toast.success('Coupon removed');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTable || !selectedTime || !selectedDate || !branchId || !branch || !user) {
-      toast.error('Please complete all selections and ensure you are logged in');
+      toast.error('Please complete all required fields and log in');
       return;
     }
+    // Add a submitting state to prevent double submission
+    if (loading) return; // Assuming `loading` can be reused here
+    setLoading(true);
     try {
       const tableQuantity = Math.ceil(Number(partySize) / selectedTable.capacity);
       const reservationData: Partial<Reservation> = {
@@ -129,8 +161,8 @@ const BookingPage: React.FC = () => {
         couponCode,
       };
       const response = await createReservation(reservationData);
-      toast.success(response.message || 'Reservation Created!');
-      setTimeout(() =>
+      toast.success(response.message || 'Reservation confirmed!');
+      setTimeout(() => {
         navigate(`/confirmation/${response.data._id}`, {
           state: {
             reservation: {
@@ -138,15 +170,18 @@ const BookingPage: React.FC = () => {
               reservationId: response.data._id,
               price: response.data.finalAmount || selectedTable.price * tableQuantity,
               discountApplied: response.data.discountApplied || 0,
-              finalAmount: response.data.finalAmount || (selectedTable.price * tableQuantity),
+              finalAmount: response.data.finalAmount || selectedTable.price * tableQuantity,
             },
           },
-        }), 2000);
+        });
+        setLoading(false); // Reset after navigation
+      }, 2000);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Reservation Failed';
+      const message = error instanceof Error ? error.message : 'Failed to create reservation';
       toast.error(message);
       setError(message);
       setSelectedTable(null);
+      setLoading(false);
     }
   };
 
@@ -162,87 +197,69 @@ const BookingPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#faf7f2] to-[#e8e2d9] flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf7f2] flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
-          className="text-[#2c2420] text-2xl font-playfair font-semibold"
+          className="text-[#2c2420] text-xl font-sans font-medium"
         >
-          Loading Your Experience...
+          Loading reservation details...
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#faf7f2] to-[#e8e2d9] pt-16">
-      <Toaster />
-      <div className="max-w-5xl mx-auto px-6">
+    <div className="min-h-screen bg-[#faf7f2] font-sans antialiased">
+      <Toaster position="top-right" />
+      <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <motion.div
-          className="text-center mb-10"
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
+          className="mb-10 text-center"
         >
-          <h1 className="font-playfair text-4xl md:text-5xl text-[#2c2420] font-bold mb-3 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-serif text-[#2c2420] font-bold tracking-tight">
             {branch ? branch.name : 'Branch Not Found'}
           </h1>
-          <div className="flex items-center justify-center gap-4">
-            <div className="w-16 h-[2px] bg-[#d4a373]"></div>
-            <p className="text-sm text-[#2c2420]/70 font-medium uppercase tracking-wider">
-              Reserve Your Table
-            </p>
-            <div className="w-16 h-[2px] bg-[#d4a373]"></div>
-          </div>
+          <p className="mt-2 text-sm text-[#8b5d3b] font-medium uppercase tracking-widest">
+            Book Your Table
+          </p>
         </motion.div>
 
-        {/* Branch Picture */}
+        {/* Branch Image */}
         {branch && (
           <motion.div
-            className="mb-10 relative overflow-hidden rounded-2xl shadow-2xl border border-[#e8e2d9]/50"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: 'easeOut' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="mb-12 rounded-xl overflow-hidden shadow-lg border border-[#e8e2d9]"
           >
-            <div className="relative w-full h-72 md:h-96">
-              <img
-                src={branch.mainImage || 'https://via.placeholder.com/150'}
-                alt={branch.name}
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2c2420]/60 via-[#2c2420]/20 to-transparent pointer-events-none"></div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#d4a373] to-transparent"></div>
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#d4a373] to-transparent"></div>
-              <div className="absolute bottom-6 left-6 text-white">
-                <h2 className="font-playfair text-2xl md:text-3xl font-bold tracking-tight drop-shadow-lg">
-                  {branch.name}
-                </h2>
-                <p className="text-sm md:text-base font-medium opacity-80 drop-shadow-md">
-                  A Culinary Haven Awaits
-                </p>
-              </div>
-              <div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-[#d4a373]/20 border border-[#d4a373]/40"></div>
-            </div>
+            <img
+              src={branch.mainImage || 'https://via.placeholder.com/1200x400'}
+              alt={branch.name}
+              className="w-full h-64 md:h-80 object-cover"
+              onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/1200x400')}
+            />
           </motion.div>
         )}
 
         {/* Booking Form */}
         <motion.form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-2xl p-8"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white rounded-xl shadow-md border border-[#e8e2d9] p-6 md:p-8"
         >
           {error && (
             <motion.div
-              className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
+              className="mb-6 p-4 bg-[#faf7f2] border-l-4 border-[#8b5d3b] text-[#2c2420] rounded-r-lg text-sm"
             >
               {error}
             </motion.div>
@@ -251,52 +268,46 @@ const BookingPage: React.FC = () => {
           {/* Date & Party Size */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <div>
-              <label className="block text-[#2c2420] text-sm font-semibold mb-2 tracking-wide">
-                Reservation Date
-              </label>
+              <label className="block text-[#2c2420] text-sm font-medium mb-2">Date</label>
               <DatePicker
                 selected={selectedDate}
                 onChange={(date: Date | null) => setSelectedDate(date)}
                 minDate={new Date()}
-                className="w-full px-4 py-3 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] shadow-sm transition-all duration-300"
+                className="w-full px-4 py-3 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg text-[#2c2420] text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] transition-all duration-200"
+                placeholderText="Select a date"
               />
             </div>
             <div>
-              <label className="block text-[#2c2420] text-sm font-semibold mb-2 tracking-wide">
-                Party Size
-              </label>
+              <label className="block text-[#2c2420] text-sm font-medium mb-2">Party Size</label>
               <select
                 value={partySize}
                 onChange={(e) => setPartySize(e.target.value === 'moreThan20' ? 'moreThan20' : Number(e.target.value))}
-                className="w-full px-4 py-3 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] shadow-sm transition-all duration-300"
+                className="w-full px-4 py-3 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg text-[#2c2420] text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] transition-all duration-200"
               >
                 {Array.from({ length: 20 }, (_, i) => i + 1).map((size) => (
                   <option key={size} value={size}>
                     {size} {size === 1 ? 'Person' : 'People'}
                   </option>
                 ))}
-                <option value="moreThan20">Need more than 20?</option>
+                <option value="moreThan20">More than 20</option>
               </select>
             </div>
           </div>
 
-          {/* Conditional Rendering Based on Party Size */}
           {partySize !== 'moreThan20' ? (
             <>
               {/* Time Slots */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-[#2c2420] mb-4 tracking-tight">
-                  Select Time Slot
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <h2 className="text-lg font-medium text-[#2c2420] mb-4">Select a Time</h2>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                   {timeSlots.map((time) => (
                     <motion.button
                       key={time}
                       type="button"
                       onClick={() => handleTimeSlotClick(time)}
-                      className={`p-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                      className={`py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
                         selectedTime === time
-                          ? 'bg-[#8b5d3b] text-white shadow-lg'
+                          ? 'bg-[#8b5d3b] text-white'
                           : 'bg-[#e8e2d9] text-[#2c2420] hover:bg-[#d4a373] hover:text-white'
                       }`}
                       whileHover={{ scale: 1.05 }}
@@ -310,10 +321,8 @@ const BookingPage: React.FC = () => {
 
               {/* Preferences */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-[#2c2420] mb-4 tracking-tight">
-                  Preferences
-                </h2>
-                <div className="flex flex-wrap gap-4">
+                <h2 className="text-lg font-medium text-[#2c2420] mb-4">Preferences (Optional)</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {['windowView', 'outdoor', 'accessible', 'quiet', 'booth', 'private'].map((pref) => (
                     <label key={pref} className="flex items-center gap-2">
                       <input
@@ -327,7 +336,7 @@ const BookingPage: React.FC = () => {
                               : preferences.filter((p) => p !== pref)
                           )
                         }
-                        className="h-4 w-4 text-[#8b5d3b] border-[#e8e2d9] rounded focus:ring-[#d4a373]"
+                        className="h-4 w-4 text-[#8b5d3b] border-[#e8e2d9] rounded focus:ring-[#8b5d3b]"
                       />
                       <span className="text-[#2c2420] text-sm capitalize">
                         {pref.replace(/([A-Z])/g, ' $1').trim()}
@@ -337,54 +346,45 @@ const BookingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Coupon Input */}
+              {/* Coupon */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-[#2c2420] text-sm font-semibold tracking-wide">
-                    Coupon Code
-                  </label>
+                  <label className="text-[#2c2420] text-sm font-medium">Promo Code</label>
                   <button
                     type="button"
                     onClick={() => setIsCouponModalOpen(true)}
-                    className="text-[#d4a373] text-sm font-medium hover:text-[#8b5d3b] transition-colors"
+                    className="text-[#8b5d3b] text-sm font-medium hover:text-[#d4a373] transition-colors"
                   >
-                    View Offers
+                    View Available Offers
                   </button>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <input
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] shadow-sm disabled:bg-[#e8e2d9] disabled:text-[#2c2420]/50 transition-all duration-300"
-                    placeholder="Enter or select a coupon"
                     disabled={!!couponCode}
+                    placeholder="Enter promo code"
+                    className="w-full px-4 py-3 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg text-[#2c2420] text-sm focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] disabled:bg-[#e8e2d9] disabled:text-[#2c2420]/50 transition-all duration-200"
                   />
                   {couponCode && (
                     <motion.button
                       type="button"
                       onClick={cancelCoupon}
-                      className="px-4 py-2 bg-[#2c2420] text-white rounded-full text-sm font-medium hover:bg-[#8b5d3b] transition-all duration-300"
+                      className="px-4 py-2 bg-[#2c2420] text-white rounded-lg text-sm font-medium hover:bg-[#8b5d3b] transition-all duration-200"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      Cancel
+                      Remove
                     </motion.button>
                   )}
                 </div>
                 {couponCode && (
-                  <motion.div
-                    className="mt-2 p-2 bg-[#d4a373]/10 border border-[#d4a373] text-[#8b5d3b] rounded-md text-sm font-medium"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    Applied: "{couponCode}"
-                  </motion.div>
+                  <p className="mt-2 text-sm text-[#8b5d3b]">Promo code "{couponCode}" applied</p>
                 )}
               </div>
 
-              {/* Table Selection with No Tables Message */}
+              {/* Table Selection */}
               {selectedTime ? (
                 filteredTables.length > 0 ? (
                   <TableSelection
@@ -397,64 +397,38 @@ const BookingPage: React.FC = () => {
                     preferences={preferences}
                   />
                 ) : (
-                  <motion.div
-                    className="mb-8 p-4 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg text-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <p className="text-[#8b5d3b] text-sm font-medium">
-                      No tables currently available for these preferences.
-                    </p>
-                  </motion.div>
+                  <div className="mb-8 p-4 bg-[#faf7f2] rounded-lg text-[#8b5d3b] text-sm text-center">
+                    No tables available for this time. Please select another slot.
+                  </div>
                 )
               ) : (
-                <motion.div
-                  className="mb-8 p-4 bg-[#faf7f2] border border-[#e8e2d9] rounded-lg text-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <p className="text-[#2c2420] text-sm font-medium">
-                    Please select a time slot to view available tables.
-                  </p>
-                </motion.div>
+                <div className="mb-8 p-4 bg-[#faf7f2] rounded-lg text-[#2c2420] text-sm text-center">
+                  Please select a time to view available tables.
+                </div>
               )}
 
-              {/* Confirmation Section */}
-              <motion.div
-                className="mt-8 bg-[#faf7f2] p-6 rounded-xl shadow-inner border border-[#e8e2d9]"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
-                <h2 className="text-xl font-semibold text-[#2c2420] mb-4 tracking-tight flex items-center">
-                  <span className="mr-2 text-[#d4a373]">✓</span> Confirm Your Reservation
-                </h2>
+              {/* Confirmation */}
+              <div className="border-t border-[#e8e2d9] pt-6">
+                <h2 className="text-lg font-medium text-[#2c2420] mb-4">Reservation Summary</h2>
                 {selectedTable && selectedTime && selectedDate ? (
-                  <motion.div
-                    className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-[#e8e2d9]"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="mb-6 p-4 bg-[#faf7f2] rounded-lg text-sm text-[#2c2420]">
+                    <div className="grid grid-cols-2 gap-2">
                       <span className="text-[#2c2420]/70">Table:</span>
-                      <span className="text-[#2c2420] font-medium">{selectedTable.name}</span>
+                      <span>{selectedTable.name}</span>
                       <span className="text-[#2c2420]/70">Date:</span>
-                      <span className="text-[#2c2420] font-medium">{selectedDate.toLocaleDateString()}</span>
+                      <span>{selectedDate.toLocaleDateString()}</span>
                       <span className="text-[#2c2420]/70">Time:</span>
-                      <span className="text-[#2c2420] font-medium">{selectedTime}</span>
+                      <span>{selectedTime}</span>
                       <span className="text-[#2c2420]/70">Party Size:</span>
-                      <span className="text-[#2c2420] font-medium">{partySize} people</span>
-                      <span className="text-[#2c2420]/70">Tables Required:</span>
-                      <span className="text-[#2c2420] font-medium">{tableQuantity}</span>
-                      <span className="text-[#2c2420]/70">Original Price:</span>
-                      <span className="text-[#2c2420] font-medium">₹{originalPrice.toFixed(2)}</span>
+                      <span>{partySize} people</span>
+                      <span className="text-[#2c2420]/70">Tables Needed:</span>
+                      <span>{tableQuantity}</span>
+                      <span className="text-[#2c2420]/70">Price:</span>
+                      <span>₹{originalPrice.toFixed(2)}</span>
                       {couponCode && (
                         <>
                           <span className="text-[#2c2420]/70">Discount:</span>
-                          <span className="text-[#8b5d3b] font-medium">-₹{discount.toFixed(2)}</span>
+                          <span className="text-[#8b5d3b]">-₹{discount.toFixed(2)}</span>
                           <span className="text-[#2c2420]/70">Final Price:</span>
                           <span className="text-[#8b5d3b] font-medium">₹{finalPrice.toFixed(2)}</span>
                         </>
@@ -462,58 +436,49 @@ const BookingPage: React.FC = () => {
                       {preferences.length > 0 && (
                         <>
                           <span className="text-[#2c2420]/70">Preferences:</span>
-                          <span className="text-[#2c2420] font-medium">
-                            {preferences.map((p) => p.replace(/([A-Z])/g, ' $1').trim()).join(', ')}
-                          </span>
+                          <span>{preferences.map((p) => p.replace(/([A-Z])/g, ' $1').trim()).join(', ')}</span>
                         </>
                       )}
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <p className="text-[#8b5d3b] text-sm mb-4">Please complete your selections</p>
+                  <p className="text-[#8b5d3b] text-sm mb-4">Complete your selections to see summary</p>
                 )}
                 <motion.button
                   type="submit"
                   disabled={!selectedTable || !selectedTime}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full text-base font-semibold hover:from-[#d4a373] hover:to-[#8b5d3b] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-[#8b5d3b] text-white rounded-lg text-sm font-medium hover:bg-[#2c2420] disabled:bg-[#e8e2d9] disabled:text-[#2c2420]/50 transition-all duration-200"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span>Confirm Reservation</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  Confirm Reservation
                 </motion.button>
-              </motion.div>
+              </div>
             </>
           ) : (
-            <motion.div
-              className="mb-8 p-6 bg-[#faf7f2] rounded-lg shadow-inner border border-[#e8e2d9] text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-lg font-semibold text-[#2c2420] mb-4 tracking-tight">
-                Large Party Booking
-              </h2>
+            <div className="p-6 bg-[#faf7f2] rounded-lg text-center">
+              <h2 className="text-lg font-medium text-[#2c2420] mb-4">Large Party Booking</h2>
               <p className="text-[#2c2420] text-sm mb-4">
-                For parties larger than 20, please contact our customer service team to make arrangements.
+                For groups over 20, please contact us directly.
               </p>
-              <div className="space-y-2">
-                <p className="text-[#2c2420] font-medium">
-                  Call us at:{' '}
-                  <a href="tel:1234567890" className="text-[#d4a373] hover:text-[#8b5d3b] transition-colors">
+              <div className="space-y-2 text-sm">
+                <p>
+                  Phone:{' '}
+                  <a href="tel:1234567890" className="text-[#8b5d3b] hover:text-[#d4a373]">
                     (123) 456-7890
                   </a>
                 </p>
-                <p className="text-[#2c2420] font-medium">
-                  Email us at:{' '}
-                  <a href="mailto:reservations@restaurantname.com" className="text-[#d4a373] hover:text-[#8b5d3b] transition-colors">
+                <p>
+                  Email:{' '}
+                  <a
+                    href="mailto:reservations@restaurantname.com"
+                    className="text-[#8b5d3b] hover:text-[#d4a373]"
+                  >
                     reservations@restaurantname.com
                   </a>
                 </p>
               </div>
-            </motion.div>
+            </div>
           )}
         </motion.form>
       </div>

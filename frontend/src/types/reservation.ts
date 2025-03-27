@@ -51,6 +51,11 @@ export enum ReservationStatus {
   COMPLETED = 'completed',
 }
 
+export interface Review {
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
 export interface TableType {
   _id: string;
   name: string;
@@ -86,6 +91,7 @@ export interface Reservation {
   finalAmount?: number;
   createdAt: string;
   updatedAt: string;
+  reviews?: Review[];
 }
 export interface PaymentResponse {
     status: number;

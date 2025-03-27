@@ -25,6 +25,7 @@ declare global {
         id: string;
         role: string;
         userId?: string;
+        email?: string;
       };
     }
   }

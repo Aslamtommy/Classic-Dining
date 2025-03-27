@@ -1,390 +1,391 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchBranchDetails } from "../../Api/userApi";
+import { fetchBranchDetails, fetchBranchReviews } from "../../Api/userApi";
 import { Branch } from "../../types/branch";
+import { Review } from "../../types/reservation";
 import { motion } from "framer-motion";
-import { Button, Modal, Box, IconButton, Tooltip } from "@mui/material";
+import { Button, IconButton, Tooltip } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
 import axios from "axios";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"; // For zoom functionality
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import ShareIcon from "@mui/icons-material/Share";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+ import Header from  '../../components/User/Home/Header'
 const mapContainerStyle = {
   width: "100%",
-  height: "300px",
+  height: "400px", // Slightly reduced for balance
 };
 
-// Modal style for enlarging photos
-const modalStyle = {
-  position: "absolute" as "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  bgcolor: "white",
-  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)",
-  p: 3,
-  borderRadius: "12px",
-  outline: "none",
-  maxWidth: "90vw",
-  maxHeight: "90vh",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: 2,
-};
+const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
 
 const RestaurantDetailPage: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
   const navigate = useNavigate();
   const [branch, setBranch] = useState<Branch | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [mapQuery, setMapQuery] = useState<string>("");
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null); // For photo modal
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
-  const GOOGLE_MAPS_API_KEY =   "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
-
-  // Load Google Maps JavaScript API
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   useEffect(() => {
-    const loadBranchAndLocation = async () => {
+    const loadBranchAndReviews = async () => {
       try {
         if (!branchId) throw new Error("No branch ID provided");
         setLoading(true);
 
-        // Fetch branch details
         const branchData = await fetchBranchDetails(branchId);
         setBranch(branchData);
 
-        // Log the address for debugging
-        console.log("Branch Address:", branchData.address);
+        const reviewData = await fetchBranchReviews(branchId);
+        setReviews(reviewData);
 
-        // Fetch coordinates if not provided, using address
         let query = "";
         let coords: { lat: number; lng: number } | null = null;
         if (branchData.location?.coordinates) {
           query = `${branchData.location.coordinates[1]},${branchData.location.coordinates[0]}`;
-          coords = {
-            lat: branchData.location.coordinates[1],
-            lng: branchData.location.coordinates[0],
-          };
+          coords = { lat: branchData.location.coordinates[1], lng: branchData.location.coordinates[0] };
         } else if (branchData.address) {
-          try {
-            const geocodeResponse: any = await axios.get(
-              `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(branchData.address)}&key=${GOOGLE_MAPS_API_KEY}`
-            );
-            console.log("Geocode Response:", geocodeResponse.data);
-            if (geocodeResponse.data.status === "OK" && geocodeResponse.data.results.length > 0) {
-              const { lat, lng } = geocodeResponse.data.results[0].geometry.location;
-              query = `${lat},${lng}`;
-              coords = { lat, lng };
-            } else {
-              setMapError("Unable to geocode address. Map may not display correctly.");
-              query = encodeURIComponent(branchData.address || `${branchData.name}, Unknown Location`);
-            }
-          } catch (geocodeError) {
-            console.error("Geocoding failed:", geocodeError);
-            setMapError("Geocoding failed. Map may not display correctly.");
+          const geocodeResponse: any = await axios.get(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(branchData.address)}&key=${GOOGLE_MAPS_API_KEY}`
+          );
+          if (geocodeResponse.data.status === "OK" && geocodeResponse.data.results.length > 0) {
+            const { lat, lng } = geocodeResponse.data.results[0].geometry.location;
+            query = `${lat},${lng}`;
+            coords = { lat, lng };
+          } else {
+            setMapError("Unable to geocode address.");
             query = encodeURIComponent(branchData.address || `${branchData.name}, Unknown Location`);
           }
         } else {
-          setMapError("No address or coordinates provided. Map may not display correctly.");
+          setMapError("No address or coordinates provided.");
           query = encodeURIComponent(`${branchData.name}, Unknown Location`);
         }
         setMapQuery(query);
         setCoordinates(coords);
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Failed to load restaurant details";
-        setError(message);
+        setError(error instanceof Error ? error.message : "Failed to load restaurant details");
       } finally {
         setLoading(false);
       }
     };
-    loadBranchAndLocation();
+    loadBranchAndReviews();
   }, [branchId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#faf7f2] flex items-center justify-center">
-        <div className="text-[#2c2420] text-2xl font-playfair">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-serif text-gray-800">
+          Loading...
+        </motion.div>
       </div>
     );
   }
 
   if (error || !branch) {
     return (
-      <div className="min-h-screen bg-[#faf7f2] flex items-center justify-center">
-        <div className="text-[#8b5d3b] text-xl">{error || "Restaurant not found"}</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-red-600 text-lg font-sans">{error || "Restaurant not found"}</div>
       </div>
     );
   }
 
   const carouselImages = [branch.mainImage || "/placeholder-branch.jpg", ...(branch.interiorImages || [])];
-  const interiorImages = branch.interiorImages || [];
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${mapQuery}`;
 
-  // Handle photo click to open modal
-  const handlePhotoClick = (imgSrc: string) => {
-    setSelectedPhoto(imgSrc);
-    console.log("Photo clicked:", imgSrc); // For debugging
-  };
-
-  // Close modal
-  const handleCloseModal = () => {
-    setSelectedPhoto(null);
-  };
-
-  // Download photo
+  const handlePhotoClick = (imgSrc: string) => setSelectedPhoto(imgSrc);
+  const handleCloseModal = () => setSelectedPhoto(null);
   const handleDownloadPhoto = (imgSrc: string) => {
     const link = document.createElement("a");
     link.href = imgSrc;
     link.download = `photo-${Date.now()}.jpg`;
     link.click();
-    console.log("Photo downloaded:", imgSrc);
   };
-
-  // Share restaurant page
   const handleShare = async () => {
     const shareData = {
       title: branch.name,
-      text: `Check out ${branch.name} at ${branch.address || "this location"}!`,
+      text: `Discover ${branch.name} at ${branch.address || "this location"}!`,
       url: window.location.href,
     };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // Fallback: Copy URL to clipboard
         await navigator.clipboard.writeText(window.location.href);
         alert("Link copied to clipboard!");
       }
     } catch (err) {
-      console.error("Share failed:", err);
-      alert("Failed to share. Link copied to clipboard!");
       await navigator.clipboard.writeText(window.location.href);
+      alert("Failed to share. Link copied to clipboard!");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#faf7f2] pt-16 pb-20">
-      <div className="max-w-5xl mx-auto px-6">
-        {/* Main Image Carousel */}
-        <motion.div
-          className="relative mb-10 rounded-xl shadow-xl overflow-hidden"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+    <div className="min-h-screen bg-gray-50 font-sans antialiased">
+      <Header/>
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative h-[60vh] w-full"
+      >
+        <Carousel
+          autoPlay={false}
+          animation="fade"
+          navButtonsAlwaysVisible={false} // Cleaner look, hover to show
+          indicators={carouselImages.length > 1}
+          className="h-full"
         >
-          <Carousel autoPlay={false} navButtonsAlwaysVisible indicators={carouselImages.length > 1}>
-            {carouselImages.map((imgSrc, index) => (
-              <div key={index} className="relative">
-                <img src={imgSrc} alt={`${branch.name} Image ${index + 1}`} className="w-full h-[500px] object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2c2420]/70 to-transparent pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-full p-8 text-white">
-                  <h1 className="text-5xl font-playfair font-bold tracking-tight drop-shadow-xl">{branch.name}</h1>
-                  <p className="text-base font-medium opacity-90 drop-shadow-md mb-3">{branch.address || "Address not available"}</p>
-                  <div className="flex gap-5 text-base opacity-90">
-                    <p><strong>Email:</strong> {branch.email}</p>
-                    <p><strong>Phone:</strong> {branch.phone || "N/A"}</p>
+          {carouselImages.map((imgSrc, index) => (
+            <div key={index} className="relative h-full w-full">
+              <img src={imgSrc} alt={`${branch.name} ${index + 1}`} className="w-full h-full object-cover brightness-90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center text-center text-white px-4 md:px-8">
+                <div className="max-w-4xl mx-auto">
+                  <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight mb-4">{branch.name}</h1>
+                  <p className="text-lg md:text-xl text-gray-200 mb-6">{branch.address || "Address not available"}</p>
+                  <div className="flex justify-center gap-4">
+                    <Button
+                      variant="contained"
+                      sx={{
+                        bgcolor: "#c62828",
+                        "&:hover": { bgcolor: "#b71c1c" },
+                        padding: "10px 28px",
+                        fontSize: "16px",
+                        borderRadius: "9999px",
+                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                      }}
+                      onClick={() => navigate(`/book/${branch._id}`)}
+                    >
+                      Reserve a Table
+                    </Button>
+                    <Tooltip title="Share this restaurant">
+                      <IconButton
+                        onClick={handleShare}
+                        sx={{ bgcolor: "white", "&:hover": { bgcolor: "#f0f0f0" }, padding: "10px" }}
+                      >
+                        <ShareIcon sx={{ color: "#c62828" }} />
+                      </IconButton>
+                    </Tooltip>
                   </div>
                 </div>
               </div>
-            ))}
-          </Carousel>
-          {/* Share Button */}
-          <Tooltip title="Share this restaurant">
-            <IconButton
-              onClick={handleShare}
-              sx={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                bgcolor: "white",
-                "&:hover": { bgcolor: "#f0f0f0" },
-              }}
-            >
-              <ShareIcon sx={{ color: "#2c2420" }} />
-            </IconButton>
-          </Tooltip>
-        </motion.div>
+            </div>
+          ))}
+        </Carousel>
+      </motion.div>
 
-        {/* Photos Section (Always Visible) */}
-        <motion.div
-          className="mb-10"
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-12">
+        {/* Overview Section */}
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ delay: 0.2 }}
+          className="mb-12 bg-white rounded-xl shadow-sm p-6"
         >
-          <h2 className="text-3xl font-playfair font-semibold text-[#2c2420] mb-6">Photos</h2>
-          {interiorImages.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {interiorImages.map((imgSrc, index) => (
-                <div
+          <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4">About {branch.name}</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-gray-700 text-base leading-relaxed mb-4">{branch.address || "N/A"}</p>
+              <div className="space-y-2 text-gray-600 text-sm">
+                <p><strong>Email:</strong> {branch.email}</p>
+                <p><strong>Phone:</strong> {branch.phone || "N/A"}</p>
+              </div>
+            </div>
+            <div className="flex items-end justify-end">
+              <Button
+                variant="outlined"
+                startIcon={<LocationOnIcon />}
+                sx={{
+                  borderColor: "#c62828",
+                  color: "#c62828",
+                  "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
+                  padding: "8px 20px",
+                  borderRadius: "9999px",
+                }}
+                href={directionsUrl}
+                target="_blank"
+              >
+                Get Directions
+              </Button>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Gallery Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-6">Gallery</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {(branch.interiorImages || []).map((imgSrc, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                className="relative rounded-lg overflow-hidden shadow-sm cursor-pointer"
+                onClick={() => handlePhotoClick(imgSrc)}
+              >
+                <img src={imgSrc} alt={`Photo ${index + 1}`} className="w-full h-40 object-cover" />
+                <div className="absolute inset-0 bg-black/10 opacity-0 hover:opacity-100 transition-opacity duration-200" />
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Location Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-6">Location</h2>
+          {isLoaded && coordinates ? (
+            <div className="rounded-lg overflow-hidden shadow-sm">
+              <GoogleMap mapContainerStyle={mapContainerStyle} center={coordinates} zoom={14}>
+                <Marker position={coordinates} title={branch.name} />
+              </GoogleMap>
+            </div>
+          ) : (
+            <div className="h-[400px] bg-gray-100 flex items-center justify-center rounded-lg">
+              <p className="text-gray-600 text-base">Map unavailable</p>
+            </div>
+          )}
+        </motion.section>
+
+        {/* Reviews Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-6">Customer Reviews</h2>
+          {reviews.length > 0 ? (
+            <div className="space-y-6">
+              {reviews.map((review, index) => (
+                <motion.div
                   key={index}
-                  className="relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group"
-                  onClick={() => handlePhotoClick(imgSrc)}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white p-5 rounded-lg shadow-sm border border-gray-100"
                 >
-                  <img
-                    src={imgSrc}
-                    alt={`${branch.name} Photo ${index + 1}`}
-                    className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2c2420]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                </div>
+                  <div className="flex items-center mb-2">
+                    {Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <span key={i} className={`text-lg ${i < review.rating ? "text-amber-400" : "text-gray-300"}`}>
+                          ★
+                        </span>
+                      ))}
+                  </div>
+                  {review.comment && (
+                    <p className="text-gray-700 text-base leading-relaxed mb-2">{review.comment}</p>
+                  )}
+                  <p className="text-gray-500 text-sm">
+                    {new Date(review.createdAt).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                </motion.div>
               ))}
             </div>
           ) : (
-            <p className="text-[#8b5d3b] text-lg font-medium">No photos available.</p>
+            <p className="text-gray-600 text-base">No reviews available yet.</p>
           )}
-        </motion.div>
-
-        {/* About Section (Always Visible) */}
-        <motion.div
-          className="mb-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <div className="bg-white p-8 rounded-xl shadow-xl border border-[#e8e2d9]">
-            <h2 className="text-3xl font-playfair font-semibold text-[#2c2420] mb-6">About {branch.name}</h2>
-
-            {/* Map Section */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-3">
-                <svg className="w-6 h-6 text-[#8b5d3b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p className="text-[#2c2420] text-lg font-medium">{branch.address || "Address not available"}</p>
-              </div>
-              {coordinates && (
-                <p className="text-[#8b5d3b] text-sm mb-3">
-                  {coordinates.lat.toFixed(6)}°N {coordinates.lng.toFixed(6)}°E
-                </p>
-              )}
-              {mapError && <p className="text-red-500 text-sm mb-3">{mapError}</p>}
-              {isLoaded && coordinates ? (
-                <div className="relative rounded-xl overflow-hidden shadow-lg">
-                  <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={coordinates}
-                    zoom={14}
-                    options={{ mapTypeId: "roadmap" }}
-                  >
-                    <Marker position={coordinates} title={branch.name} />
-                  </GoogleMap>
-                </div>
-              ) : (
-                <div className="w-full h-[300px] bg-gray-200 flex items-center justify-center rounded-xl">
-                  <p className="text-[#8b5d3b] text-lg">Map loading...</p>
-                </div>
-              )}
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-4 px-8 py-3 bg-[#ff6200] text-white rounded-full font-medium text-lg hover:bg-[#e55a00] transition-all duration-300 shadow-md"
-              >
-                Get Directions
-              </a>
-            </div>
-
-            {/* Additional Details */}
-            <div className="text-[#8b5d3b] grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
-              <p><strong>Address:</strong> {branch.address || "N/A"}</p>
-              <p><strong>Email:</strong> {branch.email}</p>
-              <p><strong>Phone:</strong> {branch.phone || "N/A"}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Book Now Button */}
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <Button
-            variant="contained"
-            sx={{
-              background: "linear-gradient(to right, #8b5d3b, #2c2420)",
-              color: "white",
-              padding: "14px 40px",
-              borderRadius: "9999px",
-              fontSize: "18px",
-              fontWeight: "medium",
-              textTransform: "none",
-              boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
-              "&:hover": { background: "linear-gradient(to right, #d4a373, #8b5d3b)", boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)" },
-            }}
-            onClick={() => navigate(`/book/${branch._id}`)}
-          >
-            Book Now
-          </Button>
-        </motion.div>
+        </motion.section>
       </div>
 
-      {/* Modal for Enlarged Photo */}
-      <Modal open={!!selectedPhoto} onClose={handleCloseModal}>
-        <Box sx={modalStyle}>
-          <IconButton
-            onClick={handleCloseModal}
-            sx={{ position: "absolute", top: 8, right: 8, color: "#2c2420" }}
-          >
-            <CloseIcon />
-          </IconButton>
-          <TransformWrapper>
-            {({ zoomIn, zoomOut, resetTransform }) => (
-              <>
-                <TransformComponent>
-                  <img
-                    src={selectedPhoto || ""}
-                    alt="Enlarged Photo"
-                    style={{
-                      maxWidth: "80vw",
-                      maxHeight: "70vh",
-                      objectFit: "contain",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </TransformComponent>
-                <div className="flex gap-3 mt-3">
-                  <Tooltip title="Zoom In">
-                    <IconButton onClick={() => zoomIn()} sx={{ bgcolor: "#f0f0f0", "&:hover": { bgcolor: "#e0e0e0" } }}>
-                      <ZoomInIcon sx={{ color: "#2c2420" }} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Zoom Out">
-                    <IconButton onClick={() => zoomOut()} sx={{ bgcolor: "#f0f0f0", "&:hover": { bgcolor: "#e0e0e0" } }}>
-                      <ZoomOutIcon sx={{ color: "#2c2420" }} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Download Photo">
+      {/* Sticky Book Now Button */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="fixed bottom-4 right-4 z-50"
+      >
+        <Button
+          variant="contained"
+          sx={{
+            bgcolor: "#c62828",
+            "&:hover": { bgcolor: "#b71c1c" },
+            padding: "10px 24px",
+            fontSize: "14px",
+            borderRadius: "9999px",
+            boxShadow: "0 3px 10px rgba(0, 0, 0, 0.2)",
+          }}
+          onClick={() => navigate(`/book/${branch._id}`)}
+        >
+          Reserve Now
+        </Button>
+      </motion.div>
+
+      {/* Photo Modal */}
+      {selectedPhoto && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={handleCloseModal}
+        >
+          <div className="relative bg-white p-4 rounded-lg max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <IconButton
+              onClick={handleCloseModal}
+              sx={{ position: "absolute", top: 8, right: 8, color: "#c62828" }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <TransformWrapper>
+              {({ zoomIn, zoomOut }) => (
+                <>
+                  <TransformComponent>
+                    <img src={selectedPhoto} alt="Enlarged" className="max-h-[80vh] w-full object-contain rounded-md" />
+                  </TransformComponent>
+                  <div className="flex justify-center gap-4 mt-4">
                     <IconButton
-                      onClick={() => handleDownloadPhoto(selectedPhoto || "")}
-                      sx={{ bgcolor: "#f0f0f0", "&:hover": { bgcolor: "#e0e0e0" } }}
+                      onClick={() => zoomIn()}
+                      sx={{ bgcolor: "#f5f5f5", "&:hover": { bgcolor: "#e0e0e0" } }}
                     >
-                      <DownloadIcon sx={{ color: "#2c2420" }} />
+                      <ZoomInIcon sx={{ color: "#c62828" }} />
                     </IconButton>
-                  </Tooltip>
-                </div>
-              </>
-            )}
-          </TransformWrapper>
-        </Box>
-      </Modal>
+                    <IconButton
+                      onClick={() => zoomOut()}
+                      sx={{ bgcolor: "#f5f5f5", "&:hover": { bgcolor: "#e0e0e0" } }}
+                    >
+                      <ZoomOutIcon sx={{ color: "#c62828" }} />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDownloadPhoto(selectedPhoto)}
+                      sx={{ bgcolor: "#f5f5f5", "&:hover": { bgcolor: "#e0e0e0" } }}
+                    >
+                      <DownloadIcon sx={{ color: "#c62828" }} />
+                    </IconButton>
+                  </div>
+                </>
+              )}
+            </TransformWrapper>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

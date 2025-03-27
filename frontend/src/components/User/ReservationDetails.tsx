@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchReservation } from '../../Api/userApi'; // Use existing function
+import { fetchReservation, submitReview } from '../../Api/userApi';
 import toast, { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { Reservation } from '../../types/reservation';
@@ -10,6 +10,8 @@ const ReservationDetails: React.FC = () => {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [rating, setRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +34,24 @@ const ReservationDetails: React.FC = () => {
   const handlePayNow = () => {
     if (reservation?._id) {
       navigate(`/confirmation/${reservation._id}`);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!rating) {
+      toast.error('Please select a rating', { duration: 4000, position: 'top-center' });
+      return;
+    }
+    try {
+      if (id) {
+        const response = await submitReview(id, { rating, comment });
+        setReservation(response.data);
+        setRating(0);
+        setComment('');
+        toast.success('Review submitted successfully', { duration: 4000, position: 'top-center' });
+      }
+    } catch (error: any) {
+      toast.error(error.message, { duration: 4000, position: 'top-center' });
     }
   };
 
@@ -71,6 +91,7 @@ const ReservationDetails: React.FC = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="space-y-4">
+            {/* Existing reservation details */}
             <div>
               <h2 className="text-xl font-semibold text-[#2c2420]">
                 {reservation.branch?.name || 'Branch Name Not Available'}
@@ -96,16 +117,16 @@ const ReservationDetails: React.FC = () => {
               <p className="text-[#8b5d3b] text-sm">Phone: {reservation.user.phone}</p>
             </div>
 
-            {(reservation.preferences && reservation.preferences.length > 0) && (
-  <div>
-    <p className="text-[#2c2420] font-medium">Preferences:</p>
-    <ul className="list-disc list-inside text-[#8b5d3b] text-sm">
-      {reservation.preferences.map((pref, index) => (
-        <li key={index}>{pref}</li>
-      ))}
-    </ul>
-  </div>
-)}
+            {reservation.preferences && reservation.preferences.length > 0 && (
+              <div>
+                <p className="text-[#2c2420] font-medium">Preferences:</p>
+                <ul className="list-disc list-inside text-[#8b5d3b] text-sm">
+                  {reservation.preferences.map((pref, index) => (
+                    <li key={index}>{pref}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {reservation.specialRequests && (
               <div>
@@ -147,6 +168,8 @@ const ReservationDetails: React.FC = () => {
                   ? 'text-green-600'
                   : reservation.status === 'cancelled' || reservation.status === 'expired'
                   ? 'text-red-600'
+                  : reservation.status === 'completed'
+                  ? 'text-blue-600'
                   : 'text-yellow-600'
               }`}
             >
@@ -160,6 +183,71 @@ const ReservationDetails: React.FC = () => {
               >
                 Pay Now
               </button>
+            )}
+
+            {/* Review Section */}
+            {reservation.status === 'completed' && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-[#2c2420] mb-2">Leave a Review</h3>
+                {!reservation.reviews || reservation.reviews.length === 0 ? (
+                  <div>
+                    <div className="flex items-center mb-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setRating(star)}
+                          className={`text-2xl ${
+                            star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="Write your review here..."
+                      className="w-full p-2 border rounded text-[#8b5d3b] mb-2"
+                      rows={4}
+                    />
+                    <button
+                      onClick={handleSubmitReview}
+                      className="px-4 py-2 bg-[#8b5d3b] text-white rounded-full hover:bg-[#2c2420] transition-colors"
+                    >
+                      Submit Review
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="text-md font-medium text-[#2c2420]">Your Review:</h4>
+                    {reservation.reviews.map((review, index) => (
+                      <div key={index} className="mt-2">
+                        <div className="flex items-center">
+                          {Array(5)
+                            .fill(0)
+                            .map((_, i) => (
+                              <span
+                                key={i}
+                                className={`text-xl ${
+                                  i < review.rating ? 'text-yellow-400' : 'text-gray-300'
+                                }`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                        </div>
+                        {review.comment && (
+                          <p className="text-[#8b5d3b] text-sm mt-1">{review.comment}</p>
+                        )}
+                        <p className="text-gray-500 text-xs mt-1">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </motion.div>

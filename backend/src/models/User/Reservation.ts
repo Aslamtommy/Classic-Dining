@@ -11,6 +11,12 @@ export enum ReservationStatus {
   COMPLETED = 'completed',
 }
 
+export interface IReview {
+  rating: number; 
+  comment?: string;
+  createdAt: Date;
+}
+
 export interface IReservation extends Document {
   userId: Types.ObjectId;
   user: {
@@ -39,8 +45,13 @@ export interface IReservation extends Document {
   specialRequests?: string;
  
  
-
+  reviews?: IReview[];
 }
+const ReviewSchema = new Schema<IReview>({
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: false }, // Ensure this is explicitly defined
+  createdAt: { type: Date, default: Date.now },
+});
 
 const ReservationSchema: Schema = new Schema({
 
@@ -68,6 +79,7 @@ const ReservationSchema: Schema = new Schema({
   couponCode: { type: String },                
   discountApplied: { type: Number, default: 0 }, 
   finalAmount: { type: Number },
+  reviews: { type: [ReviewSchema], default: [] }
 }, { timestamps: true });
 ReservationSchema.index({ reservationDate: 1 });
 export default mongoose.model<IReservation>('Reservation', ReservationSchema);

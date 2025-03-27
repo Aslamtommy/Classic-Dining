@@ -56,7 +56,7 @@ export const Gallery: React.FC = () => {
               >
                 <div className="aspect-[4/5] relative overflow-hidden bg-[#e8e2d9] rounded-lg shadow-lg">
                   <img
-                    src={branch.image || "/placeholder-branch.jpg"}
+                    src={branch.mainImage || "/placeholder-branch.jpg"}
                     alt={branch.name}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                   />

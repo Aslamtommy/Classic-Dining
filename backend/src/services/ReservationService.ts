@@ -11,7 +11,7 @@ import { IReservationService } from '../interfaces/Reservation/IReservationServi
 import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
-
+import { IReview } from '../models/User/Reservation';
 export class ReservationService implements IReservationService {
   constructor(
     private _reservationRepo: IReservationRepository,
@@ -273,9 +273,12 @@ export class ReservationService implements IReservationService {
     session.startTransaction();
 
     try {
+
+    
       const reservation = await this._reservationRepo.findById(reservationId);
       if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
-      if (reservation.branch.toString() !== branchId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      
+      if (reservation.branch._id.toString() !== branchId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
       if (reservation.status !== ReservationStatus.CONFIRMED) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_RESERVATION_STATUS);
       }
@@ -315,4 +318,71 @@ export class ReservationService implements IReservationService {
       session.endSession();
     }
   }
+
+  async submitReview(reservationId: string, userId: string, review: { rating: number; comment?: string }): Promise<IReservation> {
+    try {
+      // Fetch the existing reservation by ID
+      const reservation = await this._reservationRepo.findById(reservationId);
+      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+  
+      console.log('Existing Reservation:', reservation); // Log the current state of the reservation
+  
+      // Verify the user submitting the review owns the reservation
+      if (reservation.userId.toString() !== userId) {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+  
+      // Check if the reservation is completed (only completed reservations can be reviewed)
+      if (reservation.status !== ReservationStatus.COMPLETED) {
+        throw new AppError(HttpStatus.BadRequest, 'Reviews can only be submitted for completed reservations');
+      }
+  
+      // Log the incoming review data for debugging
+      console.log('Received Review:', review);
+  
+      // Construct the new review object
+      const newReview: IReview = {
+        rating: review.rating,
+        comment: review.comment || undefined, // Explicitly set to undefined if empty string
+        createdAt: new Date(),
+      };
+  
+      console.log('Constructed New Review:', newReview); // Log the new review object
+  
+      // Append the new review to the existing reviews array, or start a new array if none exists
+      const updatedReviews = reservation.reviews ? [...reservation.reviews, newReview] : [newReview];
+      console.log('Updated Reviews Array:', updatedReviews); // Log the full reviews array before saving
+  
+      // Update the reservation with the new reviews array
+      const updatedReservation = await this._reservationRepo.update(reservationId, {
+        reviews: updatedReviews,
+      });
+  
+      console.log('Updated Reservation:', updatedReservation); // Existing log to verify the result
+  
+      // Check if the update was successful
+      if (!updatedReservation) {
+        throw new AppError(HttpStatus.InternalServerError, 'Failed to submit review');
+      }
+  
+      return updatedReservation;
+    } catch (error) {
+      console.error('Submit Review Error:', error); // Log any errors for debugging
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  
+async getBranchReviews(branchId: string): Promise<IReview[]> {
+  try {
+    const reservations = await this._reservationRepo.findByBranchIdWithPagination(branchId, 0, 0, ReservationStatus.COMPLETED);
+    // Flatten all reviews from completed reservations
+    const reviews = reservations.flatMap(reservation => reservation.reviews || []);
+    return reviews;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+  }
+}
 }

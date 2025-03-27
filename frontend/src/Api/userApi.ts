@@ -11,6 +11,7 @@ import {
   Reservation,
   TableType,
 } from "../types/reservation";
+import { Review } from "../types/reservation";
 
 export const fetchBranchDetails = async (branchId: string): Promise<BranchResponse['data']> => {
   try {
@@ -171,5 +172,34 @@ export const fetchBranches = async (
   } catch (error: unknown) {
     const axiosError = error as AxiosError;
     throw new Error(axiosError.response?.data?.message || 'Failed to fetch branches');
+  }
+};
+
+export const submitReview = async (
+  reservationId: string,
+  review: { rating: number; comment?: string }
+): Promise<ReservationResponse> => {
+  try {
+    const response = await api.post<ReservationResponse>(`/reservations/${reservationId}/review`, review);
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to submit review');
+    }
+    return response.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to submit review');
+  }
+};
+
+export const fetchBranchReviews = async (branchId: string): Promise<Review[]> => {
+  try {
+    const response = await api.get<{ success: boolean; message: string; data: Review[] }>(`/branches/${branchId}/reviews`);
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch reviews');
+    }
+    return response.data.data;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    throw new Error(axiosError.response?.data?.message || 'Failed to fetch reviews');
   }
 };

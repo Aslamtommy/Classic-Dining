@@ -4,6 +4,8 @@ module.exports = {
   ],
   theme: {
     extend: {
+
+    
       colors: {
         sepia: {
           50: '#FCF9F3',
@@ -18,6 +20,7 @@ module.exports = {
       },
       fontFamily: {
         'playfair': ['Playfair Display', 'serif'],
+        
       },
     },
   },
