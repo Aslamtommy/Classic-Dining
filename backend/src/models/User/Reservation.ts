@@ -12,6 +12,7 @@ export enum ReservationStatus {
 }
 
 export interface IReview {
+  userName: string;
   rating: number; 
   comment?: string;
   createdAt: Date;
@@ -30,7 +31,7 @@ export interface IReservation extends Document {
   timeSlot: string;
   partySize: number;
   status:ReservationStatus
-  tableQuantity: number; // New: Number of tables booked
+  tableQuantity: number; 
   
   preferences: string[]
   paymentId?: string;
@@ -49,8 +50,9 @@ export interface IReservation extends Document {
 }
 const ReviewSchema = new Schema<IReview>({
   rating: { type: Number, required: true, min: 1, max: 5 },
-  comment: { type: String, required: false }, // Ensure this is explicitly defined
+  comment: { type: String, required: false },  
   createdAt: { type: Date, default: Date.now },
+  userName: { type: String, required: true },
 });
 
 const ReservationSchema: Schema = new Schema({

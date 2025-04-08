@@ -345,6 +345,7 @@ export class ReservationService implements IReservationService {
         rating: review.rating,
         comment: review.comment || undefined, // Explicitly set to undefined if empty string
         createdAt: new Date(),
+        userName: reservation.user.name,
       };
   
       console.log('Constructed New Review:', newReview); // Log the new review object

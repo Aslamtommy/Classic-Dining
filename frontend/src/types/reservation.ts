@@ -55,6 +55,7 @@ export interface Review {
   rating: number;
   comment?: string;
   createdAt: string;
+  userName: string;
 }
 export interface TableType {
   _id: string;

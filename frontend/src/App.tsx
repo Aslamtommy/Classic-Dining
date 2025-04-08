@@ -25,7 +25,7 @@ import RestaurentProfile from './components/Restaurent/RestaurentProfile';
 import PendingApproval from './components/Restaurent/PendingApproval';
 import RestaurentProtected from './components/Restaurent/RestaurentProtected';
 import Layout from './components/Restaurent/Home/Layout';
-
+import RestaurentLoginProtected from './components/Restaurent/RestaurentLoginProtected';
 // Branch Components
 import AddBranch from './components/BranchManagement/AddBranch';
 import Branches from './components/BranchManagement/Branches';
@@ -53,7 +53,7 @@ const App: React.FC = () => {
         <Route path="/signup" element={<SignupForm />} />
         <Route path="/login" element={<ProtectedLogin />} />
         <Route path="/restaurent/signup" element={<RestaurentSignup />} />
-        <Route path="/restaurent/login" element={<RestaurentLogin />} />
+        <Route path="/restaurent/login" element={<RestaurentLoginProtected />} /> 
         <Route path="/restaurent/pending-approval" element={<PendingApproval />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
@@ -73,6 +73,7 @@ const App: React.FC = () => {
             <Route path="/restaurentList" element={<RestaurantListPage />} />
             <Route path="/search" element={<RestaurantSearch />} />
           </Route>
+          <Route path="/bookings/:id" element={<ReservationDetails />} />
         </Route>
 
       {/* Restaurant Routes */}
@@ -85,7 +86,7 @@ const App: React.FC = () => {
             <Route path="/restaurent/branches/:branchId" element={<BranchDetails />} />
             <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
           </Route>
-          <Route path="/bookings/:id" element={<ReservationDetails />} />
+     
         </Route>
 
       {/* Branch Routes */}

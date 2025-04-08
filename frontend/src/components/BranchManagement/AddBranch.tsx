@@ -13,6 +13,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
 const AddBranch = () => {
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [interiorImagesPreview, setInteriorImagesPreview] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false); // Add loading state
   const { restaurent } = useSelector((state: RootState) => state.restaurent);
   const navigate = useNavigate();
 
@@ -43,7 +44,6 @@ const AddBranch = () => {
             }
             return true;
           })
-         
       )
       .max(3, "You can upload up to 3 interior images"),
   });
@@ -62,6 +62,7 @@ const AddBranch = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
+      setLoading(true); // Start loading
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("email", values.email);
@@ -82,9 +83,11 @@ const AddBranch = () => {
         const response = await restaurentApi.post("/branches", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Branch created successfully!");
-        navigate("/restaurent/branches");
+        toast.success("Branch successfully added!"); // Updated success message
+        setLoading(false); // Stop loading
+        navigate("/restaurent/branches"); // Navigate after success
       } catch (error: any) {
+        setLoading(false); // Stop loading on error
         toast.error(error.response?.data?.message || "Failed to create branch");
       }
     },
@@ -154,6 +157,7 @@ const AddBranch = () => {
               onBlur={formik.handleBlur}
               placeholder="Enter branch name"
               className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              disabled={loading} // Disable input during loading
             />
             {formik.touched.name && formik.errors.name && (
               <div className="text-red-600 text-sm mt-1">{formik.errors.name}</div>
@@ -171,6 +175,7 @@ const AddBranch = () => {
               onBlur={formik.handleBlur}
               placeholder="Enter branch email"
               className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              disabled={loading}
             />
             {formik.touched.email && formik.errors.email && (
               <div className="text-red-600 text-sm mt-1">{formik.errors.email}</div>
@@ -188,6 +193,7 @@ const AddBranch = () => {
               onBlur={formik.handleBlur}
               placeholder="Enter 10-digit phone number"
               className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              disabled={loading}
             />
             {formik.touched.phone && formik.errors.phone && (
               <div className="text-red-600 text-sm mt-1">{formik.errors.phone}</div>
@@ -205,6 +211,7 @@ const AddBranch = () => {
               onBlur={formik.handleBlur}
               placeholder="Enter branch password"
               className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              disabled={loading}
             />
             {formik.touched.password && formik.errors.password && (
               <div className="text-red-600 text-sm mt-1">{formik.errors.password}</div>
@@ -225,6 +232,7 @@ const AddBranch = () => {
               }}
               placeholder="Enter branch address"
               className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              disabled={loading}
             />
             {formik.touched.address && formik.errors.address && (
               <div className="text-red-600 text-sm mt-1">{formik.errors.address}</div>
@@ -282,7 +290,7 @@ const AddBranch = () => {
                     <span className="text-sm text-[#8b5d3b]">Upload main image</span>
                   </div>
                 )}
-                <input type="file" name="mainImage" onChange={handleMainImageChange} className="hidden" accept="image/*" />
+                <input type="file" name="mainImage" onChange={handleMainImageChange} className="hidden" accept="image/*" disabled={loading} />
               </label>
             </div>
             {formik.touched.mainImage && formik.errors.mainImage && (
@@ -308,6 +316,7 @@ const AddBranch = () => {
                   onChange={handleInteriorImagesChange}
                   className="hidden"
                   accept="image/*"
+                  disabled={loading}
                 />
               </label>
             </div>
@@ -320,6 +329,7 @@ const AddBranch = () => {
                       type="button"
                       onClick={() => removeInteriorImage(index)}
                       className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 transition-all"
+                      disabled={loading}
                     >
                       ×
                     </button>
@@ -336,13 +346,26 @@ const AddBranch = () => {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Submit Button with Loading State */}
           <div>
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white p-3 rounded-lg hover:from-[#2c2420] hover:to-[#8b5d3b] focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] transition-all shadow-md"
+              disabled={loading} // Disable button during loading
+              className={`w-full bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] transition-all shadow-md ${
+                loading ? "opacity-50 cursor-not-allowed" : "hover:from-[#2c2420] hover:to-[#8b5d3b]"
+              }`}
             >
-              Add Branch
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"></path>
+                  </svg>
+                  Adding Branch...
+                </span>
+              ) : (
+                "Add Branch"
+              )}
             </button>
           </div>
         </form>

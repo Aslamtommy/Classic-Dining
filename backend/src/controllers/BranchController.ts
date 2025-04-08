@@ -16,7 +16,7 @@ export class BranchController {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
 
-      // Handle file uploads (assuming multer is configured with fields)
+      // Handle file uploads  
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       let mainImageUrl = "";
       let interiorImageUrls: string[] = [];
@@ -132,7 +132,7 @@ export class BranchController {
               CloudinaryService.uploadFile(file.path, "branch_images", `branch_${email || branchId}_interior_${index}`)
             )
           );
-          updateData.interiorImages = newInteriorImages; // Replace existing interior images
+          updateData.interiorImages = newInteriorImages;  
         }
       }
 

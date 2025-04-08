@@ -15,10 +15,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
- import Header from  '../../components/User/Home/Header'
+import Header from "../../components/User/Home/Header";
+
 const mapContainerStyle = {
   width: "100%",
-  height: "400px", // Slightly reduced for balance
+  height: "400px",
 };
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
@@ -27,13 +28,17 @@ const RestaurantDetailPage: React.FC = () => {
   const { branchId } = useParams<{ branchId: string }>();
   const navigate = useNavigate();
   const [branch, setBranch] = useState<Branch | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [allReviews, setAllReviews] = useState<Review[]>([]); // Store all reviews
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [mapQuery, setMapQuery] = useState<string>("");
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const reviewsPerPage = 5; // Number of reviews per page
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -49,8 +54,8 @@ const RestaurantDetailPage: React.FC = () => {
         const branchData = await fetchBranchDetails(branchId);
         setBranch(branchData);
 
-        const reviewData = await fetchBranchReviews(branchId);
-        setReviews(reviewData);
+        const reviewData = await fetchBranchReviews(branchId); // Fetch all reviews
+        setAllReviews(reviewData); // Store all reviews
 
         let query = "";
         let coords: { lat: number; lng: number } | null = null;
@@ -83,6 +88,25 @@ const RestaurantDetailPage: React.FC = () => {
     };
     loadBranchAndReviews();
   }, [branchId]);
+
+  // Calculate paginated reviews
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = allReviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalPages = Math.ceil(allReviews.length / reviewsPerPage);
+
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -134,7 +158,7 @@ const RestaurantDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans antialiased">
-      <Header/>
+      <Header />
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -145,7 +169,7 @@ const RestaurantDetailPage: React.FC = () => {
         <Carousel
           autoPlay={false}
           animation="fade"
-          navButtonsAlwaysVisible={false} // Cleaner look, hover to show
+          navButtonsAlwaysVisible={false}
           indicators={carouselImages.length > 1}
           className="h-full"
         >
@@ -270,7 +294,7 @@ const RestaurantDetailPage: React.FC = () => {
           )}
         </motion.section>
 
-        {/* Reviews Section */}
+        {/* Reviews Section with Pagination */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -278,38 +302,73 @@ const RestaurantDetailPage: React.FC = () => {
           className="mb-12"
         >
           <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-6">Customer Reviews</h2>
-          {reviews.length > 0 ? (
-            <div className="space-y-6">
-              {reviews.map((review, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white p-5 rounded-lg shadow-sm border border-gray-100"
+          {allReviews.length > 0 ? (
+            <>
+              <div className="space-y-6">
+                {currentReviews.map((review, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white p-5 rounded-lg shadow-sm border border-gray-100"
+                  >
+                    <p className="text-gray-600 text-sm font-medium mb-1">{review.userName || "Anonymous"}</p>
+                    <div className="flex items-center mb-2">
+                      {Array(5)
+                        .fill(0)
+                        .map((_, i) => (
+                          <span key={i} className={`text-lg ${i < review.rating ? "text-amber-400" : "text-gray-300"}`}>
+                            ★
+                          </span>
+                        ))}
+                    </div>
+                    {review.comment && (
+                      <p className="text-gray-700 text-base leading-relaxed mb-2">{review.comment}</p>
+                    )}
+                    <p className="text-gray-500 text-sm">
+                      {new Date(review.createdAt).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+              {/* Pagination Controls */}
+              <div className="flex justify-between items-center mt-6">
+                <Button
+                  variant="outlined"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  sx={{
+                    borderColor: "#c62828",
+                    color: "#c62828",
+                    "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
+                    "&:disabled": { borderColor: "#cccccc", color: "#cccccc" },
+                  }}
                 >
-                  <div className="flex items-center mb-2">
-                    {Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <span key={i} className={`text-lg ${i < review.rating ? "text-amber-400" : "text-gray-300"}`}>
-                          ★
-                        </span>
-                      ))}
-                  </div>
-                  {review.comment && (
-                    <p className="text-gray-700 text-base leading-relaxed mb-2">{review.comment}</p>
-                  )}
-                  <p className="text-gray-500 text-sm">
-                    {new Date(review.createdAt).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
+                  Previous
+                </Button>
+                <span className="text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outlined"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  sx={{
+                    borderColor: "#c62828",
+                    color: "#c62828",
+                    "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
+                    "&:disabled": { borderColor: "#cccccc", color: "#cccccc" },
+                  }}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
           ) : (
             <p className="text-gray-600 text-base">No reviews available yet.</p>
           )}

@@ -267,7 +267,7 @@ const RestaurantSearch = () => {
                   >
                     <div className="relative h-64">
                       <img
-                        src={branch.image || "/placeholder-branch.jpg"}
+                        src={branch.mainImage || "/placeholder-branch.jpg"}
                         alt={branch.name}
                         className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                       />

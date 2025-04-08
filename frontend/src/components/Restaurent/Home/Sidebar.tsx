@@ -7,8 +7,8 @@ import { RootState } from "../../../redux/store";
 import restaurentApi from "../../../Axios/restaurentInstance";
 
 const Sidebar = () => {
-  const { restaurent,role } = useSelector((state: RootState) => state.restaurent);
-  const isBranch =role===   "branch";
+  const { restaurent, role } = useSelector((state: RootState) => state.restaurent);
+  const isBranch = role === "branch";
   const branchId = restaurent?._id; // Branch ID from Redux store
 
   // Restaurant-specific menu items
@@ -23,8 +23,7 @@ const Sidebar = () => {
   const branchMenuItems = [
     { name: "Dashboard", key: "dashboard", icon: <Home size={24} />, path: "/branches/dashboard" },
     { name: "Bookings", key: "bookings", icon: <Calendar size={24} />, path: `/branches/${branchId}/bookings` },
-    { name: "Messages", key: "messages", icon: <Mail size={24} />, path: "/branches/:branchId/chat" },
-  
+    { name: "Messages", key: "messages", icon: <Mail size={24} />, path: `/branches/${branchId}/chat` },
   ];
 
   const menuItems = isBranch ? branchMenuItems : restaurantMenuItems;
@@ -49,7 +48,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-72 h-screen bg-white border-r border-[#e8e2d9] shadow-md flex flex-col justify-between">
+    <aside className="w-72 h-screen bg-white border-r border-[#e8e2d9] shadow-md flex flex-col justify-between fixed top-0 left-0">
       {/* Header */}
       <div className="p-6 border-b border-[#e8e2d9]">
         <h1 className="text-2xl font-serif font-semibold text-[#2c2420] tracking-tight">
@@ -58,7 +57,7 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => (
           <button
             key={item.key}

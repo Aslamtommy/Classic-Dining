@@ -4,8 +4,8 @@ export interface Branch {
   name: string;
   email: string;
   phone?: string;
-  mainImage?: string; // Replaced 'image' with 'mainImage'
-  interiorImages?: string[]; // Added for multiple interior images
+  mainImage?: string; 
+  interiorImages?: string[];  
   address?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -42,8 +42,8 @@ export interface BranchFormValues {
   email: string;
   phone: string;
   password: string;
-  mainImage: File | null; // Updated from 'image' to 'mainImage'
-  interiorImages: File[]; // Added for multiple interior images
-  currentMainImage?: string; // Renamed 'currentImage' to be specific
-  currentInteriorImages?: string[]; // Added to track existing interior images
+  mainImage: File | null;  
+  interiorImages: File[];  
+  currentMainImage?: string;  
+  currentInteriorImages?: string[]; 
 }
