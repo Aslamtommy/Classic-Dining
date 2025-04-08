@@ -97,7 +97,18 @@ const ReservationDetails: React.FC = () => {
                 {reservation.branch?.name || 'Branch Name Not Available'}
               </h2>
               <p className="text-[#8b5d3b] text-sm">
-                Date: {new Date(reservation.reservationDate).toLocaleDateString()}
+                Reserved On:{' '}
+                {new Date(reservation.createdAt).toLocaleString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true,
+                })}
+              </p>
+              <p className="text-[#8b5d3b] text-sm">
+                Booking For: {new Date(reservation.reservationDate).toLocaleDateString()}
               </p>
               <p className="text-[#8b5d3b] text-sm">Time: {reservation.timeSlot}</p>
             </div>

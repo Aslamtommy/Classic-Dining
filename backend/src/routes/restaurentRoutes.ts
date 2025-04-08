@@ -93,6 +93,7 @@ restaurentRoute.put('/reservations/:reservationId/status', authenticateToken('br
 
 
 restaurentRoute.get('/chats/users/:branchId', authenticateToken('branch'), (req, res) => chatController.getUsersWhoMessaged(req, res));
-
+// New profile route
+restaurentRoute.get("/branch/profile", authenticateToken('branch'),(req,res)=> branchController.getBranchProfile(req,res)  );
 
 export default restaurentRoute;

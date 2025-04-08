@@ -115,4 +115,5 @@ userRoute.post('/wallet/confirm-add', authenticateToken('user'), (req, res) => w
 // Coupon route
 userRoute.get('/coupons', authenticateToken('user'), (req, res) => userController.getAvailableCoupons(req, res));
 
+
 export default userRoute;

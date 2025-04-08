@@ -8,8 +8,8 @@ interface TableSelectionProps {
   selectedTable: TableType | null;
   setSelectedTable: (table: TableType) => void;
   setIsFilterModalOpen: (open: boolean) => void;
-  partySize: number; // New: To calculate tableQuantity
-  preferences: string[]; // New: To match table features
+  partySize: number;
+  preferences: string[];
 }
 
 const TableSelection: React.FC<TableSelectionProps> = ({
@@ -39,13 +39,13 @@ const TableSelection: React.FC<TableSelectionProps> = ({
         {filteredTables.map((table) => {
           const tableQuantity = Math.ceil(partySize / table.capacity);
           const matchesPreferences = preferences.every((pref) => table.features.includes(pref));
+          const isSelected = selectedTable?._id === table._id;
+
           return (
             <motion.div
               key={table._id}
               className={`p-5 bg-white border rounded-lg shadow-sm transition-all duration-300 ${
-                selectedTable?._id === table._id
-                  ? 'border-[#8b5d3b] bg-[#faf7f2]'
-                  : 'border-[#e8e2d9] hover:shadow-md'
+                isSelected ? 'border-[#8b5d3b] bg-[#faf7f2]' : 'border-[#e8e2d9] hover:shadow-md'
               }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -75,15 +75,19 @@ const TableSelection: React.FC<TableSelectionProps> = ({
                     <p className="text-[#2c2420]/70 text-sm mt-1">{table.description}</p>
                   )}
                 </div>
-                <motion.button
-                  type="button"
-                  onClick={() => setSelectedTable(table)}
-                  className="px-5 py-2 bg-[#8b5d3b] text-white rounded-full text-sm font-medium hover:bg-[#d4a373] transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Select
-                </motion.button>
+                {isSelected ? (
+                  <span className="text-[#8b5d3b] text-sm font-medium">Selected</span>
+                ) : (
+                  <motion.button
+                    type="button"
+                    onClick={() => setSelectedTable(table)}
+                    className="px-5 py-2 bg-[#8b5d3b] text-white rounded-full text-sm font-medium hover:bg-[#d4a373] transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Select
+                  </motion.button>
+                )}
               </div>
             </motion.div>
           );

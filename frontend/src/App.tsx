@@ -35,6 +35,7 @@ import EditBranch from './components/BranchManagement/EditBranch';
 import BranchProtected from './components/BranchManagement/BranchProtected';
 import BranchChatPage from './components/BranchManagement/BranchChatPage';
 import BranchDashboard from './components/BranchManagement/BranchDashboard';
+import BranchProfile from './components/BranchManagement/BranchProfile';
 // Admin Components
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -95,6 +96,7 @@ const App: React.FC = () => {
             <Route path="/branches/:branchId/bookings" element={<BranchBookings />} />
             <Route path="/branches/:branchId/chat" element={<BranchChatPage />} />
             <Route path="/branches/dashboard" element={<BranchDashboard />} />
+            <Route path="/branches/profile" element={<BranchProfile/>} />
           </Route>
         </Route>
 

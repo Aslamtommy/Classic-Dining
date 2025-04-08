@@ -170,4 +170,27 @@ export class BranchController {
       }
     }
   }
+
+  async getBranchProfile(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.data?.id) {
+        throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
+      }
+
+      const branchId = req.data.id;
+      const branch = await this._branchService.getBranchById(branchId);
+
+      if (!branch) {
+        throw new AppError(HttpStatus.NotFound, MessageConstants.BRANCH_NOT_FOUND);
+      }
+
+      sendResponse(res, HttpStatus.OK, MessageConstants.PROFILE_FETCHED_SUCCESS, branch);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
 }

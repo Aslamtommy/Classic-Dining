@@ -24,6 +24,7 @@ const Sidebar = () => {
     { name: "Dashboard", key: "dashboard", icon: <Home size={24} />, path: "/branches/dashboard" },
     { name: "Bookings", key: "bookings", icon: <Calendar size={24} />, path: `/branches/${branchId}/bookings` },
     { name: "Messages", key: "messages", icon: <Mail size={24} />, path: `/branches/${branchId}/chat` },
+    { name: "Profile", key: "profile", icon: <User size={24} />, path: "/branches/profile" },
   ];
 
   const menuItems = isBranch ? branchMenuItems : restaurantMenuItems;
