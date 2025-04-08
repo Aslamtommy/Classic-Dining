@@ -226,24 +226,29 @@ export class UserService implements IUserService {
     }
   }
 
-  async getAllBranches(
-    search: string = '',
-    page: number = 1,
-    limit: number = 10
-  ): Promise<{ branches: IBranch[]; total: number; page: number; pages: number }> {
-    try {
-      const skip = (page - 1) * limit;
-      const branches = await this._branchRepository.searchBranches(search, skip, limit);
-      const total = await this._branchRepository.countBranches(search);
-      return {
-        branches,
-        total,
-        page,
-        pages: Math.ceil(total / limit),
-      };
-    } catch (error: unknown) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(HttpStatus.InternalServerError, "Failed to fetch branches");
-    }
+  // src/services/UserService.ts
+async getAllBranches(
+  search: string = "",
+  page: number = 1,
+  limit: number = 10,
+  minPrice?: number,
+  maxPrice?: number,
+  minRating?: number,
+  sortBy?: string,
+  sortOrder?: "asc" | "desc"
+): Promise<{ branches: IBranch[]; total: number; page: number; pages: number }> {
+  try {
+    const options = { search, page, limit, minPrice, maxPrice, minRating, sortBy, sortOrder };
+    const { branches, total } = await this._branchRepository.searchBranches(options);
+    return {
+      branches,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError(HttpStatus.InternalServerError, "Failed to fetch branches");
   }
+}
 }

@@ -47,8 +47,13 @@ export interface IUserService {
   getBranchDetails(branchId: string): Promise<IBranch | null>;
 
   getAllBranches(
-    search: string,
-    page: number,
-    limit: number
-  ): Promise<{ branches: IBranch[]; total: number; page: number; pages: number }>;
+    search: string ,
+    page: number  ,
+    limit: number ,
+    minPrice?: number,
+    maxPrice?: number,
+    minRating?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<{ branches: IBranch[]; total: number; page: number; pages: number }>
 }

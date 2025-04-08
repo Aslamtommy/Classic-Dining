@@ -215,21 +215,48 @@ export class Usercontroller {
     }
   }
 
-  async getAllBranches(req: Request, res: Response): Promise<void> {
-    try {
-      const search = (req.query.search as string) || '';
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const result = await this._userService.getAllBranches(search, page, limit);
-      sendResponse(res, HttpStatus.OK, "Branches fetched successfully", result);
-    } catch (error: unknown) {
-      if (error instanceof AppError) {
-        sendError(res, error.status, error.message);
-      } else {
-        sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches");
-      }
+ // src/controllers/UserController.ts
+async getAllBranches(req: Request, res: Response): Promise<void> {
+  try {
+    const {
+      search,
+      page,
+      limit,
+      minPrice,
+      maxPrice,
+      minRating,
+      sortBy,
+      sortOrder,
+    } = req.query;
+    const options = {
+      search: search as string || "",
+      page: parseInt(page as string) || 1,
+      limit: parseInt(limit as string) || 10,
+      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+      minRating: minRating ? parseFloat(minRating as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as "asc" | "desc",
+    };
+    const result = await this._userService.getAllBranches(
+      options.search,
+      options.page,
+      options.limit,
+      options.minPrice,
+      options.maxPrice,
+      options.minRating,
+      options.sortBy,
+      options.sortOrder
+    );
+    sendResponse(res, HttpStatus.OK, "Branches fetched successfully", result);
+  } catch (error) {
+    if (error instanceof AppError) {
+      sendError(res, error.status, error.message);
+    } else {
+      sendError(res, HttpStatus.InternalServerError, "Failed to fetch branches");
     }
   }
+}
 
   async getBranchDetails(req: Request, res: Response): Promise<void> {
     try {

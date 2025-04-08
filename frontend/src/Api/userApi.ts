@@ -157,13 +157,18 @@ export const fetchAvailableCoupons = async (): Promise<Coupon[]> => {
 };
 
 export const fetchBranches = async (
-  search: string = '',
-  page: number = 1,
-  limit: number = 10
+  search: string,
+  page: number,
+  limit: number,
+  minPrice?: number,
+  maxPrice?: number,
+  minRating?: number,
+  sortBy?: string,
+  sortOrder?: "asc" | "desc"
 )  => {
   try {
     const response :any= await api.get ("/branches", {
-      params: { search, page, limit },
+      params: { search, page, limit, minPrice, maxPrice, minRating, sortBy, sortOrder},
     });
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to fetch branches');

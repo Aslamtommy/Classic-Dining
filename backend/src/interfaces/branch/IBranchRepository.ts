@@ -11,6 +11,15 @@ export interface IBranchRepository {
   findByIdAndUpdate(branchId: string, updateData: Partial<IBranch>): Promise<IBranch | null>;
   deleteBranch(branchId: string): Promise<void>;
   findByIdUser(branchId: string): Promise<IBranch | null>;
-  searchBranches(query: string, skip?: number, limit?: number): Promise<IBranch[]>;
-  countBranches(query: string): Promise<number>;
+ 
+    searchBranches(options: {
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    minRating?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+    page?: number;
+    limit?: number;
+  }): Promise<{ branches: IBranch[]; total: number }> 
 }

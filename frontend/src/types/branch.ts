@@ -12,6 +12,8 @@ export interface Branch {
   parentRestaurant?: string;
   tableTypes?: string[];
   isBranch?: boolean;
+  averagePrice?: number;
+  averageRating?: number;
   location?: {
     type: string; // e.g., "Point"
     coordinates: [number, number]; // [longitude, latitude]

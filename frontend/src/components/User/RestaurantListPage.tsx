@@ -1,8 +1,9 @@
+// src/components/UserComponents/RestaurantListPage.tsx
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { FaSearch, FaSortAlphaDown, FaSortAlphaUp, FaComments } from "react-icons/fa";
+import { FaSearch, FaComments } from "react-icons/fa";
 import { fetchBranches } from "../../Api/userApi";
 import { Branch } from "../../types/branch";
 import ChatWidget from "../CommonComponents/ChatWidget";
@@ -21,10 +22,13 @@ const RestaurantListPage: React.FC = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [locationFilter, setLocationFilter] = useState<string>("");
+  const [priceFilter, setPriceFilter] = useState<string>("any");
+  const [ratingFilter, setRatingFilter] = useState<string>("any");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
 
   const limit = 6;
@@ -32,10 +36,27 @@ const RestaurantListPage: React.FC = () => {
   const userId = useSelector((state: RootState) => state.user.user?.id);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const loadBranches = async (search: string, pageNum: number) => {
+  const loadBranches = async (
+    search: string,
+    pageNum: number,
+    minPrice?: number,
+    maxPrice?: number,
+    minRating?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => {
     try {
       setLoading(true);
-      const response = await fetchBranches(search, pageNum, limit);
+      const response = await fetchBranches(
+        search,
+        pageNum,
+        limit,
+        minPrice,
+        maxPrice,
+        minRating,
+        sortBy,
+        sortOrder
+      );
       let filteredBranches = [...response.branches];
 
       if (locationFilter) {
@@ -48,15 +69,12 @@ const RestaurantListPage: React.FC = () => {
         });
       }
 
-      const sortedBranches = filteredBranches.sort((a, b) =>
-        sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-      );
-
-      setBranches(sortedBranches);
-      setTotalPages(Math.ceil(filteredBranches.length / limit) || response.pages);
+      setBranches(filteredBranches);
+      setTotalPages(response.pages);
     } catch (error) {
       console.error("Error loading branches:", error);
       setBranches([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -74,11 +92,6 @@ const RestaurantListPage: React.FC = () => {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    loadBranches(debouncedSearchTerm.trim(), newPage);
-  };
-
-  const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
   const handleChatClick = (branchId: string) => {
@@ -90,13 +103,46 @@ const RestaurantListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadBranches(debouncedSearchTerm.trim(), page);
-  }, [debouncedSearchTerm, locationFilter, sortOrder, page]);
-
-  useEffect(() => {
-    loadBranches("", 1);
-  }, []);
-
+    let minPrice: number | undefined, maxPrice: number | undefined;
+    switch (priceFilter) {
+      case "under500":
+        minPrice = 0;
+        maxPrice = 500;
+        break;
+      case "500to1000":
+        minPrice = 500;
+        maxPrice = 1000;
+        break;
+      case "1000to2000":
+        minPrice = 1000;
+        maxPrice = 2000;
+        break;
+      case "over2000":
+        minPrice = 2000;
+        maxPrice = undefined;
+        break;
+      default:
+        minPrice = undefined;
+        maxPrice = undefined;
+    }
+  
+    let minRating: number | undefined;
+    switch (ratingFilter) {
+      case "3":
+        minRating = 3;
+        break;
+      case "4":
+        minRating = 4;
+        break;
+      case "5":
+        minRating = 5;
+        break;
+      default:
+        minRating = undefined;
+    }
+  
+    loadBranches(debouncedSearchTerm.trim(), page, minPrice, maxPrice, minRating, sortBy, sortOrder);
+  }, [debouncedSearchTerm, page, locationFilter, priceFilter, ratingFilter, sortBy, sortOrder]);
   return (
     <section className="min-h-screen bg-[#faf7f2] pt-20 pb-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -110,7 +156,7 @@ const RestaurantListPage: React.FC = () => {
           <span className="block w-16 h-1 bg-[#d4a373] mt-2 mx-auto" />
         </motion.h1>
 
-        {/* Search, Filter, and Sort */}
+        {/* Filters and Sorting */}
         <div className="mb-12 flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <div className="relative w-full max-w-md">
@@ -120,30 +166,60 @@ const RestaurantListPage: React.FC = () => {
                 placeholder="Search by name or email"
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-3 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] placeholder-[#8b5d3b] bg-white transition-all duration-200"
+                className="w-full pl-10 pr-4 py-3 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] placeholder-[#8b5d3b] bg-white"
                 aria-label="Search restaurants"
               />
             </div>
-            <button
-              onClick={toggleSortOrder}
-              className="flex items-center gap-2 px-4 py-2 bg-[#8b5d3b] text-white rounded-md hover:bg-[#d4a373] transition-all duration-200 shadow-sm"
-              aria-label={`Sort by name ${sortOrder === "asc" ? "descending" : "ascending"}`}
-            >
-              {sortOrder === "asc" ? <FaSortAlphaDown /> : <FaSortAlphaUp />}
-              <span className="text-sm font-medium">Sort by Name</span>
-            </button>
           </div>
 
-          <div className="flex justify-center items-center gap-4">
+          <div className="flex flex-wrap justify-center items-center gap-4">
             <label className="text-[#2c2420] text-sm font-medium">Location:</label>
             <input
               type="text"
               placeholder="e.g., New York"
               value={locationFilter}
               onChange={handleLocationFilterChange}
-              className="px-4 py-2 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] placeholder-[#8b5d3b] bg-white w-64 transition-all duration-200"
+              className="px-4 py-2 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] bg-white w-64"
               aria-label="Filter by location"
             />
+          <select
+  value={priceFilter}
+  onChange={(e) => setPriceFilter(e.target.value)}
+  className="px-4 py-2 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] bg-white"
+>
+  <option value="any">Any Price</option>
+  <option value="under500">Under ₹500</option>
+  <option value="500to1000">₹500 - ₹1000</option>
+  <option value="1000to2000">₹1000 - ₹2000</option>
+  <option value="over2000">Over ₹2000</option>
+</select>
+            <select
+              value={ratingFilter}
+              onChange={(e) => setRatingFilter(e.target.value)}
+              className="px-4 py-2 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] bg-white"
+            >
+              <option value="any">Any Rating</option>
+              <option value="3">3+ Stars</option>
+              <option value="4">4+ Stars</option>
+              <option value="5">5 Stars</option>
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] bg-white"
+            >
+              <option value="name">Sort by Name</option>
+              <option value="price">Sort by Price</option>
+              <option value="rating">Sort by Rating</option>
+            </select>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+              className="px-4 py-2 border border-[#e8e2d9] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d4a373] text-[#2c2420] bg-white"
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
           </div>
         </div>
 
@@ -183,23 +259,26 @@ const RestaurantListPage: React.FC = () => {
                     <p className="text-[#8b5d3b] text-sm mb-1">{branch.email}</p>
                     <p className="text-[#8b5d3b] text-sm mb-1">{branch.phone || "N/A"}</p>
                     <p className="text-[#8b5d3b] text-sm mb-1">{branch.address || "N/A"}</p>
-                    {branch.location && (
-                      <p className="text-[#8b5d3b] text-sm mb-3">
-                        Lat: {branch.location.coordinates[1]}, Long: {branch.location.coordinates[0]}
-                      </p>
-                    )}
+                    <p className="text-[#8b5d3b] text-sm mb-1">
+  Avg Price: {branch.averagePrice && branch.averagePrice > 0 
+    ? `₹${branch.averagePrice.toFixed(2)}` 
+    : "N/A"}
+</p>
+<p className="text-[#8b5d3b] text-sm mb-3">
+  Rating: {branch.averageRating && branch.averageRating > 0 
+    ? `${branch.averageRating.toFixed(1)} stars` 
+    : "No Ratings"}
+</p>
                     <div className="flex justify-center gap-3">
                       <button
                         onClick={() => navigate(`/book/${branch._id}`)}
                         className="px-4 py-2 bg-[#8b5d3b] text-white rounded-md hover:bg-[#d4a373] transition-all duration-200 text-sm font-medium shadow-sm"
-                        aria-label={`Book at ${branch.name}`}
                       >
                         Book Now
                       </button>
                       <button
                         onClick={() => handleChatClick(branch._id)}
                         className="px-4 py-2 bg-[#2c2420] text-white rounded-md hover:bg-[#d4a373] transition-all duration-200 text-sm font-medium flex items-center gap-1 shadow-sm"
-                        aria-label={`Chat with ${branch.name}`}
                       >
                         <FaComments /> Chat
                       </button>
@@ -215,7 +294,6 @@ const RestaurantListPage: React.FC = () => {
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
                 className="px-4 py-2 bg-[#8b5d3b] text-white rounded-md hover:bg-[#d4a373] disabled:bg-[#e8e2d9] disabled:text-[#2c2420] transition-all duration-200"
-                aria-label="Previous page"
               >
                 Previous
               </button>
@@ -226,7 +304,6 @@ const RestaurantListPage: React.FC = () => {
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page === totalPages}
                 className="px-4 py-2 bg-[#8b5d3b] text-white rounded-md hover:bg-[#d4a373] disabled:bg-[#e8e2d9] disabled:text-[#2c2420] transition-all duration-200"
-                aria-label="Next page"
               >
                 Next
               </button>
