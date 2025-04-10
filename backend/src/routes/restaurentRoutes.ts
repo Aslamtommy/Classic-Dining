@@ -22,11 +22,21 @@ import { BranchDashboardController } from '../controllers/BranchDashboardControl
 import { BranchDashboardService } from '../services/BranchDashboardService';
 import { BranchDashboardRepository } from '../repositories/BracnDashboardRepository';
 import blockedUserMiddleware from '../middlewares/blockedUserMiddleware';
+import { MainDashboardRepository } from '../repositories/MainDashboardRepository';
+import { MainDashboardService } from '../services/MainDashboardService';
+import { MainDashboardController } from '../controllers/MainDashboardController';
+
+// ... existing instantiations ...
+
+
 const dashboardRepo = new BranchDashboardRepository();
 const dashboardService = new BranchDashboardService(dashboardRepo);
 const dashboardController = new BranchDashboardController(dashboardService);
 const restaurentRoute: Router = express.Router();
-
+// Instantiate Main Dashboard classes
+const mainDashboardRepo = new MainDashboardRepository();
+const mainDashboardService = new MainDashboardService(mainDashboardRepo);
+const mainDashboardController = new MainDashboardController(mainDashboardService);
 // Instantiate repositories
 const otpRepository = new OtpRepository();
 const branchRepository = new BranchRepository();
@@ -95,5 +105,15 @@ restaurentRoute.put('/reservations/:reservationId/status', authenticateToken('br
 restaurentRoute.get('/chats/users/:branchId', authenticateToken('branch'), (req, res) => chatController.getUsersWhoMessaged(req, res));
 // New profile route
 restaurentRoute.get("/branch/profile", authenticateToken('branch'),(req,res)=> branchController.getBranchProfile(req,res)  );
+
+
+restaurentRoute.get(
+  '/main-dashboard',
+  authenticateToken('restaurent'),
+  blockedUserMiddleware, // Assuming this applies to restaurant as well
+  checkApproved, // Ensure restaurant is approved
+  (req, res) => mainDashboardController.getDashboard(req, res)
+);
+
 
 export default restaurentRoute;

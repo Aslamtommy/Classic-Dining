@@ -26,6 +26,7 @@ import PendingApproval from './components/Restaurent/PendingApproval';
 import RestaurentProtected from './components/Restaurent/RestaurentProtected';
 import Layout from './components/Restaurent/Home/Layout';
 import RestaurentLoginProtected from './components/Restaurent/RestaurentLoginProtected';
+import MainRestaurantDashboard from './components/Restaurent/Home/MainRestaurantDashboard';
 // Branch Components
 import AddBranch from './components/BranchManagement/AddBranch';
 import Branches from './components/BranchManagement/Branches';
@@ -86,6 +87,7 @@ const App: React.FC = () => {
             <Route path="/restaurent/branches" element={<Branches />} />
             <Route path="/restaurent/branches/:branchId" element={<BranchDetails />} />
             <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
+            <Route path="/restaurent/dashboard" element={<MainRestaurantDashboard />} />
           </Route>
      
         </Route>
