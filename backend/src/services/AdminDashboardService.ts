@@ -1,4 +1,3 @@
-// src/services/AdminDashboardService.ts
 import { IAdminDashboardService, DashboardData } from "../interfaces/admin/IAdminDashboardService";
 import { IAdminDashboardRepository } from "../interfaces/admin/IAdminDashboardRepository";
 import { AppError } from "../utils/AppError";
@@ -6,7 +5,7 @@ import { HttpStatus } from "../constants/HttpStatus";
 import { MessageConstants } from "../constants/MessageConstants";
 
 export class AdminDashboardService implements IAdminDashboardService {
-  constructor(private _adminDashboardRepo: IAdminDashboardRepository) {}
+  constructor(private repository: IAdminDashboardRepository) {}
 
   async getDashboardData(
     startDate?: Date,
@@ -16,28 +15,23 @@ export class AdminDashboardService implements IAdminDashboardService {
     branchId?: string
   ): Promise<DashboardData> {
     try {
-      let dateFilter: { $gte: Date; $lte: Date };
+      let dateFilter: { $gte: Date; $lte: Date } = { $gte: new Date(), $lte: new Date() };
 
-       
-      if (startDate && endDate) {
-        dateFilter = { $gte: startDate, $lte: endDate };
-      } else {
+      // Apply default date ranges if no custom dates are provided
+      if (!startDate || !endDate) {
         const now = new Date();
         if (filter === "daily") {
-          // Full current day: 12 AM to 11:59 PM
           const startOfDay = new Date(now.setHours(0, 0, 0, 0));
-          const endOfDay = new Date(startOfDay);
-          endOfDay.setHours(23, 59, 59, 999);
-          dateFilter = { $gte: startOfDay, $lte: endOfDay };
+          dateFilter = { $gte: startOfDay, $lte: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1) };
         } else if (filter === "monthly") {
-          // Current month: Start of month to now
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
           dateFilter = { $gte: startOfMonth, $lte: now };
-        } else {
-          // Current year: Start of year to now
+        } else if (filter === "yearly") {
           const startOfYear = new Date(now.getFullYear(), 0, 1);
           dateFilter = { $gte: startOfYear, $lte: now };
         }
+      } else {
+        dateFilter = { $gte: startDate, $lte: endDate };
       }
 
       const [
@@ -51,21 +45,31 @@ export class AdminDashboardService implements IAdminDashboardService {
         userGrowth,
         systemHealth,
         overviewCounts,
+        restaurantPerformance,
+        performanceMetrics,
       ] = await Promise.all([
-        this._adminDashboardRepo.getTotalRevenue(dateFilter, restaurantId, branchId),
-        this._adminDashboardRepo.getReservationStats(dateFilter, restaurantId, branchId),
-        this._adminDashboardRepo.getReservationTrends(dateFilter, filter, restaurantId, branchId),
-        this._adminDashboardRepo.getTopRestaurants(dateFilter, restaurantId),
-        this._adminDashboardRepo.getBranchActivity(dateFilter, restaurantId, branchId),
-        this._adminDashboardRepo.getPendingApprovals(),
-        this._adminDashboardRepo.getTopCustomers(dateFilter, restaurantId, branchId),
-        this._adminDashboardRepo.getUserGrowth(dateFilter, filter),
-        this._adminDashboardRepo.getSystemHealth(dateFilter, restaurantId, branchId),
-        this._adminDashboardRepo.getOverviewCounts(restaurantId, branchId),
+        this.repository.getTotalRevenue(dateFilter, restaurantId, branchId),
+        this.repository.getReservationStats(dateFilter, restaurantId, branchId),
+        this.repository.getReservationTrends(dateFilter, filter, restaurantId, branchId),
+        this.repository.getTopRestaurants(dateFilter, restaurantId),
+        this.repository.getBranchActivity(dateFilter, restaurantId, branchId),
+        this.repository.getPendingApprovals(),
+        this.repository.getTopCustomers(dateFilter, restaurantId, branchId),
+        this.repository.getUserGrowth(dateFilter, filter),
+        this.repository.getSystemHealth(dateFilter, restaurantId, branchId),
+        this.repository.getOverviewCounts(restaurantId, branchId),
+        this.repository.getRestaurantPerformance(dateFilter, filter),
+        this.repository.getPerformanceMetrics(dateFilter),
       ]);
 
       return {
-        overview: { totalRevenue, ...overviewCounts },
+        overview: {
+          totalRevenue,
+          totalReservations: overviewCounts.totalReservations,
+          activeRestaurants: overviewCounts.activeRestaurants,
+          activeBranches: overviewCounts.activeBranches,
+          userCount: overviewCounts.userCount,
+        },
         reservationStats,
         reservationTrends,
         topRestaurants,
@@ -74,10 +78,11 @@ export class AdminDashboardService implements IAdminDashboardService {
         topCustomers,
         userGrowth,
         systemHealth,
+        restaurantPerformance,
+        performanceMetrics,
       };
     } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      throw error instanceof AppError ? error : new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
   }
 }
