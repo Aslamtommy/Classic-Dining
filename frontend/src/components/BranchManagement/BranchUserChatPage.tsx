@@ -1,3 +1,4 @@
+ // src/pages/Branch/BranchUserChatPage.tsx
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -22,7 +23,7 @@ interface User {
 
 const SOCKET_URL = 'http://localhost:5000/';
 
-const BranchChatPage: React.FC = () => {
+const BranchUserChatPage: React.FC = () => {
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
@@ -34,19 +35,14 @@ const BranchChatPage: React.FC = () => {
   const branchId = useSelector((state: RootState) => state.restaurent.restaurent?._id);
   const token = useSelector((state: RootState) => state.restaurent.restaurent?.accessToken);
 
-  console.log('Branch ID from Redux:', branchId);
-
-  // Fetch users who have messaged this branch
   const fetchUsersWithMessages = async () => {
     try {
       if (!branchId || !token) {
         setError('Missing branch ID or token');
         return;
       }
-      const response: any = await restaurentApi.get(`/chats/users/${branchId}` );
-      console.log(response)
+      const response:any = await restaurentApi.get(`/chats/users/${branchId}`);
       const fetchedUsers = response.data.data?.users || [];
-      console.log('Fetched users:', fetchedUsers);
       setUsers(fetchedUsers);
       setError(null);
     } catch (error: any) {
@@ -56,7 +52,6 @@ const BranchChatPage: React.FC = () => {
     }
   };
 
-  // Initialize socket connection
   useEffect(() => {
     if (!token || !branchId) {
       setError('Please log in as a branch manager.');
@@ -69,71 +64,52 @@ const BranchChatPage: React.FC = () => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log('Branch socket connected:', newSocket.id);
       setIsConnected(true);
       setError(null);
     });
 
-    newSocket.on('connect_error', (err:any) => {
-      console.error('Branch connection error:', err.message);
+    newSocket.on('connect_error', (err: any) => {
       setIsConnected(false);
       setError('Socket connection failed.');
     });
 
     newSocket.on('error', (error: string) => {
-      console.error('Branch socket error:', error);
       setError(`Socket error: ${error}`);
     });
 
     return () => {
       newSocket.disconnect();
-      console.log('Branch socket disconnected:', newSocket.id);
     };
   }, [token, branchId]);
 
-  // Handle user selection and real-time messages
   useEffect(() => {
     if (!socket || !selectedUserId || !isConnected) return;
 
-    console.log('Branch joining chat with:', { userId: selectedUserId, branchId });
     socket.emit('joinChat', { userId: selectedUserId, branchId });
 
     socket.on('previousMessages', (previousMessages: Message[]) => {
-      console.log('Branch received previous messages:', previousMessages);
       setMessages(previousMessages || []);
     });
 
     socket.on('receiveMessage', (message: Message) => {
-      console.log('Branch received message:', message);
       if (message.branchId === branchId && message.userId === selectedUserId) {
         setMessages((prev) => [...prev, message]);
-      } else {
-        console.log('Branch ignored message due to mismatch:', { selectedUserId, branchId, message });
       }
-    });
-
-    socket.on('joined', ({ room }: { room: string }) => {
-      console.log('Branch joined room:', room);
     });
 
     return () => {
       socket.off('previousMessages');
       socket.off('receiveMessage');
-      socket.off('joined');
     };
   }, [socket, selectedUserId, isConnected, branchId]);
 
-  // Send message
   const sendMessage = () => {
     if (!input.trim() || !socket || !isConnected || !selectedUserId) return;
-
     const messageData = { userId: selectedUserId, branchId, message: input };
-    console.log('Branch sending message:', messageData);
     socket.emit('sendMessage', messageData);
     setInput('');
   };
 
-  // Select a user
   const selectUser = (userId: string) => {
     setSelectedUserId(userId);
     setMessages([]);
@@ -141,11 +117,9 @@ const BranchChatPage: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 flex h-screen bg-[#faf7f2] font-sans">
-      {/* User List */}
       <div className="w-1/3 bg-white p-4 border-r border-[#e8e2d9] overflow-y-auto shadow-md rounded-lg">
         <h3 className="text-lg font-playfair font-semibold text-[#2c2420] mb-4">Users</h3>
         {error && <p className="text-red-500 mb-2 text-sm">{error}</p>}
-        {!branchId && <p className="text-red-500 text-sm">Please log in as a branch manager.</p>}
         {users.length === 0 ? (
           <p className="text-[#8b5d3b] italic">No users have messaged yet.</p>
         ) : (
@@ -154,9 +128,7 @@ const BranchChatPage: React.FC = () => {
               key={user.id}
               onClick={() => selectUser(user.id)}
               className={`p-3 mb-2 cursor-pointer rounded-lg flex items-center gap-3 transition-colors duration-200 ${
-                selectedUserId === user.id
-                  ? 'bg-[#8b5d3b] text-white'
-                  : 'bg-white hover:bg-[#e8e2d9]'
+                selectedUserId === user.id ? 'bg-[#8b5d3b] text-white' : 'bg-white hover:bg-[#e8e2d9]'
               }`}
             >
               <img
@@ -173,7 +145,6 @@ const BranchChatPage: React.FC = () => {
         )}
       </div>
 
-      {/* Chat Area */}
       <div className="w-2/3 p-4 flex flex-col">
         <h2 className="text-2xl font-playfair font-semibold text-[#2c2420] mb-4 flex items-center gap-3">
           {selectedUserId ? (
@@ -202,9 +173,7 @@ const BranchChatPage: React.FC = () => {
                 messages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`mb-3 flex ${
-                      msg.senderRole === 'branch' ? 'justify-end' : 'justify-start'
-                    }`}
+                    className={`mb-3 flex ${msg.senderRole === 'branch' ? 'justify-end' : 'justify-start'}`}
                   >
                     {msg.senderRole !== 'branch' && (
                       <img
@@ -215,9 +184,7 @@ const BranchChatPage: React.FC = () => {
                     )}
                     <div
                       className={`inline-block px-3 py-2 rounded-lg text-sm ${
-                        msg.senderRole === 'branch'
-                          ? 'bg-[#8b5d3b] text-white'
-                          : 'bg-[#e8e2d9] text-[#2c2420]'
+                        msg.senderRole === 'branch' ? 'bg-[#8b5d3b] text-white' : 'bg-[#e8e2d9] text-[#2c2420]'
                       }`}
                     >
                       <span>{msg.message}</span>
@@ -256,4 +223,4 @@ const BranchChatPage: React.FC = () => {
   );
 };
 
-export default BranchChatPage;
+export default BranchUserChatPage; 

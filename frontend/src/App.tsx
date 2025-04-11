@@ -27,6 +27,7 @@ import RestaurentProtected from './components/Restaurent/RestaurentProtected';
 import Layout from './components/Restaurent/Home/Layout';
 import RestaurentLoginProtected from './components/Restaurent/RestaurentLoginProtected';
 import MainRestaurantDashboard from './components/Restaurent/Home/MainRestaurantDashboard';
+import RestaurantChatPage from './components/Restaurent/RestaurantChatPage';
 // Branch Components
 import AddBranch from './components/BranchManagement/AddBranch';
 import Branches from './components/BranchManagement/Branches';
@@ -34,9 +35,10 @@ import BranchDetails from './components/BranchManagement/BranchDetails';
 import BranchBookings from './components/BranchManagement/BranchBookings';
 import EditBranch from './components/BranchManagement/EditBranch';
 import BranchProtected from './components/BranchManagement/BranchProtected';
-import BranchChatPage from './components/BranchManagement/BranchChatPage';
+import BranchUserChatPage from './components/BranchManagement/BranchUserChatPage';
 import BranchDashboard from './components/BranchManagement/BranchDashboard';
 import BranchProfile from './components/BranchManagement/BranchProfile';
+ import BranchRestaurantChatPage from './components/BranchManagement/BranchRestaurantChatPage';
 // Admin Components
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -88,6 +90,7 @@ const App: React.FC = () => {
             <Route path="/restaurent/branches/:branchId" element={<BranchDetails />} />
             <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
             <Route path="/restaurent/dashboard" element={<MainRestaurantDashboard />} />
+            <Route path="/restaurant/chat" element={<RestaurantChatPage />} />
           </Route>
      
         </Route>
@@ -96,9 +99,10 @@ const App: React.FC = () => {
       <Route element={<BranchProtected />}>
           <Route element={<Layout />}> {/* Reusing Layout; replace with BranchLayout if exists */}
             <Route path="/branches/:branchId/bookings" element={<BranchBookings />} />
-            <Route path="/branches/:branchId/chat" element={<BranchChatPage />} />
+            <Route path="/branch/chat/users" element={<BranchUserChatPage />} />
             <Route path="/branches/dashboard" element={<BranchDashboard />} />
             <Route path="/branches/profile" element={<BranchProfile/>} />
+            <Route path="/branch/chat/restaurant" element={<BranchRestaurantChatPage />} />
           </Route>
         </Route>
 

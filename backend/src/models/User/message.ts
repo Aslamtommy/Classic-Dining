@@ -9,11 +9,12 @@ interface IMessage extends Document {
   timestamp: Date;
 }
 
-const messageSchema: Schema = new Schema({
-  userId: { type: String, required: true },
+const messageSchema = new mongoose.Schema({
+  userId: { type: String, required: false },
   branchId: { type: String, required: true },
+  restaurantId: { type: String, required: false },
   senderId: { type: String, required: true },
-  senderRole: { type: String, enum: ['user', 'branch'], required: true },
+  senderRole: { type: String, enum: ['user', 'branch', 'restaurent', 'admin'], required: true },
   message: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
 });

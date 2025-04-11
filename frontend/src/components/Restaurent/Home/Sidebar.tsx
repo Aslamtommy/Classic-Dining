@@ -1,3 +1,4 @@
+// src/components/Sidebar.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, Calendar, Tag, User, Mail, LogOut } from "lucide-react";
@@ -17,13 +18,15 @@ const Sidebar = () => {
     { name: "Profile", key: "profile", icon: <User size={24} />, path: "/restaurent/profile" },
     { name: "Add Branch", key: "addbranch", icon: <Tag size={24} />, path: "/restaurent/addbranch" },
     { name: "Branches", key: "branches", icon: <User size={24} />, path: "/restaurent/branches" },
+    { name: "Chat with Branches", key: "chat-branches", icon: <Mail size={24} />, path: "/restaurant/chat" },
   ];
 
   // Branch-specific menu items
   const branchMenuItems = [
     { name: "Dashboard", key: "dashboard", icon: <Home size={24} />, path: "/branches/dashboard" },
     { name: "Bookings", key: "bookings", icon: <Calendar size={24} />, path: `/branches/${branchId}/bookings` },
-    { name: "Messages", key: "messages", icon: <Mail size={24} />, path: `/branches/${branchId}/chat` },
+    { name: "Chat with Users", key: "chat-users", icon: <Mail size={24} />, path: `/branch/chat/users` },
+    { name: "Chat with Restaurant", key: "chat-restaurant", icon: <Mail size={24} />, path: `/branch/chat/restaurant` },
     { name: "Profile", key: "profile", icon: <User size={24} />, path: "/branches/profile" },
   ];
 

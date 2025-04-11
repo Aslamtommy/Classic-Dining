@@ -103,6 +103,10 @@ restaurentRoute.put('/reservations/:reservationId/status', authenticateToken('br
 
 
 restaurentRoute.get('/chats/users/:branchId', authenticateToken('branch'), (req, res) => chatController.getUsersWhoMessaged(req, res));
+restaurentRoute.get('/chats/branches', authenticateToken('restaurent'), blockedUserMiddleware, checkApproved, (req, res) => chatController.getBranchesForRestaurant(req, res));
+restaurentRoute.get('/chats/restaurant', authenticateToken('branch'), (req, res) => chatController.getRestaurantForBranch(req, res));
+
+
 // New profile route
 restaurentRoute.get("/branch/profile", authenticateToken('branch'),(req,res)=> branchController.getBranchProfile(req,res)  );
 
