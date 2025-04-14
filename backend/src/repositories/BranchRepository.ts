@@ -74,7 +74,7 @@ export class BranchRepository extends BaseRepository<IBranch> implements IBranch
     }
   }
 
-  // src/repositories/BranchRepository.ts
+  
 async searchBranches(options: {
   search?: string;
   minPrice?: number;

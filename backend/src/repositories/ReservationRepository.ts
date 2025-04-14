@@ -161,7 +161,7 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
       return await Reservation.find(query)
         .populate('branch', 'name')
         .populate('tableType', 'name capacity price features')
-        .sort({ reservationDate: -1 })
+        .sort({ reservationDate:-1 })
         .skip(skip)
         .limit(limit)
         .exec();

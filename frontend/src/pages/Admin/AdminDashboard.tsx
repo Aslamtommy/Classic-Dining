@@ -317,10 +317,7 @@ const AdminDashboard: React.FC = () => {
             <ul className="space-y-2">{data.topCustomers.map((c) => <li key={c._id} className="text-gray-700">{c.name} ({c.email}) - {c.totalBookings} bookings, ₹{c.totalSpent.toLocaleString()}</li>)}</ul>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">System Health</h2>
-            <p className="text-gray-700">Pending Issues: {data.systemHealth.pendingIssues}</p>
-            <h3 className="text-md font-medium text-gray-800 mt-4">Coupon Usage</h3>
-            <ul className="space-y-2">{data.systemHealth.couponUsage.map((c) => <li key={c.code} className="text-gray-700">{c.code} - Used: {c.timesUsed}, Discount: ₹{c.totalDiscount.toLocaleString()}</li>)}</ul>
+           
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Approvals</h2>
