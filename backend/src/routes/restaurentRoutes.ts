@@ -110,6 +110,8 @@ restaurentRoute.get('/chats/restaurant', authenticateToken('branch'), (req, res)
 // New profile route
 restaurentRoute.get("/branch/profile", authenticateToken('branch'),(req,res)=> branchController.getBranchProfile(req,res)  );
 
+// New Chat Route
+restaurentRoute.get('/chats/admins', authenticateToken('restaurent'), blockedUserMiddleware, checkApproved, (req, res) => chatController.getAdminsForRestaurant(req, res));
 
 restaurentRoute.get(
   '/main-dashboard',

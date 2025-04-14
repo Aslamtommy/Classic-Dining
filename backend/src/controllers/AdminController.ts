@@ -18,7 +18,7 @@ class AdminController {
             }
             const { admin, accessToken, refreshToken } = await this._adminService.adminLogin(email, password);
             CookieManager.setAuthCookies(res, { accessToken, refreshToken });
-            sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, { admin, email });
+            sendResponse(res, HttpStatus.OK, MessageConstants.LOGIN_SUCCESS, { admin, email,accessToken });
         } catch (error: unknown) {
             if (error instanceof AppError) {
                 sendError(res, error.status, error.message);

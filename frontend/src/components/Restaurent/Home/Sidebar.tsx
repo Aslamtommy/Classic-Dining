@@ -19,6 +19,7 @@ const Sidebar = () => {
     { name: "Add Branch", key: "addbranch", icon: <Tag size={24} />, path: "/restaurent/addbranch" },
     { name: "Branches", key: "branches", icon: <User size={24} />, path: "/restaurent/branches" },
     { name: "Chat with Branches", key: "chat-branches", icon: <Mail size={24} />, path: "/restaurant/chat" },
+    { name: 'Chat with Admins', key: 'chat-admins', icon: <Mail size={24} />, path: '/restaurent/chats/admins' },  
   ];
 
   // Branch-specific menu items

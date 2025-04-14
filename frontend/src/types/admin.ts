@@ -12,6 +12,9 @@ export interface Admin {
     data: {
       admin: Admin;
       email: string;
+      _id:any;
+      accessToken:string
+
     };
   }
 

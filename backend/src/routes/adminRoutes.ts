@@ -12,6 +12,8 @@ import { CouponService } from "../services/CouponService";
 import { CouponController } from "../controllers/CouponController";
 import { CouponRepository } from "../repositories/CouponRepository";
 import { AdminDashboardRepository } from "../repositories/AdminDashboardRepository"; // New import
+import { ChatController } from "../controllers/chatController";
+
 
 const adminRoute: Router = express.Router();
 
@@ -29,7 +31,7 @@ const adminDashboardController = new AdminDashboardController(adminDashboardServ
 const couponRepository = new CouponRepository();
 const couponService = new CouponService(couponRepository);
 const couponController = new CouponController(couponService);
-
+const chatController=new ChatController()
 // Admin Routes
 adminRoute.post("/login", (req: Request, res: Response) => adminController.login(req, res));
 adminRoute.get("/pending", authenticateToken("admin"), (req, res) => adminController.getPendingRestaurent(req, res));
@@ -51,4 +53,7 @@ adminRoute.get("/coupons/:id", authenticateToken("admin"), (req, res) => couponC
 adminRoute.put("/coupons/:id", authenticateToken("admin"), (req, res) => couponController.updateCoupon(req, res));
 adminRoute.delete("/coupons/:id", authenticateToken("admin"), (req, res) => couponController.deleteCoupon(req, res));
 
+
+// New Chat Route
+adminRoute.get('/chats/restaurants', authenticateToken('admin'), (req, res) => chatController.getRestaurantsForAdmin(req, res));
 export default adminRoute;

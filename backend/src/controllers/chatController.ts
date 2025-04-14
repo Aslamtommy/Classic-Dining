@@ -67,4 +67,42 @@ export class ChatController {
       }
     }
   }
+
+  // New method: Get restaurants for admin
+  async getRestaurantsForAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const adminId = req.data?.id;
+      if (!adminId) {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.UNAUTHORIZED);
+      }
+
+      const restaurants = await this.chatService.getRestaurantsForAdmin(adminId);
+      sendResponse(res, HttpStatus.OK, 'Restaurants fetched successfully', { restaurants });
+    } catch (error) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  // New method: Get admins for restaurant
+  async getAdminsForRestaurant(req: Request, res: Response): Promise<void> {
+    try {
+      const restaurantId = req.data?.id;
+      if (!restaurantId) {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.UNAUTHORIZED);
+      }
+
+      const admins = await this.chatService.getAdminsForRestaurant(restaurantId);
+      sendResponse(res, HttpStatus.OK, 'Admins fetched successfully', { admins });
+    } catch (error) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
 }

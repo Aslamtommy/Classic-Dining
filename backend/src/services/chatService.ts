@@ -46,5 +46,32 @@ export class ChatService {
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
+
+    
+  }
+  // New method: Get restaurants for admin
+  async getRestaurantsForAdmin(adminId: string): Promise<{ id: string; name: string }[]> {
+    try {
+      if (!adminId) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+      return await this.chatRepository.getRestaurantsForAdmin(adminId);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // New method: Get admins for restaurant
+  async getAdminsForRestaurant(restaurantId: string): Promise<{ id: string; email: string }[]> {
+    try {
+      if (!restaurantId) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+      return await this.chatRepository.getAdminsForRestaurant(restaurantId);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
   }
 }

@@ -28,6 +28,8 @@ import Layout from './components/Restaurent/Home/Layout';
 import RestaurentLoginProtected from './components/Restaurent/RestaurentLoginProtected';
 import MainRestaurantDashboard from './components/Restaurent/Home/MainRestaurantDashboard';
 import RestaurantChatPage from './components/Restaurent/RestaurantChatPage';
+import RestaurantAdminChatPage from './components/Restaurent/RestaurantAdminChatPage';
+
 // Branch Components
 import AddBranch from './components/BranchManagement/AddBranch';
 import Branches from './components/BranchManagement/Branches';
@@ -48,7 +50,7 @@ import UserList from './components/Admin/userList';
 import CouponManagement from './components/Admin/CouponManagement';
 import { AdminLayout } from './components/Admin/Home/AdminLayout';
 import AdminProtected from './components/Admin/AdminProtected';
- 
+ import AdminRestaurantChatPage from './components/Admin/AdminRestaurantChatPage';
 const App: React.FC = () => {
   return (
     <Router>
@@ -91,6 +93,7 @@ const App: React.FC = () => {
             <Route path="/restaurent/branches/edit/:branchId" element={<EditBranch />} />
             <Route path="/restaurent/dashboard" element={<MainRestaurantDashboard />} />
             <Route path="/restaurant/chat" element={<RestaurantChatPage />} />
+            <Route path="/restaurent/chats/admins" element={<RestaurantAdminChatPage />} /> {/* New chat route */}
           </Route>
      
         </Route>
@@ -110,6 +113,7 @@ const App: React.FC = () => {
         <Route element={<AdminProtected />}>
       
           <Route element={<AdminLayout />}>
+          <Route path="/admin/messages" element={<AdminRestaurantChatPage />} /> {/* Updated for chat */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/approvals" element={<ApproveRestaurents />} />
             <Route path="/admin/restaurents" element={<RestaurentList />} />

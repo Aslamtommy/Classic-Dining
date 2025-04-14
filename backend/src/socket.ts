@@ -1,4 +1,3 @@
- 
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { verifyToken } from './utils/jwt';
@@ -43,13 +42,13 @@ export const initializeSocket = (server: HttpServer): Server => {
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log(`Connected: ${socket.id} (Role: ${socket.data.role}, ID: ${socket.data.id})`);
 
-    socket.on('joinChat', async (data: { userId?: string; branchId?: string; restaurantId?: string }) => {
+    socket.on('joinChat', async (data: { userId?: string; branchId?: string; restaurantId?: string; adminId?: string }) => {
       try {
-        const { userId, branchId, restaurantId } = data;
-        console.log('Join chat request:', { userId, branchId, restaurantId, role: socket.data.role, id: socket.data.id });
+        const { userId, branchId, restaurantId, adminId } = data;
+        console.log('Join chat request:', { userId, branchId, restaurantId, adminId, role: socket.data.role, id: socket.data.id });
 
         // Branch ↔ User Chat
-        if (userId && branchId && !restaurantId) {
+        if (userId && branchId && !restaurantId && !adminId) {
           const room = `chat_user_${userId}_${branchId}`;
           if (socket.data.role === 'user' && socket.data.id !== userId) {
             socket.emit('error', 'Unauthorized: Cannot join chat for another user');
@@ -67,7 +66,7 @@ export const initializeSocket = (server: HttpServer): Server => {
         }
 
         // Branch ↔ Restaurant Chat
-        else if (restaurantId && branchId && !userId) {
+        else if (restaurantId && branchId && !userId && !adminId) {
           const room = `chat_restaurant_${restaurantId}_${branchId}`;
           if (socket.data.role === 'restaurent' && socket.data.id !== restaurantId) {
             socket.emit('error', 'Unauthorized: Cannot join chat for another restaurant');
@@ -82,6 +81,24 @@ export const initializeSocket = (server: HttpServer): Server => {
           console.log(`Joined room ${room} with ${previousMessages.length} previous messages`);
           socket.emit('previousMessages', previousMessages);
           socket.emit('joined', { room });
+        }
+
+        // Admin ↔ Restaurant Chat
+        else if (adminId && restaurantId && !userId && !branchId) {
+          const room = `chat_admin_${adminId}_${restaurantId}`;
+          if (socket.data.role === 'admin' && socket.data.id !== adminId) {
+            socket.emit('error', 'Unauthorized: Cannot join chat for another admin');
+            return;
+          }
+          if (socket.data.role === 'restaurent' && socket.data.id !== restaurantId) {
+            socket.emit('error', 'Unauthorized: Cannot join chat for another restaurant');
+            return;
+          }
+          socket.join(room);
+          const previousMessages = await Message.find({ adminId, restaurantId }).sort({ timestamp: 1 }).lean();
+          console.log(`Joined room ${room} with ${previousMessages.length} previous messages`);
+          socket.emit('previousMessages', previousMessages);
+          socket.emit('joined', { room });
         } else {
           socket.emit('error', 'Invalid chat parameters');
           console.log('Invalid joinChat parameters:', data);
@@ -92,10 +109,10 @@ export const initializeSocket = (server: HttpServer): Server => {
       }
     });
 
-    socket.on('sendMessage', async (data: { userId?: string; branchId?: string; restaurantId?: string; message: string }) => {
+    socket.on('sendMessage', async (data: { userId?: string; branchId?: string; restaurantId?: string; adminId?: string; message: string }) => {
       try {
-        const { userId, branchId, restaurantId, message } = data;
-        console.log('Send message request:', { userId, branchId, restaurantId, message, senderRole: socket.data.role, senderId: socket.data.id });
+        const { userId, branchId, restaurantId, adminId, message } = data;
+        console.log('Send message request:', { userId, branchId, restaurantId, adminId, message, senderRole: socket.data.role, senderId: socket.data.id });
 
         if (!message) {
           socket.emit('error', 'Missing message');
@@ -104,7 +121,7 @@ export const initializeSocket = (server: HttpServer): Server => {
         }
 
         // Branch ↔ User Message
-        if (userId && branchId && !restaurantId) {
+        if (userId && branchId && !restaurantId && !adminId) {
           const room = `chat_user_${userId}_${branchId}`;
           const messageData = {
             userId,
@@ -122,7 +139,7 @@ export const initializeSocket = (server: HttpServer): Server => {
         }
 
         // Branch ↔ Restaurant Message
-        else if (restaurantId && branchId && !userId) {
+        else if (restaurantId && branchId && !userId && !adminId) {
           const room = `chat_restaurant_${restaurantId}_${branchId}`;
           const messageData = {
             restaurantId,
@@ -133,6 +150,24 @@ export const initializeSocket = (server: HttpServer): Server => {
             timestamp: new Date(),
           };
           console.log('Saving Branch ↔ Restaurant message:', messageData);
+          const newMessage = new Message(messageData);
+          await newMessage.save();
+          console.log(`Message saved for room ${room}`);
+          io.to(room).emit('receiveMessage', messageData);
+        }
+
+        // Admin ↔ Restaurant Message
+        else if (adminId && restaurantId && !userId && !branchId) {
+          const room = `chat_admin_${adminId}_${restaurantId}`;
+          const messageData = {
+            adminId,
+            restaurantId,
+            senderId: socket.data.id,
+            senderRole: socket.data.role as 'admin' | 'restaurent',
+            message,
+            timestamp: new Date(),
+          };
+          console.log('Saving Admin ↔ Restaurant message:', messageData);
           const newMessage = new Message(messageData);
           await newMessage.save();
           console.log(`Message saved for room ${room}`);

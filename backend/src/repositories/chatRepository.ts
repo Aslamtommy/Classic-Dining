@@ -6,14 +6,14 @@ import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { Types } from 'mongoose';
+import RestaurentModel from '../models/Restaurent/restaurentModel';
+import adminModel from '../models/Admin/adminModel';
 
-// Define an interface for the populated parentRestaurant
 interface PopulatedRestaurant {
   _id: Types.ObjectId;
   name: string;
 }
 
-// Define an interface for the branch with populated parentRestaurant
 interface PopulatedBranch {
   _id: Types.ObjectId;
   name: string;
@@ -83,7 +83,6 @@ export class ChatRepository {
 
   async getRestaurantForBranch(branchId: string): Promise<{ id: string; name: string }> {
     try {
-      // Populate parentRestaurant and type the result
       const branch = (await BranchModel.findById(branchId)
         .populate<{ parentRestaurant: PopulatedRestaurant }>('parentRestaurant', '_id name')
         .lean()
@@ -119,6 +118,60 @@ export class ChatRepository {
   async findMessagesByRestaurantAndBranch(restaurantId: string, branchId: string): Promise<any[]> {
     try {
       return await Message.find({ restaurantId, branchId }).sort({ timestamp: 1 }).lean().exec();
+    } catch (error) {
+      throw new AppError(
+        HttpStatus.InternalServerError,
+        `${MessageConstants.INTERNAL_SERVER_ERROR}: ${(error as Error).message}`
+      );
+    }
+  }
+
+  async getRestaurantsForAdmin(adminId: string): Promise<{ id: string; name: string }[]> {
+    try {
+      // Fetch all approved main restaurants (not branches)
+      const restaurants = await RestaurentModel.find(
+        { isApproved: true, isBranch: false },
+        'name'
+      ).lean();
+      
+      if (!restaurants.length) {
+        return [];
+      }
+
+      return restaurants.map((restaurant) => ({
+        id: restaurant._id.toString(),
+        name: restaurant.name,
+      }));
+    } catch (error) {
+      throw new AppError(
+        HttpStatus.InternalServerError,
+        `${MessageConstants.INTERNAL_SERVER_ERROR}: ${(error as Error).message}`
+      );
+    }
+  }
+
+  async getAdminsForRestaurant(restaurantId: string): Promise<{ id: string; email: string }[]> {
+    try {
+      const adminIds = await Message.distinct('adminId', { restaurantId }).exec();
+      if (!adminIds.length) {
+        return [];
+      }
+      const admins = await adminModel.find({ _id: { $in: adminIds } }, 'email').lean();
+      return admins.map((admin) => ({
+        id: admin._id.toString(),
+        email: admin.email,
+      }));
+    } catch (error) {
+      throw new AppError(
+        HttpStatus.InternalServerError,
+        `${MessageConstants.INTERNAL_SERVER_ERROR}: ${(error as Error).message}`
+      );
+    }
+  }
+
+  async findMessagesByAdminAndRestaurant(adminId: string, restaurantId: string): Promise<any[]> {
+    try {
+      return await Message.find({ adminId, restaurantId }).sort({ timestamp: 1 }).lean().exec();
     } catch (error) {
       throw new AppError(
         HttpStatus.InternalServerError,
