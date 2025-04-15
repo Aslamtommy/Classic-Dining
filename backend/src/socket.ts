@@ -1,7 +1,9 @@
+// src/socket.ts
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { verifyToken } from './utils/jwt';
 import Message from './models/User/message';
+import adminModel from './models/Admin/adminModel';
 
 interface SocketData {
   id: string;
@@ -85,6 +87,12 @@ export const initializeSocket = (server: HttpServer): Server => {
 
         // Admin ↔ Restaurant Chat
         else if (adminId && restaurantId && !userId && !branchId) {
+          // Verify adminId is super admin
+          const superAdmin = await adminModel.findOne({ _id: adminId, email: 'admin123@gmail.com' }).lean();
+          if (!superAdmin) {
+            socket.emit('error', 'Unauthorized: Only super admin can chat with restaurants');
+            return;
+          }
           const room = `chat_admin_${adminId}_${restaurantId}`;
           if (socket.data.role === 'admin' && socket.data.id !== adminId) {
             socket.emit('error', 'Unauthorized: Cannot join chat for another admin');
@@ -132,10 +140,9 @@ export const initializeSocket = (server: HttpServer): Server => {
             timestamp: new Date(),
           };
           console.log('Saving Branch ↔ User message:', messageData);
-          const newMessage = new Message(messageData);
-          await newMessage.save();
+          const newMessage = await new Message(messageData).save();
           console.log(`Message saved for room ${room}`);
-          io.to(room).emit('receiveMessage', messageData);
+          io.to(room).emit('receiveMessage', newMessage);
         }
 
         // Branch ↔ Restaurant Message
@@ -150,14 +157,19 @@ export const initializeSocket = (server: HttpServer): Server => {
             timestamp: new Date(),
           };
           console.log('Saving Branch ↔ Restaurant message:', messageData);
-          const newMessage = new Message(messageData);
-          await newMessage.save();
+          const newMessage = await new Message(messageData).save();
           console.log(`Message saved for room ${room}`);
-          io.to(room).emit('receiveMessage', messageData);
+          io.to(room).emit('receiveMessage', newMessage);
         }
 
         // Admin ↔ Restaurant Message
         else if (adminId && restaurantId && !userId && !branchId) {
+          // Verify adminId is super admin
+          const superAdmin = await adminModel.findOne({ _id: adminId, email: 'admin123@gmail.com' }).lean();
+          if (!superAdmin) {
+            socket.emit('error', 'Unauthorized: Only super admin can chat with restaurants');
+            return;
+          }
           const room = `chat_admin_${adminId}_${restaurantId}`;
           const messageData = {
             adminId,
@@ -168,10 +180,9 @@ export const initializeSocket = (server: HttpServer): Server => {
             timestamp: new Date(),
           };
           console.log('Saving Admin ↔ Restaurant message:', messageData);
-          const newMessage = new Message(messageData);
-          await newMessage.save();
+          const newMessage = await new Message(messageData).save();
           console.log(`Message saved for room ${room}`);
-          io.to(room).emit('receiveMessage', messageData);
+          io.to(room).emit('receiveMessage', newMessage);
         } else {
           socket.emit('error', 'Invalid message parameters');
           console.log('Invalid sendMessage parameters:', data);

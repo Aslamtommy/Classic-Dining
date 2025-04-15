@@ -126,22 +126,37 @@ export class ChatRepository {
     }
   }
 
-  async getRestaurantsForAdmin(adminId: string): Promise<{ id: string; name: string }[]> {
+  async getRestaurantsForAdmin(adminId: string): Promise<
+    { id: string; name: string; lastMessage?: string; lastMessageTime?: Date }[]
+  > {
     try {
-      // Fetch all approved main restaurants (not branches)
       const restaurants = await RestaurentModel.find(
         { isApproved: true, isBranch: false },
         'name'
       ).lean();
-      
       if (!restaurants.length) {
         return [];
       }
 
-      return restaurants.map((restaurant) => ({
-        id: restaurant._id.toString(),
-        name: restaurant.name,
-      }));
+      // Fetch the last message for each restaurant
+      const result = await Promise.all(
+        restaurants.map(async (restaurant) => {
+          const lastMessage = await Message.findOne(
+            { adminId, restaurantId: restaurant._id },
+            'message timestamp'
+          )
+            .sort({ timestamp: -1 })
+            .lean();
+          return {
+            id: restaurant._id.toString(),
+            name: restaurant.name,
+            lastMessage: lastMessage?.message,
+            lastMessageTime: lastMessage?.timestamp,
+          };
+        })
+      );
+
+      return result;
     } catch (error) {
       throw new AppError(
         HttpStatus.InternalServerError,
@@ -150,17 +165,35 @@ export class ChatRepository {
     }
   }
 
-  async getAdminsForRestaurant(restaurantId: string): Promise<{ id: string; email: string }[]> {
+  async getAdminsForRestaurant(restaurantId: string): Promise<
+    { id: string; email: string; lastMessage?: string; lastMessageTime?: Date }[]
+  > {
     try {
-      const adminIds = await Message.distinct('adminId', { restaurantId }).exec();
-      if (!adminIds.length) {
+      // Return only the super admin
+      const superAdmin = await adminModel.findOne(
+        { email: 'admin123@gmail.com' }, // Or use _id: '6794c02dda04fc5369da3f88'
+        'email'
+      ).lean();
+      if (!superAdmin) {
         return [];
       }
-      const admins = await adminModel.find({ _id: { $in: adminIds } }, 'email').lean();
-      return admins.map((admin) => ({
-        id: admin._id.toString(),
-        email: admin.email,
-      }));
+
+      // Fetch the last message for this restaurant-super admin pair
+      const lastMessage = await Message.findOne(
+        { adminId: superAdmin._id, restaurantId },
+        'message timestamp'
+      )
+        .sort({ timestamp: -1 })
+        .lean();
+
+      return [
+        {
+          id: superAdmin._id.toString(),
+          email: superAdmin.email,
+          lastMessage: lastMessage?.message,
+          lastMessageTime: lastMessage?.timestamp,
+        },
+      ];
     } catch (error) {
       throw new AppError(
         HttpStatus.InternalServerError,
