@@ -1,4 +1,3 @@
- // src/pages/Branch/BranchUserChatPage.tsx
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -19,6 +18,8 @@ interface User {
   name: string;
   mobile?: string;
   profilePicture?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
 }
 
 const SOCKET_URL = 'http://localhost:5000/';
@@ -41,9 +42,15 @@ const BranchUserChatPage: React.FC = () => {
         setError('Missing branch ID or token');
         return;
       }
-      const response:any = await restaurentApi.get(`/chats/users/${branchId}`);
+      const response: any = await restaurentApi.get(`/chats/users/${branchId}`);
       const fetchedUsers = response.data.data?.users || [];
-      setUsers(fetchedUsers);
+      // Sort by lastMessageTime (descending), undefined at bottom
+      const sortedUsers = fetchedUsers.sort((a: User, b: User) => {
+        const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+        const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+        return timeB - timeA;
+      });
+      setUsers(sortedUsers);
       setError(null);
     } catch (error: any) {
       console.error('Error fetching users:', error.response?.data || error.message);
@@ -95,6 +102,19 @@ const BranchUserChatPage: React.FC = () => {
       if (message.branchId === branchId && message.userId === selectedUserId) {
         setMessages((prev) => [...prev, message]);
       }
+      // Update users list with new message and re-sort
+      setUsers((prev:any) => {
+        const updated = prev.map((user:any) =>
+          user.id === message.userId
+            ? { ...user, lastMessage: message.message, lastMessageTime: message.timestamp }
+            : user
+        );
+        return updated.sort((a:any, b:any) => {
+          const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+          const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+          return timeB - timeA;
+        });
+      });
     });
 
     return () => {
@@ -107,6 +127,19 @@ const BranchUserChatPage: React.FC = () => {
     if (!input.trim() || !socket || !isConnected || !selectedUserId) return;
     const messageData = { userId: selectedUserId, branchId, message: input };
     socket.emit('sendMessage', messageData);
+    // Optimistically update users list
+    setUsers((prev) => {
+      const updated = prev.map((user) =>
+        user.id === selectedUserId
+          ? { ...user, lastMessage: input, lastMessageTime: new Date().toISOString() }
+          : user
+      );
+      return updated.sort((a, b) => {
+        const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+        const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+        return timeB - timeA;
+      });
+    });
     setInput('');
   };
 
@@ -127,7 +160,7 @@ const BranchUserChatPage: React.FC = () => {
             <div
               key={user.id}
               onClick={() => selectUser(user.id)}
-              className={`p-3 mb-2 cursor-pointer rounded-lg flex items-center gap-3 transition-colors duration-200 ${
+              className={`p-3 mb-2 cursor-pointer rounded-lg flex items-start gap-3 transition-colors duration-200 ${
                 selectedUserId === user.id ? 'bg-[#8b5d3b] text-white' : 'bg-white hover:bg-[#e8e2d9]'
               }`}
             >
@@ -136,9 +169,21 @@ const BranchUserChatPage: React.FC = () => {
                 alt={user.name}
                 className="w-10 h-10 rounded-full object-cover border border-[#e8e2d9]"
               />
-              <div>
-                <span className="font-medium block text-[#2c2420]">{user.name}</span>
+              <div className="flex-1">
+                <span className="font-medium block">{user.name}</span>
                 <span className="text-sm text-gray-500">{user.mobile || 'N/A'}</span>
+                {user.lastMessage ? (
+                  <>
+                    <span className="text-xs truncate block max-w-[150px]">{user.lastMessage}</span>
+                    <span className="text-xs opacity-70">
+                      {user.lastMessageTime
+                        ? new Date(user.lastMessageTime).toLocaleTimeString()
+                        : ''}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs italic opacity-70">No messages yet</span>
+                )}
               </div>
             </div>
           ))
@@ -223,4 +268,4 @@ const BranchUserChatPage: React.FC = () => {
   );
 };
 
-export default BranchUserChatPage; 
+export default BranchUserChatPage;

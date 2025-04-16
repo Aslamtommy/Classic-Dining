@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
-import { useNavigate } from 'react-router-dom';
 import adminApi from '../../Axios/adminInstance';
 
 interface Message {
@@ -32,29 +31,26 @@ const AdminRestaurantChatPage: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const adminState = useSelector((state: RootState) => state.admin);
-  const adminId = adminState._id;
-  const token = adminState.accessToken;
-  const navigate = useNavigate();
+  const adminId = useSelector((state: RootState) => state.admin ._id);
+  const token = useSelector((state: RootState) => state.admin .accessToken);
 
   const fetchRestaurants = async () => {
     try {
       if (!adminId || !token) {
-        console.log('Missing adminId or token:', { adminId, token });
         setError('Missing admin ID or token');
-        navigate('/admin/login');
         return;
       }
       const response: any = await adminApi.get('/chats/restaurants');
-      console.log('Fetch Restaurants Response:', response.data);
       const fetchedRestaurants = response.data.data?.restaurants || [];
-      // Sort by lastMessageTime (descending), undefined at bottom
       const sortedRestaurants = fetchedRestaurants.sort((a: Restaurant, b: Restaurant) => {
         const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
         const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
         return timeB - timeA;
       });
       setRestaurants(sortedRestaurants);
+      if (sortedRestaurants.length > 0 && !selectedRestaurantId) {
+        setSelectedRestaurantId(sortedRestaurants[0].id);
+      }
       setError(null);
     } catch (error: any) {
       console.error('Error fetching restaurants:', error.response?.data || error.message);
@@ -65,9 +61,7 @@ const AdminRestaurantChatPage: React.FC = () => {
 
   useEffect(() => {
     if (!token || !adminId) {
-      console.log('No token or adminId, redirecting to login');
       setError('Please log in as an admin.');
-      navigate('/admin/login');
       return;
     }
 
@@ -77,64 +71,65 @@ const AdminRestaurantChatPage: React.FC = () => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log('Socket connected');
       setIsConnected(true);
       setError(null);
     });
 
     newSocket.on('connect_error', (err: any) => {
-      console.error('Socket connection error:', err);
       setIsConnected(false);
       setError('Socket connection failed.');
     });
 
     newSocket.on('error', (error: string) => {
-      console.error('Socket error:', error);
       setError(`Socket error: ${error}`);
-    });
-
-    newSocket.on('receiveMessage', (message: Message) => {
-      console.log('Received message:', message);
-      // Update messages for selected restaurant
-      if (message.adminId === adminId && message.restaurantId === selectedRestaurantId) {
-        setMessages((prev) => [...prev, message]);
-      }
-      // Update restaurant list for all messages
-      setRestaurants((prev:any) => {
-        const updated = prev.map((r:any) =>
-          r.id === message.restaurantId
-            ? { ...r, lastMessage: message.message, lastMessageTime: message.timestamp }
-            : r
-        );
-        // Re-sort by lastMessageTime
-        return updated.sort((a:any, b:any) => {
-          const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-          const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
-          return timeB - timeA;
-        });
-      });
     });
 
     return () => {
       newSocket.disconnect();
     };
-  }, [token, adminId, navigate, selectedRestaurantId]);
+  }, [token, adminId]);
 
   useEffect(() => {
-    if (!socket || !selectedRestaurantId || !isConnected) return;
+    if (!socket || !isConnected || restaurants.length === 0) return;
 
-    socket.emit('joinChat', { adminId, restaurantId: selectedRestaurantId });
-    console.log('Joining chat room:', { adminId, restaurantId: selectedRestaurantId });
+    // Join rooms for all restaurants to receive messages
+    restaurants.forEach((restaurant) => {
+      socket.emit('joinChat', { adminId, restaurantId: restaurant.id });
+    });
 
     socket.on('previousMessages', (previousMessages: Message[]) => {
-      console.log('Received previous messages:', previousMessages);
-      setMessages(previousMessages || []);
+      if (previousMessages.length > 0 && previousMessages[0].restaurantId === selectedRestaurantId) {
+        setMessages(previousMessages || []);
+      }
+    });
+
+    socket.on('receiveMessage', (message: Message) => {
+      if (message.adminId === adminId) {
+        // Update messages for the selected restaurant
+        if (message.restaurantId === selectedRestaurantId) {
+          setMessages((prev) => [...prev, message]);
+        }
+        // Update restaurants list with new message and re-sort
+        setRestaurants((prev:any) => {
+          const updated = prev.map((restaurant:any) =>
+            restaurant.id === message.restaurantId
+              ? { ...restaurant, lastMessage: message.message, lastMessageTime: message.timestamp }
+              : restaurant
+          );
+          return updated.sort((a:any, b:any) => {
+            const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+            const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+            return timeB - timeA;
+          });
+        });
+      }
     });
 
     return () => {
       socket.off('previousMessages');
+      socket.off('receiveMessage');
     };
-  }, [socket, selectedRestaurantId, isConnected, adminId]);
+  }, [socket, selectedRestaurantId, isConnected, adminId, restaurants]);
 
   const sendMessage = () => {
     if (!input.trim() || !socket || !isConnected || !selectedRestaurantId) return;
@@ -145,16 +140,13 @@ const AdminRestaurantChatPage: React.FC = () => {
       senderId: adminId,
       senderRole: 'admin',
     };
-    console.log('Sending message:', messageData);
     socket.emit('sendMessage', messageData);
-    // Optimistically update restaurants list
     setRestaurants((prev) => {
-      const updated = prev.map((r) =>
-        r.id === selectedRestaurantId
-          ? { ...r, lastMessage: input, lastMessageTime: new Date().toISOString() }
-          : r
+      const updated = prev.map((restaurant) =>
+        restaurant.id === selectedRestaurantId
+          ? { ...restaurant, lastMessage: input, lastMessageTime: new Date().toISOString() }
+          : restaurant
       );
-      // Re-sort by lastMessageTime
       return updated.sort((a, b) => {
         const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
         const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
@@ -167,6 +159,9 @@ const AdminRestaurantChatPage: React.FC = () => {
   const selectRestaurant = (restaurantId: string) => {
     setSelectedRestaurantId(restaurantId);
     setMessages([]);
+    if (socket && isConnected) {
+      socket.emit('joinChat', { adminId, restaurantId });
+    }
   };
 
   return (

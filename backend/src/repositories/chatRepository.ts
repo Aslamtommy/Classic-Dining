@@ -1,4 +1,3 @@
-// src/repositories/ChatRepository.ts
 import Message from '../models/User/message';
 import User from '../models/User/userModel';
 import BranchModel from '../models/Restaurent/Branch/BranchModel';
@@ -36,15 +35,28 @@ export class ChatRepository {
 
   async getUserDetails(
     userIds: string[]
-  ): Promise<{ id: string; name: string; mobile?: string; profilePicture?: string }[]> {
+  ): Promise<{ id: string; name: string; mobile?: string; profilePicture?: string; lastMessage?: string; lastMessageTime?: Date }[]> {
     try {
       const users = await User.find({ _id: { $in: userIds } }, 'name mobile profilePicture').lean();
-      return users.map((user) => ({
-        id: user._id.toString(),
-        name: user.name,
-        mobile: user.mobile || undefined,
-        profilePicture: user.profilePicture || undefined,
-      }));
+      const result = await Promise.all(
+        users.map(async (user) => {
+          const lastMessage = await Message.findOne(
+            { userId: user._id, branchId: userIds.length === 1 ? userIds[0] : undefined },
+            'message timestamp'
+          )
+            .sort({ timestamp: -1 })
+            .lean();
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            mobile: user.mobile || undefined,
+            profilePicture: user.profilePicture || undefined,
+            lastMessage: lastMessage?.message,
+            lastMessageTime: lastMessage?.timestamp,
+          };
+        })
+      );
+      return result;
     } catch (error) {
       throw new AppError(
         HttpStatus.InternalServerError,
@@ -55,10 +67,11 @@ export class ChatRepository {
 
   async getBranchesForRestaurant(
     restaurantId: string
-  ): Promise<{ id: string; name: string; location?: string }[]> {
+  ): Promise<{ id: string; name: string; location?: string; lastMessage?: string; lastMessageTime?: Date }[]> {
     try {
       const branchesFromMessages = await Message.distinct('branchId', { restaurantId }).exec();
       let branches;
+47
       if (branchesFromMessages.length > 0) {
         branches = await BranchModel.find({ _id: { $in: branchesFromMessages } }, 'name address')
           .lean()
@@ -68,11 +81,24 @@ export class ChatRepository {
           .lean()
           .exec();
       }
-      return branches.map((branch) => ({
-        id: branch._id.toString(),
-        name: branch.name,
-        location: branch.address || undefined,
-      }));
+      const result = await Promise.all(
+        branches.map(async (branch) => {
+          const lastMessage = await Message.findOne(
+            { branchId: branch._id, restaurantId },
+            'message timestamp'
+          )
+            .sort({ timestamp: -1 })
+            .lean();
+          return {
+            id: branch._id.toString(),
+            name: branch.name,
+            location: branch.address || undefined,
+            lastMessage: lastMessage?.message,
+            lastMessageTime: lastMessage?.timestamp,
+          };
+        })
+      );
+      return result;
     } catch (error) {
       throw new AppError(
         HttpStatus.InternalServerError,
@@ -81,7 +107,7 @@ export class ChatRepository {
     }
   }
 
-  async getRestaurantForBranch(branchId: string): Promise<{ id: string; name: string }> {
+  async getRestaurantForBranch(branchId: string): Promise<{ id: string; name: string; lastMessage?: string; lastMessageTime?: Date }> {
     try {
       const branch = (await BranchModel.findById(branchId)
         .populate<{ parentRestaurant: PopulatedRestaurant }>('parentRestaurant', '_id name')
@@ -92,9 +118,18 @@ export class ChatRepository {
         throw new AppError(HttpStatus.NotFound, MessageConstants.RESTAURANT_NOT_FOUND);
       }
 
+      const lastMessage = await Message.findOne(
+        { branchId, restaurantId: branch.parentRestaurant._id },
+        'message timestamp'
+      )
+        .sort({ timestamp: -1 })
+        .lean();
+
       return {
         id: branch.parentRestaurant._id.toString(),
         name: branch.parentRestaurant.name,
+        lastMessage: lastMessage?.message,
+        lastMessageTime: lastMessage?.timestamp,
       };
     } catch (error) {
       throw new AppError(
@@ -138,7 +173,6 @@ export class ChatRepository {
         return [];
       }
 
-      // Fetch the last message for each restaurant
       const result = await Promise.all(
         restaurants.map(async (restaurant) => {
           const lastMessage = await Message.findOne(
@@ -169,16 +203,14 @@ export class ChatRepository {
     { id: string; email: string; lastMessage?: string; lastMessageTime?: Date }[]
   > {
     try {
-      // Return only the super admin
       const superAdmin = await adminModel.findOne(
-        { email: 'admin123@gmail.com' }, // Or use _id: '6794c02dda04fc5369da3f88'
+        { email: 'admin123@gmail.com' },
         'email'
       ).lean();
       if (!superAdmin) {
         return [];
       }
 
-      // Fetch the last message for this restaurant-super admin pair
       const lastMessage = await Message.findOne(
         { adminId: superAdmin._id, restaurantId },
         'message timestamp'

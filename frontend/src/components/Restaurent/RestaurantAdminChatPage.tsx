@@ -1,4 +1,3 @@
-// src/pages/Restaurant/RestaurantAdminChatPage.tsx
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -41,10 +40,9 @@ const RestaurantAdminChatPage: React.FC = () => {
         return;
       }
       const response: any = await restaurentApi.get('/chats/admins');
-      console.log('Fetch Super Admin Response:', response.data);
       const fetchedAdmins = response.data.data?.admins || [];
       if (fetchedAdmins.length > 0) {
-        setSuperAdmin(fetchedAdmins[0]); // Expecting only super admin
+        setSuperAdmin(fetchedAdmins[0]);
       } else {
         setSuperAdmin(null);
       }
@@ -68,26 +66,36 @@ const RestaurantAdminChatPage: React.FC = () => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log('Socket connected');
       setIsConnected(true);
       setError(null);
     });
 
     newSocket.on('connect_error', (err: any) => {
-      console.error('Socket connection error:', err);
       setIsConnected(false);
       setError('Socket connection failed.');
     });
 
     newSocket.on('error', (error: string) => {
-      console.error('Socket error:', error);
       setError(`Socket error: ${error}`);
     });
 
-    newSocket.on('receiveMessage', (message: Message) => {
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [token, restaurantId]);
+
+  useEffect(() => {
+    if (!socket || !superAdmin || !isConnected) return;
+
+    socket.emit('joinChat', { adminId: superAdmin.id, restaurantId });
+
+    socket.on('previousMessages', (previousMessages: Message[]) => {
+      setMessages(previousMessages || []);
+    });
+
+    socket.on('receiveMessage', (message: Message) => {
       if (superAdmin && message.adminId === superAdmin.id && message.restaurantId === restaurantId) {
         setMessages((prev) => [...prev, message]);
-        // Update superAdmin with new message
         setSuperAdmin((prev:any) =>
           prev
             ? { ...prev, lastMessage: message.message, lastMessageTime: message.timestamp }
@@ -97,23 +105,8 @@ const RestaurantAdminChatPage: React.FC = () => {
     });
 
     return () => {
-      newSocket.disconnect();
-    };
-  }, [token, restaurantId, superAdmin]);
-
-  useEffect(() => {
-    if (!socket || !superAdmin || !isConnected) return;
-
-    socket.emit('joinChat', { adminId: superAdmin.id, restaurantId });
-    console.log('Joining chat with super admin:', { adminId: superAdmin.id, restaurantId });
-
-    socket.on('previousMessages', (previousMessages: Message[]) => {
-      console.log('Received previous messages:', previousMessages);
-      setMessages(previousMessages || []);
-    });
-
-    return () => {
       socket.off('previousMessages');
+      socket.off('receiveMessage');
     };
   }, [socket, superAdmin, isConnected, restaurantId]);
 
@@ -126,10 +119,8 @@ const RestaurantAdminChatPage: React.FC = () => {
       senderId: restaurantId,
       senderRole: 'restaurent',
     };
-    console.log('Sending message:', messageData);
     socket.emit('sendMessage', messageData);
     setInput('');
-    // Optimistically update superAdmin
     setSuperAdmin((prev) =>
       prev
         ? { ...prev, lastMessage: input, lastMessageTime: new Date().toISOString() }

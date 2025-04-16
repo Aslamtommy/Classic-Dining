@@ -1,4 +1,3 @@
-// src/pages/Branch/BranchRestaurantChatPage.tsx
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -17,6 +16,8 @@ interface Message {
 interface Restaurant {
   id: string;
   name: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
 }
 
 const SOCKET_URL = 'http://localhost:5000/';
@@ -39,11 +40,11 @@ const BranchRestaurantChatPage: React.FC = () => {
         setError('Missing branch ID or token');
         return;
       }
-      const response :any= await restaurentApi.get('/chats/restaurant');
+      const response: any = await restaurentApi.get('/chats/restaurant');
       const restaurant = response.data.data?.restaurant;
       if (restaurant) {
-        setRestaurants([{ id: restaurant.id, name: restaurant.name }]);
-        setSelectedRestaurantId(restaurant.id); // Auto-select since there's only one parent
+        setRestaurants([{ id: restaurant.id, name: restaurant.name, lastMessage: restaurant.lastMessage, lastMessageTime: restaurant.lastMessageTime }]);
+        setSelectedRestaurantId(restaurant.id);
       } else {
         setRestaurants([]);
       }
@@ -98,6 +99,15 @@ const BranchRestaurantChatPage: React.FC = () => {
       if (message.branchId === branchId && message.restaurantId === selectedRestaurantId) {
         setMessages((prev) => [...prev, message]);
       }
+      // Update restaurants list with new message
+      setRestaurants((prev:any) => {
+        const updated = prev.map((restaurant:any) =>
+          restaurant.id === message.restaurantId
+            ? { ...restaurant, lastMessage: message.message, lastMessageTime: message.timestamp }
+            : restaurant
+        );
+        return updated;
+      });
     });
 
     return () => {
@@ -110,6 +120,15 @@ const BranchRestaurantChatPage: React.FC = () => {
     if (!input.trim() || !socket || !isConnected || !selectedRestaurantId) return;
     const messageData = { restaurantId: selectedRestaurantId, branchId, message: input };
     socket.emit('sendMessage', messageData);
+    // Optimistically update restaurants list
+    setRestaurants((prev) => {
+      const updated = prev.map((restaurant) =>
+        restaurant.id === selectedRestaurantId
+          ? { ...restaurant, lastMessage: input, lastMessageTime: new Date().toISOString() }
+          : restaurant
+      );
+      return updated;
+    });
     setInput('');
   };
 
@@ -124,11 +143,21 @@ const BranchRestaurantChatPage: React.FC = () => {
           restaurants.map((restaurant) => (
             <div
               key={restaurant.id}
-              className={`p-3 mb-2 rounded-lg flex items-center gap-3 transition-colors duration-200 bg-[#8b5d3b] text-white`}
+              className={`p-3 mb-2 rounded-lg flex flex-col gap-1 transition-colors duration-200 bg-[#8b5d3b] text-white`}
             >
-              <div>
-                <span className="font-medium block">{restaurant.name}</span>
-              </div>
+              <span className="font-medium">{restaurant.name}</span>
+              {restaurant.lastMessage ? (
+                <>
+                  <span className="text-xs truncate max-w-[200px]">{restaurant.lastMessage}</span>
+                  <span className="text-xs opacity-70">
+                    {restaurant.lastMessageTime
+                      ? new Date(restaurant.lastMessageTime).toLocaleTimeString()
+                      : ''}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs italic opacity-70">No messages yet</span>
+              )}
             </div>
           ))
         )}

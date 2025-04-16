@@ -1,4 +1,3 @@
-// src/pages/Restaurant/RestaurantChatPage.tsx
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -18,6 +17,8 @@ interface Branch {
   id: string;
   name: string;
   location?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
 }
 
 const SOCKET_URL = 'http://localhost:5000/';
@@ -40,9 +41,15 @@ const RestaurantChatPage: React.FC = () => {
         setError('Missing restaurant ID or token');
         return;
       }
-      const response :any= await restaurentApi.get('/chats/branches');
+      const response: any = await restaurentApi.get('/chats/branches');
       const fetchedBranches = response.data.data?.branches || [];
-      setBranches(fetchedBranches);
+      // Sort by lastMessageTime (descending), undefined at bottom
+      const sortedBranches = fetchedBranches.sort((a: Branch, b: Branch) => {
+        const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+        const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+        return timeB - timeA;
+      });
+      setBranches(sortedBranches);
       setError(null);
     } catch (error: any) {
       console.error('Error fetching branches:', error.response?.data || error.message);
@@ -94,6 +101,19 @@ const RestaurantChatPage: React.FC = () => {
       if (message.restaurantId === restaurantId && message.branchId === selectedBranchId) {
         setMessages((prev) => [...prev, message]);
       }
+      // Update branches list with new message and re-sort
+      setBranches((prev:any) => {
+        const updated = prev.map((branch:any) =>
+          branch.id === message.branchId
+            ? { ...branch, lastMessage: message.message, lastMessageTime: message.timestamp }
+            : branch
+        );
+        return updated.sort((a:any, b:any) => {
+          const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+          const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+          return timeB - timeA;
+        });
+      });
     });
 
     return () => {
@@ -106,6 +126,19 @@ const RestaurantChatPage: React.FC = () => {
     if (!input.trim() || !socket || !isConnected || !selectedBranchId) return;
     const messageData = { restaurantId, branchId: selectedBranchId, message: input };
     socket.emit('sendMessage', messageData);
+    // Optimistically update branches list
+    setBranches((prev) => {
+      const updated = prev.map((branch) =>
+        branch.id === selectedBranchId
+          ? { ...branch, lastMessage: input, lastMessageTime: new Date().toISOString() }
+          : branch
+      );
+      return updated.sort((a, b) => {
+        const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+        const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+        return timeB - timeA;
+      });
+    });
     setInput('');
   };
 
@@ -126,14 +159,24 @@ const RestaurantChatPage: React.FC = () => {
             <div
               key={branch.id}
               onClick={() => selectBranch(branch.id)}
-              className={`p-3 mb-2 cursor-pointer rounded-lg flex items-center gap-3 transition-colors duration-200 ${
+              className={`p-3 mb-2 cursor-pointer rounded-lg flex flex-col gap-1 transition-colors duration-200 ${
                 selectedBranchId === branch.id ? 'bg-[#8b5d3b] text-white' : 'bg-white hover:bg-[#e8e2d9]'
               }`}
             >
-              <div>
-                <span className="font-medium block text-[#2c2420]">{branch.name}</span>
-                <span className="text-sm text-gray-500">{branch.location || 'N/A'}</span>
-              </div>
+              <span className="font-medium">{branch.name}</span>
+              <span className="text-sm text-gray-500">{branch.location || 'N/A'}</span>
+              {branch.lastMessage ? (
+                <>
+                  <span className="text-xs truncate max-w-[200px]">{branch.lastMessage}</span>
+                  <span className="text-xs opacity-70">
+                    {branch.lastMessageTime
+                      ? new Date(branch.lastMessageTime).toLocaleTimeString()
+                      : ''}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs italic opacity-70">No messages yet</span>
+              )}
             </div>
           ))
         )}
