@@ -2,7 +2,7 @@ import axios from "axios";
 import { store } from "../redux/store";
 import { logoutRestaurent } from "../redux/restaurentSlice";
 import toast from "react-hot-toast";
-
+import { BaseUrl } from "../../Config/BaseUrl";
 interface TokenResponse {
   tokens: {
     accessToken: string;
@@ -12,7 +12,7 @@ interface TokenResponse {
 
 // Set up Axios instance for restaurent
 const restaurentApi = axios.create({
-  baseURL: "http://localhost:5000/restaurent",
+  baseURL:  `${BaseUrl}/restaurent`,
   headers: {
     "Content-Type": "application/json",
   },

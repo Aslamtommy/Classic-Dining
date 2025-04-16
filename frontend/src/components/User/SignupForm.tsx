@@ -5,7 +5,7 @@ import { setLoading, setError, setUser } from '../../redux/userslice';
 import OtpModal from '../../components/CommonComponents/Modals/OtpModal';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import App from '../../features/FirebaseAuthentication/config';
+import App from '../../../Config/firebaseConfig';
 import sendOtp from '../../utils/sentotp';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';

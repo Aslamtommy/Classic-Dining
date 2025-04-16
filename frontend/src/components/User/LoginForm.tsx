@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { setLoading, setUser, setError } from "../../redux/userslice";
 import api from "../../Axios/userInstance";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import App from "../../features/FirebaseAuthentication/config";
+import App from "../../../Config/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import ForgotPasswordModal from "../CommonComponents/Modals/ForgotPasswordModal";
 import toast from "react-hot-toast";

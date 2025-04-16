@@ -29,7 +29,8 @@ const RestaurantSearch = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userId = useSelector((state: RootState) => state.user.user?.id);
-  const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
+// Access the API key from Vite environment variables
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
   useEffect(() => {
     const fetchBranches = async () => {
       try {
@@ -84,7 +85,7 @@ const RestaurantSearch = () => {
           setUserLocation({ lat: latitude, lng: longitude });
           searchByLocation(latitude, longitude);
         },
-        (error) => {
+        ( ) => {
           toast.error("Failed to get your location.");
           setLoading(false);
           navigate('/search');
@@ -111,7 +112,7 @@ const RestaurantSearch = () => {
           searchByLocation(latitude, longitude);
           setMapVisible(true);
         },
-        (error) => {
+        ( ) => {
           toast.error("Failed to get location.");
           setLoading(false);
           navigate('/search');

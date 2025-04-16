@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 import { logoutUser } from '../redux/userslice';
-import toast  from  'react-hot-toast';;
+import toast  from  'react-hot-toast';import { BaseUrl } from '../../Config/BaseUrl';
+;
 
 interface TokenResponse {
   tokens: {
@@ -12,7 +13,7 @@ interface TokenResponse {
 
 // Set up Axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5000/users', // Backend API URL
+  baseURL:  `${BaseUrl}/users`, // Backend API URL
   headers: {
     'Content-Type': 'application/json',
   },
