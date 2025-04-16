@@ -11,6 +11,7 @@ import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { SignupFormInputs, SignupResponse, GoogleSignInResponse, AxiosError } from '../../types/auth';
+import { toast } from 'react-hot-toast';
 
 // Yup validation schema
 const validationSchema = yup
@@ -63,6 +64,7 @@ const SignupForm: React.FC = () => {
 
     const { success, message: otpMessage } = await sendOtp(data.email, dispatch);
     setMessage(otpMessage);
+    toast.success(otpMessage);
 
     if (success) {
       setShowOtpModal(true);
@@ -72,6 +74,7 @@ const SignupForm: React.FC = () => {
   const handleOtpSuccess = async (successMessage: string) => {
     setMessage(successMessage);
     setShowOtpModal(false);
+    toast.success(successMessage);
 
     const data = getValues();
 
@@ -91,6 +94,7 @@ const SignupForm: React.FC = () => {
         mobile: user.mobile || '', // Default to empty string if undefined
       }));
       setMessage(response.data.message || 'User registered successfully!');
+      toast.success('User registered successfully!');
       navigate('/login');
     } catch (error: unknown) {
       const axiosError = error as AxiosError;
@@ -99,9 +103,11 @@ const SignupForm: React.FC = () => {
       const errorMessage = axiosError.response?.data?.message || 'Error registering user.';
       if (errorMessage === 'User with this email already exists') {
         setMessage('This email is already registered. Please use a different email.');
+        toast.error('This email is already registered. Please use a different email.');
       } else {
         dispatch(setError(errorMessage));
         setMessage('Error registering user. Please try again.');
+        toast.error('Error registering user. Please try again.');
       }
     }
   };

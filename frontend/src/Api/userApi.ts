@@ -175,9 +175,9 @@ export const fetchAvailableCoupons = async (): Promise<Coupon[]> => {
 };
 
 export const fetchBranches = async (
-  search: string,
-  page: number,
-  limit: number,
+  search?: string,
+  page?: number,
+  limit?: number,
   minPrice?: number,
   maxPrice?: number,
   minRating?: number,
