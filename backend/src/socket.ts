@@ -1,4 +1,3 @@
-// src/socket.ts
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { verifyToken } from './utils/jwt';
@@ -44,6 +43,26 @@ export const initializeSocket = (server: HttpServer): Server => {
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log(`Connected: ${socket.id} (Role: ${socket.data.role}, ID: ${socket.data.id})`);
 
+    // Join notification room based on role
+    const { role, id } = socket.data;
+    let notificationRoom: string | null = null;
+    if (role === 'user') {
+      notificationRoom = `user_${id}`;
+    } else if (role === 'branch') {
+      notificationRoom = `branch_${id}`;
+    } else if (role === 'restaurent') {
+      notificationRoom = `restaurant_${id}`;
+    }
+    if (notificationRoom) {
+      socket.join(notificationRoom);
+      console.log(`Socket ${socket.id} joined notification room: ${notificationRoom}`);
+    }
+
+    // Optional: Log incoming notifications for debugging
+    socket.on('receiveNotification', (notification: any) => {
+      console.log(`Notification received by ${socket.id} (Role: ${role}, ID: ${id}):`, notification);
+    });
+
     socket.on('joinChat', async (data: { userId?: string; branchId?: string; restaurantId?: string; adminId?: string }) => {
       try {
         const { userId, branchId, restaurantId, adminId } = data;
@@ -87,7 +106,6 @@ export const initializeSocket = (server: HttpServer): Server => {
 
         // Admin ↔ Restaurant Chat
         else if (adminId && restaurantId && !userId && !branchId) {
-          // Verify adminId is super admin
           const superAdmin = await adminModel.findOne({ _id: adminId, email: 'admin123@gmail.com' }).lean();
           if (!superAdmin) {
             socket.emit('error', 'Unauthorized: Only super admin can chat with restaurants');
@@ -164,7 +182,6 @@ export const initializeSocket = (server: HttpServer): Server => {
 
         // Admin ↔ Restaurant Message
         else if (adminId && restaurantId && !userId && !branchId) {
-          // Verify adminId is super admin
           const superAdmin = await adminModel.findOne({ _id: adminId, email: 'admin123@gmail.com' }).lean();
           if (!superAdmin) {
             socket.emit('error', 'Unauthorized: Only super admin can chat with restaurants');

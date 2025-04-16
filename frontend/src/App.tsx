@@ -17,9 +17,10 @@ import RestaurantSearch from './components/User/RestaurentSearch';
 import ProtectedLogin from './components/User/ProtectedLogin';
 import RestaurantDetailPage from './components/User/RestaurentDetailPage';
 import ReservationDetails from './components/User/ReservationDetails';
+import UserNotifications from './components/User/UserNotification';
 // Restaurant Components
 import RestaurentSignup from './components/Restaurent/restaurentSignup';
-import RestaurentLogin from './components/Restaurent/RestaurentLogin';
+ 
 import RestaurentDashboard from './pages/Restaurent/RestaurentDashboard';
 import RestaurentProfile from './components/Restaurent/RestaurentProfile';
 import PendingApproval from './components/Restaurent/PendingApproval';
@@ -29,7 +30,7 @@ import RestaurentLoginProtected from './components/Restaurent/RestaurentLoginPro
 import MainRestaurantDashboard from './components/Restaurent/Home/MainRestaurantDashboard';
 import RestaurantChatPage from './components/Restaurent/RestaurantChatPage';
 import RestaurantAdminChatPage from './components/Restaurent/RestaurantAdminChatPage';
-
+import RestaurantNotifications from './components/Restaurent/RestaurantNotifications';
 // Branch Components
 import AddBranch from './components/BranchManagement/AddBranch';
 import Branches from './components/BranchManagement/Branches';
@@ -41,6 +42,7 @@ import BranchUserChatPage from './components/BranchManagement/BranchUserChatPage
 import BranchDashboard from './components/BranchManagement/BranchDashboard';
 import BranchProfile from './components/BranchManagement/BranchProfile';
  import BranchRestaurantChatPage from './components/BranchManagement/BranchRestaurantChatPage';
+ import BranchNotifications from './components/BranchManagement/BranchNotification';
 // Admin Components
 import AdminLogin from './components/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -78,8 +80,10 @@ const App: React.FC = () => {
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/restaurentList" element={<RestaurantListPage />} />
             <Route path="/search" element={<RestaurantSearch />} />
+            <Route path='/notifications' element={<UserNotifications/>}/>
           </Route>
           <Route path="/bookings/:id" element={<ReservationDetails />} />
+
         </Route>
 
       {/* Restaurant Routes */}
@@ -94,6 +98,7 @@ const App: React.FC = () => {
             <Route path="/restaurent/dashboard" element={<MainRestaurantDashboard />} />
             <Route path="/restaurant/chat" element={<RestaurantChatPage />} />
             <Route path="/restaurent/chats/admins" element={<RestaurantAdminChatPage />} /> {/* New chat route */}
+          <Route path='/restaurent/notifications' element={<RestaurantNotifications/>}/>
           </Route>
      
         </Route>
@@ -106,6 +111,7 @@ const App: React.FC = () => {
             <Route path="/branches/dashboard" element={<BranchDashboard />} />
             <Route path="/branches/profile" element={<BranchProfile/>} />
             <Route path="/branch/chat/restaurant" element={<BranchRestaurantChatPage />} />
+            <Route path='/branch/notifications' element={<BranchNotifications/>}/>
           </Route>
         </Route>
 

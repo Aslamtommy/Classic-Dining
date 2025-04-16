@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
 import { HttpStatus } from '../constants/HttpStatus';
 
-export const authenticateToken = (requiredRole?: string) => {
+export const authenticateToken = (requiredRole?: string | string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
@@ -26,7 +26,7 @@ export const authenticateToken = (requiredRole?: string) => {
         id: decoded.id,
         role: decoded.role,
         parentRestaurantId: decoded.parentRestaurantId,
-        email: decoded.email,  
+        email: decoded.email,
       } as {
         id: string;
         role: string;
@@ -38,10 +38,13 @@ export const authenticateToken = (requiredRole?: string) => {
       console.log('User attached to request:', req.data);
 
       // Role validation
-      if (requiredRole && decoded.role !== requiredRole) {
-        console.log(`Forbidden: Role mismatch. Required: ${requiredRole}, Found: ${decoded.role}`);
-        res.status(HttpStatus.Forbidden).json({ message: 'Forbidden: Insufficient permissions' });
-        return;
+      if (requiredRole) {
+        const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+        if (!allowedRoles.includes(decoded.role)) {
+          console.log(`Forbidden: Role mismatch. Required: ${allowedRoles.join(',')}, Found: ${decoded.role}`);
+          res.status(HttpStatus.Forbidden).json({ message: 'Forbidden: Insufficient permissions' });
+          return;
+        }
       }
 
       next();

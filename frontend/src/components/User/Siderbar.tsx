@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
-import { User, Calendar, Wallet, Settings, LogOut, Utensils } from 'lucide-react';
+import { User, Calendar, Wallet, Settings, LogOut, Utensils,Bell } from 'lucide-react';
 import { useSelector } from 'react-redux'; // Corrected from 'redux' to 'react-redux'
 
 const Sidebar = () => {
@@ -39,7 +39,8 @@ const Sidebar = () => {
             { to: '/bookings', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
             { to: '/wallet', icon: <Wallet className="w-5 h-5" />, text: 'Wallet' },
             { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' },
-            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurants' }, // Fixed typo in 'Restaurants'
+            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurants' },  
+            { to: '/notifications', icon: <Bell className="w-5 h-5" />, text: 'Notifications' },  
           ].map((link, index) => (
             <NavLink
               key={index}

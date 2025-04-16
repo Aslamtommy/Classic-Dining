@@ -54,6 +54,8 @@ adminRoute.put("/coupons/:id", authenticateToken("admin"), (req, res) => couponC
 adminRoute.delete("/coupons/:id", authenticateToken("admin"), (req, res) => couponController.deleteCoupon(req, res));
 
 
+// Notification Route
+adminRoute.post('/notifications', authenticateToken('admin'), (req, res) => adminDashboardController.sendNotification(req, res));
 // New Chat Route
 adminRoute.get('/chats/restaurants', authenticateToken('admin'), (req, res) => chatController.getRestaurantsForAdmin(req, res));
 export default adminRoute;

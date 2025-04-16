@@ -17,6 +17,8 @@ import { ReservationRepository } from '../repositories/ReservationRepository'; /
 import { TableTypeRepository } from '../repositories/TableRepository'; // Added import
 import { WalletRepository } from '../repositories/WalletRepository'; // Added import
 import { WalletService } from '../services/WalletService';
+import { NotificationService } from '../services/NotificationService';
+import { NotificationRepository } from '../repositories/NotificationRepository';
 const userRoute: Router = express.Router();
 
 // Instantiate repositories
@@ -27,7 +29,7 @@ const couponRepository = new CouponRepository();
 const reservationRepository = new ReservationRepository();
 const tableTypeRepository = new TableTypeRepository();
 const walletRepository = new WalletRepository();
-
+const notificationRepository = new NotificationRepository();
 // Instantiate services
 const userService = new UserService(userRepository, otpRepository, branchRepository);
 const couponService = new CouponService(couponRepository); // Corrected typo
@@ -39,8 +41,9 @@ const reservationService = new ReservationService(
   couponRepository
 );
 const walletService = new WalletService( walletRepository );
+const notificationService = new NotificationService(notificationRepository);
 // Instantiate controllers
-const userController = new Usercontroller(userService, couponService);
+const userController = new Usercontroller(userService, couponService,notificationService);
 const reservationController = new ReservationController(reservationService); // Pass reservationService
 const walletController = new WalletController(walletService);
 
@@ -115,5 +118,9 @@ userRoute.post('/wallet/confirm-add', authenticateToken('user'), (req, res) => w
 // Coupon route
 userRoute.get('/coupons', authenticateToken('user'), (req, res) => userController.getAvailableCoupons(req, res));
 
+
+// Notification routes
+userRoute.get('/notifications', authenticateToken('user'), (req: Request, res: Response) => userController.getNotifications(req, res));
+userRoute.patch('/notifications/:notificationId/read', authenticateToken('user'), (req: Request, res: Response) => userController.markNotificationAsRead(req, res));
 
 export default userRoute;

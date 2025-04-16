@@ -5,9 +5,12 @@ import { CloudinaryService } from "../utils/cloudinary.service";
 import { IBranchService } from "../interfaces/branch/IBranchService";
 import { AppError } from "../utils/AppError";
 import { MessageConstants } from "../constants/MessageConstants";
-
+import { INotificationService } from "../services/NotificationService";
 export class BranchController {
-  constructor(private _branchService: IBranchService) {}
+  constructor(
+    private _branchService: IBranchService,
+    private _notificationService: INotificationService
+  ) {}
 
   async createBranch(req: Request, res: Response): Promise<void> {
     try {
@@ -189,6 +192,57 @@ export class BranchController {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  async getNotifications(req: Request, res: Response): Promise<void> {
+    try {
+      const { role, id } = req.data!;
+      if (role !== 'branch') {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+      const { page = '1', limit = '10' } = req.query;
+      const { notifications, total } = await this._notificationService.getNotifications(
+        'branch',
+        id,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+      sendResponse(res, HttpStatus.OK, 'Notifications fetched successfully', {
+        notifications,
+        total,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+      });
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        console.error('Error fetching notifications:', error);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  async markNotificationAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const { role } = req.data!;
+      if (role !== 'branch') {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+      const { notificationId } = req.params;
+      if (!notificationId) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+      const notification = await this._notificationService.markNotificationAsRead(notificationId);
+      sendResponse(res, HttpStatus.OK, 'Notification marked as read', notification);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        console.error('Error marking notification as read:', error);
         sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }

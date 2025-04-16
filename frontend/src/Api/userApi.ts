@@ -13,6 +13,24 @@ import {
 } from "../types/reservation";
 import { Review } from "../types/reservation";
 
+// Define notification types
+interface Notification {
+  _id: string;
+  message: string;
+  read: boolean;
+  timestamp: string;
+}
+
+interface NotificationsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    notifications: Notification[];
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
 export const fetchBranchDetails = async (branchId: string): Promise<BranchResponse['data']> => {
   try {
     const response = await api.get<BranchResponse>(`/branches/${branchId}`);
@@ -207,4 +225,36 @@ export const fetchBranchReviews = async (branchId: string): Promise<Review[]> =>
     const axiosError = error as AxiosError;
     throw new Error(axiosError.response?.data?.message || 'Failed to fetch reviews');
   }
+
+  
 };
+
+ // Fetch notifications for user
+ export const getNotifications= async (
+  page: number = 1,
+  limit: number = 10
+): Promise<NotificationsResponse['data']> => {
+  try {
+    const response = await api.get<NotificationsResponse>('/notifications', {
+      params: { page, limit },
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch notifications');
+    }
+    console.log('getNotifications response', response);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    throw new Error('Failed to fetch notifications');
+  }
+} 
+// Mark a notification as read
+ export const markNotificationAsRead= async (notificationId: string): Promise<void> => {
+  try {
+    const response = await api.patch(`/notifications/${notificationId}/read`);
+    console.log('markNotificationAsRead response', response);
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    throw new Error('Failed to mark notification as read');
+  }
+} 

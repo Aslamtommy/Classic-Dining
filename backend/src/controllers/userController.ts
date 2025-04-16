@@ -7,13 +7,16 @@ import { MessageConstants } from "../constants/MessageConstants";
 import { sendResponse, sendError } from "../utils/responseUtils";
 import { ICouponService } from "../interfaces/coupon/ICouponService";
 import { IUserService } from "../interfaces/user/UserServiceInterface";
-import { AppError } from "../utils/AppError";
+import { INotificationService } from '../services/NotificationService';
+import { AppError } from '../utils/AppError';
 
 export class Usercontroller {
   constructor(
     private _userService: IUserService,
-    private _couponService: ICouponService
+    private _couponService: ICouponService,
+    private _notificationService: INotificationService
   ) {}
+
 
   async registerUser(req: Request, res: Response): Promise<void> {
     
@@ -286,6 +289,50 @@ async getAllBranches(req: Request, res: Response): Promise<void> {
       if (error instanceof AppError) {
         sendError(res, error.status, error.message);
       } else {
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  async getNotifications(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.data!;
+      const { page = '1', limit = '10' } = req.query;
+      const { notifications, total } = await this._notificationService.getNotifications(
+        'user',
+        id,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+      sendResponse(res, HttpStatus.OK, 'Notifications fetched successfully', {
+        notifications,
+        total,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+      });
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        console.error('Error fetching notifications:', error);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  async markNotificationAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const { notificationId } = req.params;
+      if (!notificationId) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+      const notification = await this._notificationService.markNotificationAsRead(notificationId);
+      sendResponse(res, HttpStatus.OK, 'Notification marked as read', notification);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        console.error('Error marking notification as read:', error);
         sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
       }
     }

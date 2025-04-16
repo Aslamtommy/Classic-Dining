@@ -4,6 +4,7 @@ import upload from '../middlewares/multer';
 import { authenticateToken } from '../middlewares/authentication';
 import { RestaurentController } from '../controllers/RestaurentController';
 import { RestaurentServices } from '../services/RestaurentServices';
+
 import { BranchRepository } from '../repositories/BranchRepository';
 import { RestaurentRepository } from '../repositories/RestaurentRepository';
 import { OtpRepository } from '../repositories/otpRepository';
@@ -25,13 +26,15 @@ import blockedUserMiddleware from '../middlewares/blockedUserMiddleware';
 import { MainDashboardRepository } from '../repositories/MainDashboardRepository';
 import { MainDashboardService } from '../services/MainDashboardService';
 import { MainDashboardController } from '../controllers/MainDashboardController';
-
+import { NotificationService } from '../services/NotificationService';
+import { NotificationRepository } from '../repositories/NotificationRepository';
 // ... existing instantiations ...
 
 
 const dashboardRepo = new BranchDashboardRepository();
 const dashboardService = new BranchDashboardService(dashboardRepo);
 const dashboardController = new BranchDashboardController(dashboardService);
+const notificationRepository = new NotificationRepository();
 const restaurentRoute: Router = express.Router();
 // Instantiate Main Dashboard classes
 const mainDashboardRepo = new MainDashboardRepository();
@@ -55,15 +58,15 @@ const reservationService = new ReservationService(
   walletRepository,
   couponRepository
 );
-
+const notificationService = new NotificationService(notificationRepository);
  
 const tableTypeService = new TableTypeService(tableTypeRepository, branchRepository);
-
+ 
 // Instantiate controllers
-const branchController = new BranchController(branchService);
+const branchController = new BranchController(branchService,notificationService);
 const reservationController = new ReservationController(reservationService);
 const restaurentService = new RestaurentServices(restaurentRepository, otpRepository,  branchRepository);
-const restaurentController = new RestaurentController(restaurentService);
+const restaurentController = new RestaurentController(restaurentService,notificationService);
 const tabletypeController = new TableTypeController(tableTypeService);
 
 
@@ -121,5 +124,19 @@ restaurentRoute.get(
   (req, res) => mainDashboardController.getDashboard(req, res)
 );
 
+// Notification Routes
+restaurentRoute.get('/notifications', authenticateToken(['restaurent', 'branch']), (req, res) => {
+  if (req.data!.role === 'restaurent') {
+    return restaurentController.getNotifications(req, res);
+  }
+  return branchController.getNotifications(req, res);
+});
+
+restaurentRoute.patch('/notifications/:notificationId/read', authenticateToken(['restaurent', 'branch']), (req, res) => {
+  if (req.data!.role === 'restaurent') {
+    return restaurentController.markNotificationAsRead(req, res);
+  }
+  return branchController.markNotificationAsRead(req, res);
+});
 
 export default restaurentRoute;

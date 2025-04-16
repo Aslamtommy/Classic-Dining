@@ -22,6 +22,7 @@ export interface BaseTableType {
    
   export interface CreateTableTypeData extends BaseTableType {
     price: number;
+    
   }
   
  
@@ -39,6 +40,7 @@ export interface BaseTableType {
     description: string;
     name: string;
     price: number;
+    features: string[];
     quantity: number;
     updatedAt: string;
     __v: number;

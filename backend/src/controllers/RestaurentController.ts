@@ -6,9 +6,13 @@ import { MessageConstants } from '../constants/MessageConstants';
 import { sendResponse, sendError } from '../utils/responseUtils';
 import { AppError } from '../utils/AppError';
 import { IRestaurentService } from '../interfaces/Restaurent/RestaurentServiceInterface';
+import { INotificationService } from '../services/NotificationService';
 
 export class RestaurentController {
-  constructor(private _restaurentService: IRestaurentService) {}
+  constructor(
+    private _restaurentService: IRestaurentService,
+    private _notificationService: INotificationService
+  ) {}
 
   async registerRestaurent(req: Request, res: Response): Promise<void> {
     try {
@@ -160,6 +164,57 @@ export class RestaurentController {
     } catch (error: unknown) {
       console.error('Logout error:', error instanceof Error ? error.message : 'Unknown error');
       sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getNotifications(req: Request, res: Response): Promise<void> {
+    try {
+      const { role, id } = req.data!;
+      if (role !== 'restaurent') {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+      const { page = '1', limit = '10' } = req.query;
+      const { notifications, total } = await this._notificationService.getNotifications(
+        'restaurant',
+        id,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+      sendResponse(res, HttpStatus.OK, 'Notifications fetched successfully', {
+        notifications,
+        total,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+      });
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        console.error('Error fetching notifications:', error);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+    }
+  }
+
+  async markNotificationAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const { role } = req.data!;
+      if (role !== 'restaurent') {
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+      const { notificationId } = req.params;
+      if (!notificationId) {
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
+      }
+      const notification = await this._notificationService.markNotificationAsRead(notificationId);
+      sendResponse(res, HttpStatus.OK, 'Notification marked as read', notification);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        sendError(res, error.status, error.message);
+      } else {
+        console.error('Error marking notification as read:', error);
+        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 }

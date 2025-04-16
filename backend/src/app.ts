@@ -34,7 +34,7 @@ declare global {
 // Initialize Express app and HTTP server
 const app: Application = express();
 const httpServer: HttpServer = createServer(app);
-const io: SocketIOServer = initializeSocket(httpServer); // Attach Socket.IO to HTTP server
+export const io: SocketIOServer = initializeSocket(httpServer); // Attach Socket.IO to HTTP server
 
 // Middleware
 app.use(cookieParser());
