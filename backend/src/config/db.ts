@@ -17,7 +17,7 @@ const connectDB = async (): Promise<void> => {
       'MongoDB connection failed:',
       error instanceof Error ? error.stack : error,
     );
-    process.exit(1); // Optionally exit the process if the connection fails
+    process.exit(1); 
   }
 };
 

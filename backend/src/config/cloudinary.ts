@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary with your credentials
+ 
 cloudinary.config({
   cloud_name: 'diqlw1tbl',
   api_key: '372778885957583',
