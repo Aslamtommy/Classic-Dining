@@ -64,17 +64,7 @@ const BranchNotifications: React.FC = () => {
     };
   }, [accessToken]);
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await tableTypeApi.markNotificationAsRead(notificationId);
-      toast.success('Notification marked as read');
-      fetchNotifications();
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
-    }
-  };
-
+ 
   if (role !== 'branch') {
     return (
       <div className="flex items-center justify-center h-screen text-red-500 text-lg font-playfair">
@@ -109,14 +99,7 @@ const BranchNotifications: React.FC = () => {
                         {format(new Date(notification.timestamp), 'PPP p')}
                       </p>
                     </div>
-                    {!notification.read && (
-                      <button
-                        onClick={() => handleMarkAsRead(notification._id)}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                      >
-                        Mark as Read
-                      </button>
-                    )}
+                 
                   </div>
                 </div>
               ))

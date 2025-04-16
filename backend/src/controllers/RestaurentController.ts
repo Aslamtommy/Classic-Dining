@@ -196,25 +196,5 @@ export class RestaurentController {
     }
   }
 
-  async markNotificationAsRead(req: Request, res: Response): Promise<void> {
-    try {
-      const { role } = req.data!;
-      if (role !== 'restaurent') {
-        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
-      }
-      const { notificationId } = req.params;
-      if (!notificationId) {
-        throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
-      }
-      const notification = await this._notificationService.markNotificationAsRead(notificationId);
-      sendResponse(res, HttpStatus.OK, 'Notification marked as read', notification);
-    } catch (error: unknown) {
-      if (error instanceof AppError) {
-        sendError(res, error.status, error.message);
-      } else {
-        console.error('Error marking notification as read:', error);
-        sendError(res, HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-      }
-    }
-  }
+ 
 }

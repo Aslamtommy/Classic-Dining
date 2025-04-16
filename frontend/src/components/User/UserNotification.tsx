@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
  import { getNotifications } from '../../Api/userApi';
-import { markNotificationAsRead } from '../../Api/userApi';
+ 
 import   io from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -64,18 +64,7 @@ const UserNotifications: React.FC = () => {
       socket.disconnect();
     };
   }, [accessToken]);
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await  markNotificationAsRead(notificationId);
-      toast.success('Notification marked as read');
-      fetchNotifications();
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
-    }
-  };
-
+ 
   
 
   return (
@@ -104,14 +93,7 @@ const UserNotifications: React.FC = () => {
                         {format(new Date(notification.timestamp), 'PPP p')}
                       </p>
                     </div>
-                    {!notification.read && (
-                      <button
-                        onClick={() => handleMarkAsRead(notification._id)}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                      >
-                        Mark as Read
-                      </button>
-                    )}
+                  
                   </div>
                 </div>
               ))

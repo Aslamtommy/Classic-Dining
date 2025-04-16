@@ -17,7 +17,7 @@ export interface INotificationService {
     page: number,
     limit: number
   ): Promise<{ notifications: INotification[]; total: number }>;
-  markNotificationAsRead(notificationId: string): Promise<INotification | null>;
+ 
 }
 
 export class NotificationService implements INotificationService {
@@ -67,17 +67,5 @@ export class NotificationService implements INotificationService {
     }
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<INotification | null> {
-    try {
-      const notification = await this.repository.markNotificationAsRead(notificationId);
-      if (!notification) {
-        throw new AppError(HttpStatus.NotFound, 'Notification not found');
-      }
-      return notification;
-    } catch (error) {
-      throw error instanceof AppError
-        ? error
-        : new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
-    }
-  }
+ 
 }

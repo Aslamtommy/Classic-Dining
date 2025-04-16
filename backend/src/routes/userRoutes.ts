@@ -121,6 +121,6 @@ userRoute.get('/coupons', authenticateToken('user'), (req, res) => userControlle
 
 // Notification routes
 userRoute.get('/notifications', authenticateToken('user'), (req: Request, res: Response) => userController.getNotifications(req, res));
-userRoute.patch('/notifications/:notificationId/read', authenticateToken('user'), (req: Request, res: Response) => userController.markNotificationAsRead(req, res));
+ 
 
 export default userRoute;

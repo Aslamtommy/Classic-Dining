@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 interface Notification {
   _id: string;
   message: string;
-  read: boolean;
+   read:string
   timestamp: string;
 }
 
@@ -26,7 +26,7 @@ const RestaurantNotifications: React.FC = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await tableTypeApi.getNotifications(page, limit);
+      const response :any= await tableTypeApi.getNotifications(page, limit);
       setNotifications(response.notifications);
       setTotal(response.total);
     } catch (error) {
@@ -64,16 +64,7 @@ const RestaurantNotifications: React.FC = () => {
     };
   }, [accessToken]);
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await tableTypeApi.markNotificationAsRead(notificationId);
-      toast.success('Notification marked as read');
-      fetchNotifications();
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
-    }
-  };
+ 
 
   if (role !== 'restaurent') {
     return (
@@ -109,14 +100,7 @@ const RestaurantNotifications: React.FC = () => {
                         {format(new Date(notification.timestamp), 'PPP p')}
                       </p>
                     </div>
-                    {!notification.read && (
-                      <button
-                        onClick={() => handleMarkAsRead(notification._id)}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                      >
-                        Mark as Read
-                      </button>
-                    )}
+                
                   </div>
                 </div>
               ))

@@ -132,11 +132,6 @@ restaurentRoute.get('/notifications', authenticateToken(['restaurent', 'branch']
   return branchController.getNotifications(req, res);
 });
 
-restaurentRoute.patch('/notifications/:notificationId/read', authenticateToken(['restaurent', 'branch']), (req, res) => {
-  if (req.data!.role === 'restaurent') {
-    return restaurentController.markNotificationAsRead(req, res);
-  }
-  return branchController.markNotificationAsRead(req, res);
-});
+ 
 
 export default restaurentRoute;

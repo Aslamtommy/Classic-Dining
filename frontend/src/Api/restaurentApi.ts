@@ -127,14 +127,5 @@ export const tableTypeApi = {
       }
     },
   
-    // Mark a notification as read
-    markNotificationAsRead: async (notificationId: string): Promise<void> => {
-      try {
-        const response = await restaurentApi.patch(`/notifications/${notificationId}/read`);
-        console.log('markNotificationAsRead response', response);
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-        throw new Error('Failed to mark notification as read');
-      }
-    },
+   
 };

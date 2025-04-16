@@ -19,7 +19,7 @@ export interface INotificationRepository {
     page: number,
     limit: number
   ): Promise<{ notifications: INotification[]; total: number }>;
-  markNotificationAsRead(notificationId: string): Promise<INotification | null>;
+ 
 }
 
 export class NotificationRepository implements INotificationRepository {
