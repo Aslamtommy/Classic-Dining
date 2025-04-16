@@ -3,12 +3,14 @@ import { AdminSiderbar } from "./AdminSiderbar";
 
 export function AdminLayout() {
   return (
-    <div className="flex">
-      {/* Sidebar (always visible) */}
-      <AdminSiderbar />
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar (fixed) */}
+      <div className="fixed left-0 top-0 h-screen">
+        <AdminSiderbar />
+      </div>
 
-      {/* Main content area that changes with navigation */}
-      <main className="flex-1 p-4">
+      {/* Main content area with padding to account for sidebar */}
+      <main className="flex-1 ml-[280px] p-4 overflow-y-auto">
         <Outlet />
       </main>
     </div>

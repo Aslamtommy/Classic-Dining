@@ -57,7 +57,7 @@ export function AdminSiderbar({ className }: SidebarProps) {
       initial={{ width: expanded ? 280 : 80 }}
       animate={{ width: expanded ? 280 : 80 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className={cn("relative flex flex-col border-r border-gray-200 bg-white", className)}
+      className={cn("h-screen flex flex-col border-r border-gray-200 bg-white overflow-hidden", className)}
     >
       {/* Header */}
       <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-4">
@@ -73,7 +73,7 @@ export function AdminSiderbar({ className }: SidebarProps) {
             transition={{ delay: 0.1 }}
             className="flex flex-1 items-center justify-between"
           >
-            <span className="text-lg font-semibold text-gray-900">Admin</span>
+            <span className="text-xl font-semibold text-gray-900">Admin</span>
             <div className="flex items-center gap-2">
               <button className="group rounded-full p-1.5 hover:bg-gray-100">
                 <Bell className="h-5 w-5 text-gray-500 group-hover:text-gray-700" />
@@ -92,32 +92,32 @@ export function AdminSiderbar({ className }: SidebarProps) {
       </button>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 overflow-y-auto">
         {navigation.map((item) => (
           <button
             key={item.name}
             onClick={() => {
               setSelected(item.name)
-              navigate(item.path) // Navigate to the selected path
+              navigate(item.path)
             }}
             className={cn(
-              "group relative flex w-full items-center gap-3 rounded-lg border border-transparent p-3 text-gray-700 hover:bg-gray-100/60",
+              "group relative flex w-full items-center gap-3 rounded-lg border border-transparent p-4 text-gray-700 hover:bg-gray-100/60",
               selected === item.name && "border-gray-200 bg-gray-100/80 font-medium text-gray-900 shadow-sm",
             )}
           >
             <item.icon
               className={cn(
-                "h-5 w-5 shrink-0",
+                "h-6 w-6 shrink-0",
                 selected === item.name ? "text-primary" : "text-gray-400 group-hover:text-gray-500",
               )}
             />
             {expanded && (
               <>
-                <span className="text-sm">{item.name}</span>
+                <span className="text-base">{item.name}</span>
                 {item.badge && (
                   <span
                     className={cn(
-                      "ml-auto flex h-6 min-w-6 items-center justify-center rounded-full text-xs",
+                      "ml-auto flex h-6 min-w-6 items-center justify-center rounded-full text-sm",
                       selected === item.name
                         ? "bg-primary text-white"
                         : "bg-gray-100 text-gray-500 group-hover:bg-gray-200",
@@ -136,10 +136,10 @@ export function AdminSiderbar({ className }: SidebarProps) {
       <div className="border-t border-gray-200 p-4">
         <button
           onClick={() => console.log("Logout clicked")}
-          className="group flex w-full items-center gap-3 rounded-lg p-3 text-gray-700 hover:bg-red-50"
+          className="group flex w-full items-center gap-3 rounded-lg p-4 text-gray-700 hover:bg-red-50"
         >
-          <LogOut className="h-5 w-5 text-gray-400 group-hover:text-red-500" />
-          {expanded && <span className="text-sm group-hover:text-red-500">Logout</span>}
+          <LogOut className="h-6 w-6 text-gray-400 group-hover:text-red-500" />
+          {expanded && <span className="text-base group-hover:text-red-500">Logout</span>}
         </button>
       </div>
     </motion.aside>
