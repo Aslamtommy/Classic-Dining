@@ -52,7 +52,9 @@ app.use(cors(corsOptions));
 
 // Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+app.get('/',()=>{
+  console.log('backend running')
+})
 // Database connection
 connectDB();
 
