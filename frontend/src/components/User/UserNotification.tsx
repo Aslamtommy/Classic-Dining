@@ -7,7 +7,7 @@ import   io from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
+import { BaseUrl } from '../../../Config/BaseUrl';
 interface Notification {
   _id: string;
   message: string;
@@ -45,7 +45,7 @@ const UserNotifications: React.FC = () => {
   useEffect(() => {
     if (!accessToken) return;
 
-    const socket = io('http://localhost:5000', {
+    const socket = io(BaseUrl, {
       auth: { token: accessToken },
     });
 

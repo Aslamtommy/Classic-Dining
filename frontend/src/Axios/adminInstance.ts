@@ -61,7 +61,7 @@ adminApi.interceptors.response.use(
         try {
           console.log('Sending request to refresh token...');
           const refreshResponse = await axios.post<TokenResponse>(
-            'http://localhost:5000/admin/refresh-token',
+            `${BaseUrl}/admin/refresh-token`,
             {},
             { withCredentials: true } // Send cookies along with the request
           );

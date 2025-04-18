@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { FaTimes } from 'react-icons/fa';
 import { RootState } from '../../redux/store';
-
+import { BaseUrl } from '../../../Config/BaseUrl';
 // Message interface
 interface Message {
   userId: string;
@@ -21,7 +21,7 @@ interface ChatWidgetProps {
   onClose: () => void;
 }
 
-const SOCKET_URL = 'http://localhost:5000/';
+const SOCKET_URL = BaseUrl
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, branchId, onClose }) => {
   const [socket, setSocket] = useState<any>(null);

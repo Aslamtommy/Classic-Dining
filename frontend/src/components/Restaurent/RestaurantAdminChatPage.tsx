@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import restaurentApi from '../../Axios/restaurentInstance';
-
+import { BaseUrl } from '../../../Config/BaseUrl';
 interface Message {
   adminId: string;
   restaurantId: string;
@@ -20,7 +20,7 @@ interface Admin {
   lastMessageTime?: string;
 }
 
-const SOCKET_URL = 'http://localhost:5000/';
+const SOCKET_URL = BaseUrl
 
 const RestaurantAdminChatPage: React.FC = () => {
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null);

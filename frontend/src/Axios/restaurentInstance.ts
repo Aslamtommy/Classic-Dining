@@ -56,7 +56,7 @@ restaurentApi.interceptors.response.use(
 
         try {
           const refreshResponse = await axios.post<TokenResponse>(
-            "http://localhost:5000/restaurent/refresh-token",
+          `${BaseUrl}/restaurent/refresh-token`,
             {},
             { withCredentials: true }
           );

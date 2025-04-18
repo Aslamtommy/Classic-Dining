@@ -4,6 +4,8 @@ import { verifyToken } from './utils/jwt';
 import Message from './models/User/message';
 import adminModel from './models/Admin/adminModel';
 
+import dotenv from "dotenv";
+dotenv.config();
 interface SocketData {
   id: string;
   role: 'user' | 'branch' | 'restaurent' | 'admin';
@@ -15,9 +17,10 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export const initializeSocket = (server: HttpServer): Server => {
+
   const io = new Server(server, {
     cors: {
-      origin: 'http://localhost:5173',
+      origin: process.env.FrontendUrl,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,

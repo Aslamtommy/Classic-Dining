@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import restaurentApi from '../../Axios/restaurentInstance';
-
+import { BaseUrl } from '../../../Config/BaseUrl';
 interface Message {
   userId: string;
   branchId: string;
@@ -22,8 +22,7 @@ interface User {
   lastMessageTime?: string;
 }
 
-const SOCKET_URL = 'http://localhost:5000/';
-
+const SOCKET_URL = BaseUrl
 const BranchUserChatPage: React.FC = () => {
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
