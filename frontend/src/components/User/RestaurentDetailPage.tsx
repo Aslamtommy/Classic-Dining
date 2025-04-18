@@ -241,8 +241,21 @@ const RestaurantDetailPage: React.FC = () => {
                   padding: "8px 20px",
                   borderRadius: "9999px",
                 }}
-                href={directionsUrl}
-                target="_blank"
+                onClick={() => {
+                  const coordinates = branch.location?.coordinates;
+                  const address = branch.address;
+                  let query = '';
+                  
+                  if (coordinates) {
+                    query = `${coordinates[1]},${coordinates[0]}`;
+                  } else if (address) {
+                    query = encodeURIComponent(address);
+                  } else {
+                    query = encodeURIComponent(`${branch.name}, Unknown Location`);
+                  }
+                  
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank');
+                }}
               >
                 Get Directions
               </Button>

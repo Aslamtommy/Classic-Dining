@@ -2,9 +2,11 @@
 
 import type React from "react"
 import { motion } from "framer-motion"
+import { useNavigate } from "react-router-dom"
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear()
+  const navigate = useNavigate()
 
   return (
     <footer className="bg-[#2c2420] text-[#faf7f2] py-16">
@@ -40,16 +42,16 @@ const Footer: React.FC = () => {
           >
             <h4 className="font-playfair text-xl mb-4">Quick Links</h4>
             <nav className="flex flex-col space-y-2">
-              {["About Us", "Our Menu", "Reservations", "Private Events"].map((item,  ) => (
-                <motion.a
+              {["About Us", "Our Menu", "Reservations", "Private Events"].map((item) => (
+                <motion.button
                   key={item}
-                  href={`/${item.toLowerCase().replace(" ", "-")}`}
+                  onClick={() => navigate(`/${item.toLowerCase().replace(" ", "-")}`)}
                   className="text-sm hover:text-[#8b5d3b] transition-colors"
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   {item}
-                </motion.a>
+                </motion.button>
               ))}
             </nav>
           </motion.div>

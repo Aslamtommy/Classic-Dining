@@ -1,15 +1,20 @@
 import { motion } from 'framer-motion';
-import { NavLink } from 'react-router-dom';
-import { User, Calendar, Wallet, Settings, LogOut, Utensils,Bell } from 'lucide-react';
-import { useSelector } from 'react-redux'; // Corrected from 'redux' to 'react-redux'
+import { useNavigate } from 'react-router-dom';
+import { User, Calendar, Wallet, Settings, LogOut, Utensils, Bell } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 const Sidebar = () => {
   const profile = useSelector((state: any) => state.user.user);
+  const navigate = useNavigate();
   console.log(profile);
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <motion.div
-      className="bg-white h-[calc(100vh-4rem)] w-72 fixed left-0 top-16 shadow-xl overflow-y-auto border-r border-[#e8e2d9]" // Adjusted top and height
+      className="bg-white h-[calc(100vh-4rem)] w-72 fixed left-0 top-16 shadow-xl overflow-y-auto border-r border-[#e8e2d9]"
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
@@ -22,7 +27,7 @@ const Sidebar = () => {
           whileTap={{ scale: 0.95 }}
         >
           <img
-            src={profile?.profilePicture || '/default-profile.jpg'} // Fallback for missing profile picture
+            src={profile?.profilePicture || '/default-profile.jpg'}
             alt="Profile"
             className="w-14 h-14 rounded-full border-4 border-[#e8e2d9] object-cover shadow-lg"
           />
@@ -33,43 +38,39 @@ const Sidebar = () => {
         </motion.div>
 
         {/* Navigation Links */}
-        <nav className="space-y-3 flex-1">
+        <nav className="flex flex-col gap-2">
           {[
             { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Profile' },
             { to: '/bookings', icon: <Calendar className="w-5 h-5" />, text: 'Bookings' },
             { to: '/wallet', icon: <Wallet className="w-5 h-5" />, text: 'Wallet' },
             { to: '/restaurentList', icon: <Utensils className="w-5 h-5" />, text: 'Restaurants' },
-            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurants' },  
-            { to: '/notifications', icon: <Bell className="w-5 h-5" />, text: 'Notifications' },  
+            { to: '/search', icon: <Settings className="w-5 h-5" />, text: 'Search Restaurants' },
+            { to: '/notifications', icon: <Bell className="w-5 h-5" />, text: 'Notifications' },
           ].map((link, index) => (
-            <NavLink
+            <button
               key={index}
-              to={link.to}
-              replace
-              className={({ isActive }) =>
-                `flex items-center gap-4 p-4 rounded-xl transition-all duration-300
-                ${isActive
+              onClick={() => handleNavigation(link.to)}
+              className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300
+                ${window.location.pathname === link.to
                   ? 'bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white shadow-lg'
                   : 'hover:bg-[#faf7f2] text-[#2c2420] hover:text-[#8b5d3b]'
-                }`
-              }
+                }`}
             >
               {link.icon}
               <span className="font-medium">{link.text}</span>
-            </NavLink>
+            </button>
           ))}
         </nav>
 
         {/* Footer */}
         <div className="border-t border-[#e8e2d9] pt-6">
-          <NavLink
-            to="/logout"
-            replace
+          <button
+            onClick={() => handleNavigation('/logout')}
             className="flex items-center gap-4 p-4 rounded-xl text-[#2c2420] hover:bg-[#faf7f2] hover:text-[#8b5d3b] transition-all duration-300"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Logout</span>
-          </NavLink>
+          </button>
           <p className="text-[#8b5d3b] text-sm text-center mt-4">
             © 2024 Classic Dining
           </p>
