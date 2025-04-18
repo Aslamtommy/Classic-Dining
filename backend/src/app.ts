@@ -41,9 +41,11 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+const Frontend=process.env.FrontendUrl
 // CORS configuration
+
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: Frontend,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
