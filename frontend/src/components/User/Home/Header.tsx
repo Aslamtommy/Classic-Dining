@@ -173,13 +173,14 @@ const Header: React.FC = () => {
                       <div className="py-2">
             
 
-<Link
-  to="/profile"
-  className="flex items-center px-4 py-2 text-sm text-[#2c2420] hover:bg-[#faf7f2] hover:text-[#8b5d3b] transition-colors"
+                      <button
+  onClick={() => navigate('/profile')}
+  className="w-full text-left flex items-center px-4 py-2 text-sm text-[#2c2420] hover:bg-[#faf7f2] hover:text-[#8b5d3b] transition-colors"
 >
   <User className="w-4 h-4 mr-2" />
   Profile
-</Link>
+</button>
+
 
                         <a href="/wallet" className="flex items-center px-4 py-2 text-sm text-[#2c2420] hover:bg-[#faf7f2] hover:text-[#8b5d3b] transition-colors">
                           <Wallet className="w-4 h-4 mr-2" />
