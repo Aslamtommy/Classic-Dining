@@ -16,28 +16,25 @@ export class CookieManager {
       refreshTokenMaxAge?: number;
       secure?: boolean;
       sameSite?: "strict" | "lax" | "none";
-      includeAccessTokenInBody?: boolean; // Optional: return token in response body
+      includeAccessTokenInBody?: boolean;
     }
   ): void {
-    // Hardcode secure: true for Vercel's HTTPS environment
     const secure = options?.secure ?? true;
-    // Default to "lax" for cross-site compatibility (frontend/backend on different domains)
-    const sameSite = options?.sameSite ?? "lax";
+    const sameSite = options?.sameSite ?? "none"; // Changed to "none" for cross-domain
 
     res.cookie("accessToken", tokens.accessToken, {
       httpOnly: true,
-      secure, // true for HTTPS
-      sameSite, // "lax" for Vercel cross-domain requests
+      secure,
+      sameSite,
       maxAge: options?.accessTokenMaxAge ?? 30 * 60 * 1000, // 30 minutes
     });
     res.cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,
-      secure, // true for HTTPS
-      sameSite, // "lax" for Vercel cross-domain requests
+      secure,
+      sameSite,
       maxAge: options?.refreshTokenMaxAge ?? 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Optionally include accessToken in response body for frontend use
     if (options?.includeAccessTokenInBody) {
       res.json({ accessToken: tokens.accessToken });
     }
@@ -53,20 +50,18 @@ export class CookieManager {
     res: Response,
     options?: { secure?: boolean; sameSite?: "strict" | "lax" | "none" }
   ): void {
-    // Hardcode secure: true for Vercel's HTTPS environment
     const secure = options?.secure ?? true;
-    // Default to "lax" for cross-site compatibility
-    const sameSite = options?.sameSite ?? "lax";
+    const sameSite = options?.sameSite ?? "none"; // Changed to "none"
 
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure, // true for HTTPS
-      sameSite, // "lax" for Vercel
+      secure,
+      sameSite,
     });
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure, // true for HTTPS
-      sameSite, // "lax" for Vercel
+      secure,
+      sameSite,
     });
   }
 
@@ -76,8 +71,8 @@ export class CookieManager {
   static getCookieOptions(): CookieOptions {
     return {
       httpOnly: true,
-      secure: true, // Hardcode true for Vercel's HTTPS
-      sameSite: "lax", // Hardcode "lax" for cross-site compatibility
+      secure: true,
+      sameSite: "none", // Changed to "none"
       maxAge: 30 * 60 * 1000, // 30 minutes
     };
   }
