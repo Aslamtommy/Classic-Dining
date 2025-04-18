@@ -8,8 +8,6 @@ import { fetchBranches } from "../../Api/userApi";
 import { Branch } from "../../types/branch";
 import ChatWidget from "../CommonComponents/ChatWidget";
 import { RootState } from "../../redux/store";
-import { Button } from "@mui/material";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -285,34 +283,6 @@ const RestaurantListPage: React.FC = () => {
                         <FaComments /> Chat
                       </button>
                     </div>
-                    <Button
-                      variant="outlined"
-                      startIcon={<LocationOnIcon />}
-                      sx={{
-                        borderColor: "#c62828",
-                        color: "#c62828",
-                        "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
-                        padding: "8px 20px",
-                        borderRadius: "9999px",
-                      }}
-                      onClick={() => {
-                        const coordinates = branch.location?.coordinates;
-                        const address = branch.address;
-                        let query = '';
-                        
-                        if (coordinates) {
-                          query = `${coordinates[1]},${coordinates[0]}`;
-                        } else if (address) {
-                          query = encodeURIComponent(address);
-                        } else {
-                          query = encodeURIComponent(`${branch.name}, Unknown Location`);
-                        }
-                        
-                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank');
-                      }}
-                    >
-                      Get Directions
-                    </Button>
                   </div>
                 </motion.div>
               ))}
