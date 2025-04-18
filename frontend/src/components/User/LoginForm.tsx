@@ -68,7 +68,7 @@ const LoginForm: React.FC = () => {
       const idToken = await result.user.getIdToken();
 
       const response:any = await api.post<GoogleSignInResponse>(
-        "/users/google", // Adjusted endpoint to match your backend route
+        "/google", // Adjusted endpoint to match your backend route
         { idToken },
         { withCredentials: true }
       );

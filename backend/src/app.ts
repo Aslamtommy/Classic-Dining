@@ -14,7 +14,7 @@ import adminRoute from "./routes/adminRoutes";
 import restaurentRoute from "./routes/restaurentRoutes";
 import { startCronJobs } from "./cronJobs";
 
-// Load environment variables
+ 
 dotenv.config();
 
 // Declare custom Request interface
