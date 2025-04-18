@@ -63,7 +63,7 @@ if (originalRequest.url === '/login') {
 
         try {
           const refreshResponse = await axios.post<TokenResponse>(
-            'http://localhost:5000/users/refresh-token',
+          `${BaseUrl}/users/refresh-token`,
             {},
             { withCredentials: true } 
           );
