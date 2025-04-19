@@ -45,7 +45,7 @@ app.use(express.json());
 // CORS configuration
 
 const corsOptions = {
-  origin:'https://classicdining.shop',
+  origin:'https://classic-dining-at8x.vercel.app',
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

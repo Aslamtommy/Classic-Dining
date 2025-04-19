@@ -20,7 +20,7 @@ export const initializeSocket = (server: HttpServer): Server => {
 
   const io = new Server(server, {
     cors: {
-      origin:'https://classicdining.shop',
+      origin:'https://classic-dining-at8x.vercel.app',
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
