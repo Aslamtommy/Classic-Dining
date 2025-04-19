@@ -34,7 +34,7 @@ declare global {
 // Initialize Express app and HTTP server
 const app: Application = express();
 const httpServer: HttpServer = createServer(app);
-export const io: SocketIOServer = initializeSocket(httpServer); // Attach Socket.IO to HTTP server
+export const io: SocketIOServer = initializeSocket(httpServer);  
 
 // Middleware
 app.use(cookieParser());
@@ -45,7 +45,7 @@ app.use(express.json());
 // CORS configuration
 
 const corsOptions = {
-  origin:'https://classic-dining-at8x.vercel.app',
+  origin:'https://classicdining.shop',
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

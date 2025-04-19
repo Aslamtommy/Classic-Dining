@@ -20,7 +20,7 @@ export const initializeSocket = (server: HttpServer): Server => {
 
   const io = new Server(server, {
     cors: {
-      origin: process.env.FrontendUrl,
+      origin:'https://classicdining.shop',
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
