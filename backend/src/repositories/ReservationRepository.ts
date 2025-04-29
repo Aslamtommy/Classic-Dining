@@ -159,7 +159,7 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
       const query: any = { userId };
       if (status) query.status = status;
       return await Reservation.find(query)
-        .populate('branch', 'name')
+        .populate('branch', 'name mainImage')
         .populate('tableType', 'name capacity price features')
         .sort({ createdAt: -1 })
         .skip(skip)
