@@ -58,7 +58,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/signup" element={<SignupForm />} />
+       
         <Route path="/login" element={<ProtectedLogin />} />
         <Route path="/restaurent/signup" element={<RestaurentSignup />} />
         <Route path="/restaurent/login" element={<RestaurentLoginProtected />} /> 
@@ -66,8 +66,9 @@ const App: React.FC = () => {
         <Route path="/admin/login" element={<AdminLogin />} />
 
         {/* User Routes */}
+        <Route path="/" element={<UserHomePage />} />
         <Route element={<UserProtected />}>
-          <Route path="/" element={<UserHomePage />} />
+        
          
           <Route path="/book/:branchId" element={<BookingPage />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />

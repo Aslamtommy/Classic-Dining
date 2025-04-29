@@ -1,5 +1,5 @@
-// src/redux/userslice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { clearLocation } from './locationSlice';
 
 interface User {
   id?: string;
@@ -7,8 +7,8 @@ interface User {
   email: string;
   mobile: string;
   profilePicture?: string | null;
-  accessToken?: string;  
-  refreshToken?: string; 
+  accessToken?: string;
+  refreshToken?: string;
 }
 
 export interface UserState {
@@ -35,7 +35,6 @@ const userSlice = createSlice({
     setUser: (state, action: PayloadAction<User>) => {
       state.user = {
         ...action.payload,
-        // Ensure tokens are included if provided
         accessToken: action.payload.accessToken || state.user?.accessToken,
         refreshToken: action.payload.refreshToken || state.user?.refreshToken,
       };
@@ -52,7 +51,9 @@ const userSlice = createSlice({
       state.user = null;
       state.loading = false;
       state.error = null;
-      localStorage.removeItem('userProfile');
+      // Clear persisted user and location data from localStorage
+      localStorage.removeItem('persist:user');
+      localStorage.removeItem('persist:location');
     },
     updateProfilePicture: (state, action: PayloadAction<string>) => {
       if (state.user) {

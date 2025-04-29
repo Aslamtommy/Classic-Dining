@@ -2,19 +2,23 @@ import React, { useEffect, useState } from "react";
 import { fetchBranches } from "../../../Api/userApi";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import toast from 'react-hot-toast';
 
 export const Gallery: React.FC = () => {
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user.user);
 
   useEffect(() => {
     const loadBranches = async () => {
       try {
         setLoading(true);
-        const response: any = await fetchBranches(); // Default call without search
-        setBranches(response.branches); // Access nested 'branches' array
+        const response: any = await fetchBranches();
+        setBranches(response.branches);
       } catch (error: any) {
         console.error("Error loading branches:", error);
         setError("Failed to load restaurants. Please try again later.");
@@ -26,11 +30,20 @@ export const Gallery: React.FC = () => {
   }, []);
 
   const handleCardClick = (branchId: string) => {
+    if (!user) {
+      toast.error('Please log in to book a restaurant.');
+     return
+    }
     navigate(`/book/${branchId}`);
   };
 
   const handleNameClick = (branchId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click from triggering
+    e.stopPropagation();
+    if (!user) {
+      toast.error('Please log in to view restaurant details.');
+       
+      return;
+    }
     navigate(`/restaurant/${branchId}`);
   };
 
@@ -52,11 +65,11 @@ export const Gallery: React.FC = () => {
             {branches.map((branch: any, index: number) => (
               <motion.div
                 key={branch._id}
-                className="group"
+                className="group cursor-pointer"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                onClick={() => handleCardClick(branch._id)} // Card click for booking
+                onClick={() => handleCardClick(branch._id)}
               >
                 <div className="aspect-[4/5] relative overflow-hidden bg-[#e8e2d9] rounded-lg shadow-lg">
                   <img
@@ -69,7 +82,7 @@ export const Gallery: React.FC = () => {
                 <div className="p-6 bg-white rounded-b-lg shadow-lg transform -translate-y-8 transition-transform duration-300 group-hover:-translate-y-12">
                   <h3
                     className="text-2xl font-playfair font-semibold text-[#2c2420] mb-2 cursor-pointer hover:underline"
-                    onClick={(e) => handleNameClick(branch._id, e)} // Name click for restaurant details
+                    onClick={(e) => handleNameClick(branch._id, e)}
                   >
                     {branch.parentRestaurant?.name} - {branch.name}
                   </h3>
