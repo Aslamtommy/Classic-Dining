@@ -76,9 +76,16 @@ export const fetchAvailableTables = async (
   }
 };
 
-export const confirmReservation = async (reservationId: string, paymentId: string): Promise<ReservationResponse> => {
+export const confirmReservation = async (
+  reservationId: string,
+  paymentId: string,
+  options: { whatsappOptIn: boolean }
+): Promise<ReservationResponse> => {
   try {
-    const response = await api.put<ReservationResponse>(`/reservations/${reservationId}/confirm`, { paymentId });
+    const response = await api.put<ReservationResponse>(
+      `/reservations/${reservationId}/confirm`,
+      { paymentId, whatsappOptIn: options.whatsappOptIn }
+    );
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to confirm reservation');
     }

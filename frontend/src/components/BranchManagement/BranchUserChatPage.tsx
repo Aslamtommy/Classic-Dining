@@ -13,6 +13,7 @@ interface Message {
   timestamp: string | Date;
 }
 
+
 interface User {
   id: string;
   name: string;
@@ -21,6 +22,8 @@ interface User {
   lastMessage?: string;
   lastMessageTime?: string;
 }
+
+
 
 const SOCKET_URL = BaseUrl
 const BranchUserChatPage: React.FC = () => {

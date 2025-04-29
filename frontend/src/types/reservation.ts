@@ -90,6 +90,7 @@ export interface Reservation {
   tableQuantity: number;
   discountApplied?: number;
   finalAmount?: number;
+  whatsappOptIn?: boolean;
   createdAt: string;
   updatedAt: string;
   reviews?: Review[];

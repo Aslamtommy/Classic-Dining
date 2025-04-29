@@ -15,6 +15,7 @@ const ConfirmationPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [whatsappOptIn, setWhatsappOptIn] = useState<boolean>(false); // New state for WhatsApp opt-in
 
   // Load reservation details
   useEffect(() => {
@@ -25,9 +26,11 @@ const ConfirmationPage: React.FC = () => {
           const data = await fetchReservation(reservationId);
           console.log('Reservation Data:', data);
           setReservation(data);
+          setWhatsappOptIn(data.whatsappOptIn || false); // Set initial value
         } else if (location.state?.reservation) {
           console.log('Reservation from Location State:', location.state.reservation);
           setReservation(location.state.reservation as Reservation);
+          setWhatsappOptIn((location.state.reservation as Reservation).whatsappOptIn || false);
         } else {
           navigate('/');
         }
@@ -92,7 +95,7 @@ const ConfirmationPage: React.FC = () => {
         image: 'https://your-logo-url.com/logo.png',
         handler: async (response: RazorpayResponse) => {
           try {
-            await confirmReservation(reservation._id, response.razorpay_payment_id);
+            await confirmReservation(reservation._id, response.razorpay_payment_id, { whatsappOptIn });
             setPaymentSuccess(true);
             toast.success('Payment successful! Reservation confirmed.', {
               duration: 4000,
@@ -182,7 +185,7 @@ const ConfirmationPage: React.FC = () => {
 
     try {
       const paymentAmount = reservation.finalAmount !== undefined ? reservation.finalAmount : reservation.tableType.price;
-      await api.post(`/reservations/${reservation._id}/confirm-wallet`);
+      await api.post(`/reservations/${reservation._id}/confirm-wallet`, { whatsappOptIn });
       setPaymentSuccess(true);
       toast.success('Payment successful! Reservation confirmed.', {
         duration: 4000,
@@ -314,9 +317,24 @@ const ConfirmationPage: React.FC = () => {
             </div>
           </div>
           {reservation.status === 'confirmed' ? (
-            <p className="text-green-600 font-medium">This reservation is already confirmed.</p>
+            <p className="text-green-600 font-medium">
+              This reservation is already confirmed. A confirmation email was sent to {reservation.user.email}.
+            </p>
           ) : (
             <div className="mt-6 space-y-4">
+              <p className="text-[#2c2420] text-sm">
+                Upon successful payment, a confirmation email will be sent to {reservation.user.email}.
+                Please check your spam/junk folder if you don't see it in your inbox.
+              </p>
+              <label className="flex items-center text-[#2c2420]">
+                <input
+                  type="checkbox"
+                  checked={whatsappOptIn}
+                  onChange={(e) => setWhatsappOptIn(e.target.checked)}
+                  className="mr-2"
+                />
+                Receive confirmation via WhatsApp
+              </label>
               <button
                 onClick={handleWalletPayment}
                 disabled={isProcessing || walletBalance === null || walletBalance < paymentAmount}
