@@ -47,6 +47,7 @@ export interface IReservation extends Document {
  
  
   reviews?: IReview[];
+  whatsappOptIn: boolean; // New field for WhatsApp opt-in
 }
 const ReviewSchema = new Schema<IReview>({
   rating: { type: Number, required: true, min: 1, max: 5 },
@@ -81,7 +82,8 @@ const ReservationSchema: Schema = new Schema({
   couponCode: { type: String },                
   discountApplied: { type: Number, default: 0 }, 
   finalAmount: { type: Number },
-  reviews: { type: [ReviewSchema], default: [] }
+  reviews: { type: [ReviewSchema], default: [] },
+  whatsappOptIn: { type: Boolean, default: true }, // Default to false
 }, { timestamps: true });
 ReservationSchema.index({ reservationDate: 1 });
 export default mongoose.model<IReservation>('Reservation', ReservationSchema);

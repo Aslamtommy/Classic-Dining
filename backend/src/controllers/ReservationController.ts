@@ -74,7 +74,7 @@ export class ReservationController {
 
   async confirmReservation(req: Request, res: Response): Promise<void> {
     try {
-      const { paymentId } = req.body;
+      const { paymentId, whatsappOptIn } = req.body;
       const id = req.params.id;
       if (!id || !paymentId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       const reservation = await this._reservationService.confirmReservation(id, paymentId);

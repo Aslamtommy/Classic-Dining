@@ -1,4 +1,4 @@
-// src/index.ts
+ 
 import express, { Application } from "express";
 import { createServer, Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
@@ -45,7 +45,7 @@ app.use(express.json());
 // CORS configuration
 
 const corsOptions = {
-  origin:'https://classic-dining-at8x.vercel.app',
+  origin:'http://localhost:5173',
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -57,6 +57,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get('/',()=>{
   console.log('backend running')
 })
+
 // Database connection
 connectDB();
 

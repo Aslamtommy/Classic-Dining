@@ -12,14 +12,111 @@ import { AppError } from '../utils/AppError';
 import { HttpStatus } from '../constants/HttpStatus';
 import { MessageConstants } from '../constants/MessageConstants';
 import { IReview } from '../models/User/Reservation';
+import { sentMail } from '../utils/SendMails';
+import twilio from 'twilio';
 export class ReservationService implements IReservationService {
+  private twilioClient: twilio.Twilio;
   constructor(
     private _reservationRepo: IReservationRepository,
     private _branchRepo: IBranchRepository,
     private _tableTypeRepo: TableTypeRepository,
     private _walletRepo: IWalletRepository,
     private _couponRepo: ICouponRepository
-  ) {}
+  ) {
+    // Log Twilio credentials to ensure they're loaded
+    console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID);
+    console.log('TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN ? '[REDACTED]' : 'NOT SET');
+    console.log('TWILIO_WHATSAPP_NUMBER:', process.env.TWILIO_WHATSAPP_NUMBER);
+
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      console.error('Twilio credentials are missing. WhatsApp messages will not be sent.');
+    }
+
+    this.twilioClient = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+  }
+
+   
+   // Helper function to format date
+   private formatDate(date: Date): string {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+ 
+
+  // Helper function to generate professional email template
+  private generateConfirmationEmail(reservation: IReservation, branch: any, tableType: any): string {
+    const formattedDate = this.formatDate(reservation.reservationDate);
+    const formattedTime =  reservation.timeSlot 
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #8b5d3b; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+          .content { background: #fff; padding: 20px; border: 1px solid #e8e2d9; border-radius: 0 0 5px 5px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          .details { margin: 20px 0; }
+          .details p { margin: 5px 0; }
+          .highlight { color: #8b5d3b; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>Reservation Confirmation</h2>
+          </div>
+          <div class="content">
+            <p>Dear ${reservation.user.name},</p>
+            <p>We are delighted to confirm your reservation at <span class="highlight">${branch.name}</span>. Below are the details of your booking:</p>
+            
+            <div class="details">
+              <p><strong>Restaurant:</strong> ${branch.name}</p>
+              <p><strong>Date:</strong> ${formattedDate}</p>
+              <p><strong>Time:</strong> ${formattedTime}</p>
+              <p><strong>Party Size:</strong> ${reservation.partySize} ${reservation.partySize > 1 ? 'people' : 'person'}</p>
+              <p><strong>Table Type:</strong> ${tableType.name} (Capacity: ${tableType.capacity})</p>
+              <p><strong>Number of Tables:</strong> ${reservation.tableQuantity}</p>
+              ${reservation.preferences.length > 0 ? `<p><strong>Preferences:</strong> ${reservation.preferences.join(', ')}</p>` : ''}
+              ${reservation.finalAmount !== undefined ? `<p><strong>Total Amount:</strong> ₹${reservation.finalAmount.toFixed(2)}</p>` : ''}
+              ${reservation.discountApplied ? `<p><strong>Discount Applied:</strong> ₹${reservation.discountApplied.toFixed(2)}</p>` : ''}
+            </div>
+
+            <p>We look forward to welcoming you! If you need to modify or cancel your reservation, please contact us at <a href="mailto:${branch.email}">${branch.email}</a> or call us at ${branch.phone}.</p>
+            
+            <p>Thank you for choosing ${branch.name}. We hope you have a wonderful dining experience!</p>
+            
+            <p>Best regards,<br>The ${branch.name} Team</p>
+          </div>
+          <div class="footer">
+            <p>${branch.name} | ${branch.address} | ${branch.phone}</p>
+            <p>This is an automated message, please do not reply directly to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  // Generate WhatsApp message parameters
+  private generateWhatsAppMessage(reservation: IReservation): { template: string; parameters: string[] } {
+    const formattedDate = this.formatDate(reservation.reservationDate);
+    const formattedTime =  reservation.timeSlot 
+    return {
+      template: 'reservation_confirmation', // Matches sandbox template
+      parameters: [formattedDate, formattedTime],
+    };
+  }
 
   async createReservation(reservationData: Partial<IReservation>): Promise<IReservation> {
     try {
@@ -137,21 +234,99 @@ export class ReservationService implements IReservationService {
     }
   }
 
-  async confirmReservation(id: string, paymentId: string): Promise<IReservation> {
+  async confirmReservation(id: string, paymentId: string, whatsappOptIn?: true): Promise<IReservation> {
     try {
+      console.log(`Confirming reservation ID: ${id} with paymentId: ${paymentId}, whatsappOptIn: ${whatsappOptIn}`);
+
       const reservation = await this._reservationRepo.findById(id);
-      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      if (!reservation) {
+        console.error(`Reservation not found for ID: ${id}`);
+        throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      }
+
+      console.log('Reservation found:', reservation);
+
       if (reservation.status !== ReservationStatus.PENDING && reservation.status !== ReservationStatus.PAYMENT_FAILED) {
+        console.error(`Invalid reservation status: ${reservation.status}`);
         throw new AppError(HttpStatus.BadRequest, `${MessageConstants.INVALID_RESERVATION_STATUS}: ${reservation.status}`);
       }
+
+      const branch = reservation.branch;
+      const tableType = reservation.tableType;
+
+      if (!branch || !tableType) {
+        console.error('Branch or tableType is missing:', { branch, tableType });
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_BRANCH_OR_TABLE);
+      }
+
       const updatedReservation = await this._reservationRepo.update(id, {
         status: ReservationStatus.CONFIRMED,
         paymentId,
         paymentMethod: 'razorpay',
+        whatsappOptIn: whatsappOptIn ||true,
       });
-      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+
+      if (!updatedReservation) {
+        console.error('Failed to update reservation');
+        throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+
+      console.log('Reservation updated:', updatedReservation);
+
+      // Send confirmation email
+      const emailBody = this.generateConfirmationEmail(updatedReservation, branch, tableType);
+      const emailSent = await sentMail(
+        updatedReservation.user.email,
+        `Reservation Confirmation`,
+        emailBody
+      );
+
+      if (!emailSent) {
+        console.error('Failed to send confirmation email for reservation:', id);
+      } else {
+        console.log('Confirmation email sent to:', updatedReservation.user.email);
+      }
+
+      // Send WhatsApp notification if opted in
+      console.log('Checking WhatsApp opt-in:', updatedReservation.whatsappOptIn);
+      if (updatedReservation.whatsappOptIn) {
+        console.log('WhatsApp opt-in is true. Preparing to send message...');
+        console.log('User phone number:', updatedReservation.user.phone);
+
+        if (!updatedReservation.user.phone) {
+          console.error('User phone number is missing for reservation ID:', id);
+        } else if (!updatedReservation.user.phone.startsWith('+')) {
+          console.warn('Phone number format may be incorrect (should start with +):', updatedReservation.user.phone);
+        }
+
+        const { template, parameters } = this.generateWhatsAppMessage(updatedReservation);
+        console.log('WhatsApp message parameters:', { template, parameters });
+
+        try {
+          const messageResponse = await this.twilioClient.messages.create({
+            from: process.env.TWILIO_WHATSAPP_NUMBER,
+            to: `whatsapp:${updatedReservation.user.phone}`,
+            contentSid: 'HXe992703cd9bbe13e5ff2de8201a6c7c5',
+            contentVariables: JSON.stringify({
+              '1': parameters[0],
+              '2': parameters[1],
+            }),
+          });
+          console.log('WhatsApp message sent successfully. Message SID:', messageResponse.sid);
+        } catch (error) {
+          console.error('Failed to send WhatsApp message:', error);
+          if (error instanceof Error) {
+            console.error('Error details:', error.message);
+            console.error('Error stack:', error.stack);
+          }
+        }
+      } else {
+        console.log('WhatsApp opt-in is false. Skipping WhatsApp message.');
+      }
+
       return updatedReservation;
     } catch (error) {
+      console.error('Error in confirmReservation:', error);
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
     }
@@ -225,8 +400,12 @@ export class ReservationService implements IReservationService {
         ? (reservation.tableType as ITableType)._id.toString()
         : reservation.tableType.toString();
 
-      const tableType = await this._tableTypeRepo.findById(tableTypeId);
-      if (!tableType || !('price' in tableType)) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INVALID_BRANCH_OR_TABLE);
+      const [branch, tableType] = await Promise.all([
+        this._branchRepo.findById(reservation.branch.toString()),
+        this._tableTypeRepo.findById(tableTypeId)
+      ]);
+
+      if (!branch || !tableType) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INVALID_BRANCH_OR_TABLE);
 
       const amount = reservation.finalAmount !== undefined ? reservation.finalAmount : (tableType.price || 0) * reservation.tableQuantity;
       await this._walletRepo.payWithWallet(userId, amount, reservationId);
@@ -234,7 +413,21 @@ export class ReservationService implements IReservationService {
         status: ReservationStatus.CONFIRMED,
         paymentMethod: 'wallet',
       });
+
       if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+
+      // Send confirmation email
+      const emailBody = this.generateConfirmationEmail(updatedReservation, branch, tableType);
+      const emailSent = await sentMail(
+        updatedReservation.user.email,
+        `Reservation Confirmation - ${branch.name}`,
+        emailBody
+      );
+
+      if (!emailSent) {
+        console.error('Failed to send confirmation email for reservation:', reservationId);
+      }
+
       return updatedReservation;
     } catch (error) {
       if (error instanceof AppError) throw error;

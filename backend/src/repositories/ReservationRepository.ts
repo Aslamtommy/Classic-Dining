@@ -16,7 +16,7 @@ export class ReservationRepository extends BaseRepository<IReservation> implemen
   async findById(id: string): Promise<IReservation | null> {
     try {
       return await Reservation.findById(id)
-        .populate('branch', 'name')
+        .populate('branch', 'name email phone address')
         .populate('tableType', 'name capacity price features')
         .exec();
     } catch (error) {
