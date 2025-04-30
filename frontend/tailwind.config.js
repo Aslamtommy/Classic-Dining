@@ -1,14 +1,24 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "*.{js,ts,jsx,tsx,mdx}", "app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
+  prefix: "",
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -44,22 +54,22 @@ module.exports = {
           300: "#E9D5AE",
           400: "#E2C794",
           500: "#DAB978",
-          600: "#D1AB5D",
-          700: "#C99D42",
-          800: "#B38A3A",
-          900: "#9C7732",
-          950: "#805F28",
+          600: "#C9A05D", // Slightly darker, more premium
+          700: "#B38A3A", // Richer brown
+          800: "#8F6E2E", // Deeper brown
+          900: "#6B5222", // Dark rich brown
+          950: "#4A3918", // Very dark brown for text
         },
         gold: {
           100: "#FDF7E4",
           200: "#FAEDC4",
           300: "#F6E29F",
           400: "#F2D87A",
-          500: "#EECE55",
-          600: "#E5B72E",
-          700: "#C99A1D",
-          800: "#A47D18",
-          900: "#7F6013",
+          500: "#E5C55A", // Less yellow, more gold
+          600: "#D4B13D", // Richer gold
+          700: "#B3942F", // Deeper gold
+          800: "#8C7324", // Dark gold
+          900: "#6A571C", // Very dark gold
         },
         bronze: {
           100: "#F6EDE5",
@@ -67,10 +77,10 @@ module.exports = {
           300: "#DDBEA7",
           400: "#D0A688",
           500: "#C38E69",
-          600: "#B6764A",
-          700: "#9A613D",
-          800: "#7D4D31",
-          900: "#613A25",
+          600: "#A97550", // Richer bronze
+          700: "#8A5F41", // Deeper bronze
+          800: "#6B4A32", // Dark bronze
+          900: "#4D3624", // Very dark bronze
         },
       },
       borderRadius: {
@@ -78,71 +88,23 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      fontFamily: {
-        playfair: ["Playfair Display", "serif"],
-        cormorant: ["Cormorant Garamond", "serif"],
-        lora: ["Lora", "serif"],
-      },
-      boxShadow: {
-        elegant: "0 4px 20px -2px rgba(156, 119, 50, 0.15)",
-        premium: "0 10px 30px -5px rgba(156, 119, 50, 0.2)",
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
       },
       animation: {
-        "fade-in": "fadeIn 0.7s ease-in-out forwards",
-        "slide-up": "slideUp 0.7s ease-out forwards",
-        "slide-down": "slideDown 0.7s ease-out forwards",
-        "scale-in": "scaleIn 0.5s ease-out forwards",
-        "bounce-subtle": "bounceSubtle 2s infinite",
-        float: "float 6s ease-in-out infinite",
-        shimmer: "shimmer 2s linear infinite",
-        "border-glow": "borderGlow 2s ease-in-out infinite",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
-      keyframes: {
-        fadeIn: {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
-        },
-        slideUp: {
-          "0%": { transform: "translateY(20px)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" },
-        },
-        slideDown: {
-          "0%": { transform: "translateY(-20px)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" },
-        },
-        scaleIn: {
-          "0%": { transform: "scale(0.95)", opacity: "0" },
-          "100%": { transform: "scale(1)", opacity: "1" },
-        },
-        bounceSubtle: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-5px)" },
-        },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        borderGlow: {
-          "0%, 100%": { borderColor: "rgba(156, 119, 50, 0.3)" },
-          "50%": { borderColor: "rgba(156, 119, 50, 0.8)" },
-        },
-      },
-      backgroundImage: {
-        "gold-gradient": "linear-gradient(135deg, #E5B72E 0%, #F2D87A 50%, #E5B72E 100%)",
-        "sepia-gradient": "linear-gradient(135deg, #9C7732 0%, #DAB978 50%, #9C7732 100%)",
-        marble: "url('/textures/marble.jpg')",
-        paper: "url('/textures/paper.jpg')",
-      },
-      transitionProperty: {
-        height: "height",
-        spacing: "margin, padding",
-      },
-      borderWidth: {
-        3: "3px",
+      boxShadow: {
+        elegant: "0 4px 20px -2px rgba(107, 82, 34, 0.15)",
+        premium: "0 10px 30px -5px rgba(107, 82, 34, 0.2)",
       },
     },
   },

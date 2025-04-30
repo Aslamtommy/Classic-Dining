@@ -1,222 +1,223 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
-import { motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { FaComments } from "react-icons/fa";
-import api from "../../Axios/userInstance";
-import { GoogleMap, Marker } from "@react-google-maps/api";
-import ChatWidget from "../CommonComponents/ChatWidget";
-import { RootState } from "../../redux/store";
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import axios from "axios"
+import toast from "react-hot-toast"
+import { motion } from "framer-motion"
+import { useNavigate, useLocation } from "react-router-dom"
+import { useSelector } from "react-redux"
+import { FaComments } from "react-icons/fa"
+import api from "../../Axios/userInstance"
+import { GoogleMap, Marker } from "@react-google-maps/api"
+import ChatWidget from "../CommonComponents/ChatWidget"
+import type { RootState } from "../../redux/store"
 
 const mapContainerStyle = {
   width: "100%",
   height: "500px",
-};
+}
 
 const RestaurantSearch = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [restaurants, setRestaurants] = useState<any[]>([]);
-  const [allBranches, setAllBranches] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
-  const [branchesLoaded, setBranchesLoaded] = useState<boolean>(false);
-  const [mapVisible, setMapVisible] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("")
+  const [restaurants, setRestaurants] = useState<any[]>([])
+  const [allBranches, setAllBranches] = useState<any[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null)
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
+  const [branchesLoaded, setBranchesLoaded] = useState<boolean>(false)
+  const [mapVisible, setMapVisible] = useState<boolean>(false)
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const userId = useSelector((state: RootState) => state.user.user?.id);
-// Access the API key from Vite environment variables
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+  const navigate = useNavigate()
+  const location = useLocation()
+  const userId = useSelector((state: RootState) => state.user.user?.id)
+  // Access the API key from Vite environment variables
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        setLoading(true);
-        const response: any = await api.get("/branches");
-        const branches = Array.isArray(response.data.data?.branches) ? response.data.data.branches : [];
-        setAllBranches(branches);
-        setBranchesLoaded(true);
+        setLoading(true)
+        const response: any = await api.get("/branches")
+        const branches = Array.isArray(response.data.data?.branches) ? response.data.data.branches : []
+        setAllBranches(branches)
+        setBranchesLoaded(true)
       } catch (error: any) {
-        toast.error("Failed to load branch data. Please try again.");
-        setAllBranches([]);
-        setBranchesLoaded(false);
+        toast.error("Failed to load branch data. Please try again.")
+        setAllBranches([])
+        setBranchesLoaded(false)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchBranches();
-  }, [location.search]);
+    }
+    fetchBranches()
+  }, [location.search])
 
   useEffect(() => {
-    const query = new URLSearchParams(location.search);
+    const query = new URLSearchParams(location.search)
     if (query.get("nearMe") === "true" && branchesLoaded) {
       if (allBranches.length > 0) {
-        handleNearMeSearch();
+        handleNearMeSearch()
       } else {
-        toast.error("No branches available to search.");
+        toast.error("No branches available to search.")
       }
     } else {
-      setMapVisible(false);
-      setRestaurants([]);
-      setMapCenter(null);
+      setMapVisible(false)
+      setRestaurants([])
+      setMapCenter(null)
     }
-  }, [branchesLoaded, location.search, allBranches.length]);
+  }, [branchesLoaded, location.search, allBranches.length])
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const R = 6371
+    const dLat = (lat2 - lat1) * (Math.PI / 180)
+    const dLon = (lon2 - lon1) * (Math.PI / 180)
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
-      setLoading(true);
+      setLoading(true)
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          searchByLocation(latitude, longitude);
+          const { latitude, longitude } = position.coords
+          setUserLocation({ lat: latitude, lng: longitude })
+          searchByLocation(latitude, longitude)
         },
-        ( ) => {
-          toast.error("Failed to get your location.");
-          setLoading(false);
-          navigate('/search');
+        () => {
+          toast.error("Failed to get your location.")
+          setLoading(false)
+          navigate("/search")
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      )
     } else {
-      toast.error("Geolocation not supported.");
-      setLoading(false);
+      toast.error("Geolocation not supported.")
+      setLoading(false)
     }
-  };
+  }
 
   const handleNearMeSearch = () => {
     if (!branchesLoaded) {
-      toast.error("Branch data is still loading.");
-      return;
+      toast.error("Branch data is still loading.")
+      return
     }
     if (navigator.geolocation) {
-      setLoading(true);
+      setLoading(true)
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          searchByLocation(latitude, longitude);
-          setMapVisible(true);
+          const { latitude, longitude } = position.coords
+          setUserLocation({ lat: latitude, lng: longitude })
+          searchByLocation(latitude, longitude)
+          setMapVisible(true)
         },
-        ( ) => {
-          toast.error("Failed to get location.");
-          setLoading(false);
-          navigate('/search');
+        () => {
+          toast.error("Failed to get location.")
+          setLoading(false)
+          navigate("/search")
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      )
     } else {
-      toast.error("Geolocation not supported.");
-      setLoading(false);
+      toast.error("Geolocation not supported.")
+      setLoading(false)
     }
-  };
+  }
 
   const searchByLocation = (lat: number, lng: number) => {
     if (!branchesLoaded || !Array.isArray(allBranches) || allBranches.length === 0) {
-      toast.error("No branch data available.");
-      setRestaurants([]);
-      setLoading(false);
-      return;
+      toast.error("No branch data available.")
+      setRestaurants([])
+      setLoading(false)
+      return
     }
     const nearby = allBranches
       .map((branch) => {
-        const distance = calculateDistance(lat, lng, branch.location.coordinates[1], branch.location.coordinates[0]);
-        return { ...branch, distance };
+        const distance = calculateDistance(lat, lng, branch.location.coordinates[1], branch.location.coordinates[0])
+        return { ...branch, distance }
       })
       .filter((branch) => branch.distance <= 10)
-      .sort((a, b) => a.distance - b.distance);
+      .sort((a, b) => a.distance - b.distance)
 
-    setRestaurants(nearby);
-    setMapCenter({ lat, lng });
-    setLoading(false);
+    setRestaurants(nearby)
+    setMapCenter({ lat, lng })
+    setLoading(false)
     if (nearby.length === 0) {
-      toast.error("No restaurants found within 10km.");
+      toast.error("No restaurants found within 10km.")
     } else {
-      toast.success(`Found ${nearby.length} restaurants near you!`);
+      toast.success(`Found ${nearby.length} restaurants near you!`)
     }
-  };
+  }
 
   const handleAddressSearch = async () => {
     if (!searchQuery.trim()) {
-      setRestaurants([]);
-      return;
+      setRestaurants([])
+      return
     }
-    setLoading(true);
+    setLoading(true)
     if (!branchesLoaded || !Array.isArray(allBranches)) {
-      toast.error("Branch data not available.");
-      setRestaurants([]);
-      setLoading(false);
-      return;
+      toast.error("Branch data not available.")
+      setRestaurants([])
+      setLoading(false)
+      return
     }
-    const filtered = allBranches.filter((branch) =>
-      branch.address.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = allBranches.filter((branch) => branch.address.toLowerCase().includes(searchQuery.toLowerCase()))
 
     if (filtered.length > 0) {
-      setRestaurants(filtered);
+      setRestaurants(filtered)
       setMapCenter({
         lat: filtered[0].location.coordinates[1],
         lng: filtered[0].location.coordinates[0],
-      });
-      setMapVisible(true);
-      setLoading(false);
+      })
+      setMapVisible(true)
+      setLoading(false)
     } else {
       try {
         const geocodeResponse: any = await axios.get(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery)}&key=${GOOGLE_MAPS_API_KEY}`
-        );
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery)}&key=${GOOGLE_MAPS_API_KEY}`,
+        )
         if (geocodeResponse.data.status === "OK" && geocodeResponse.data.results.length > 0) {
-          const { lat, lng } = geocodeResponse.data.results[0].geometry.location;
-          searchByLocation(lat, lng);
-          setMapVisible(true);
+          const { lat, lng } = geocodeResponse.data.results[0].geometry.location
+          searchByLocation(lat, lng)
+          setMapVisible(true)
         } else {
-          toast.error("Could not find this address.");
-          setRestaurants([]);
-          setLoading(false);
+          toast.error("Could not find this address.")
+          setRestaurants([])
+          setLoading(false)
         }
       } catch (error: any) {
-        toast.error("Failed to search address.");
-        setRestaurants([]);
-        setLoading(false);
+        toast.error("Failed to search address.")
+        setRestaurants([])
+        setLoading(false)
       }
     }
-  };
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleAddressSearch();
-  };
+    e.preventDefault()
+    handleAddressSearch()
+  }
 
   const handleChatClick = (branchId: string) => {
-    setSelectedBranchId(branchId);
-  };
+    setSelectedBranchId(branchId)
+  }
 
   const handleCloseChat = () => {
-    setSelectedBranchId(null);
-  };
+    setSelectedBranchId(null)
+  }
 
   return (
-    <section className="min-h-screen bg-[#faf7f2] pt-15 pb-20">
+    <section className="min-h-screen bg-gradient-to-b from-sepia-50 to-white pt-15 pb-20">
       <div className="max-w-7xl mx-auto px-6">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="font-playfair text-5xl md:text-6xl text-[#2c2420] font-extrabold tracking-tight text-center mb-12"
+          className="font-playfair text-5xl md:text-6xl text-sepia-900 font-extrabold tracking-tight text-center mb-12"
         >
           Find Restaurants Near You
         </motion.h1>
@@ -235,7 +236,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
             <button
               type="submit"
               disabled={loading || !branchesLoaded || allBranches.length === 0}
-              className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-md disabled:bg-[#e8e2d9] disabled:text-[#8b5d3b]"
+              className="px-6 py-2 bg-gradient-to-r from-sepia-700 to-sepia-900 text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-md disabled:bg-sepia-200 disabled:text-sepia-700"
             >
               {loading ? "Searching..." : "Search by Address"}
             </button>
@@ -243,7 +244,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
               type="button"
               onClick={getUserLocation}
               disabled={loading || !branchesLoaded || allBranches.length === 0}
-              className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-md disabled:bg-[#e8e2d9] disabled:text-[#8b5d3b]"
+              className="px-6 py-2 bg-gradient-to-r from-sepia-700 to-sepia-900 text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-md disabled:bg-sepia-200 disabled:text-sepia-700"
             >
               {loading ? "Locating..." : "Use My Location"}
             </button>
@@ -261,7 +262,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
                 {restaurants.map((branch, index) => (
                   <motion.div
                     key={branch._id}
-                    className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 cursor-pointer border border-[#e8e2d9]"
+                    className="group relative bg-white rounded-2xl overflow-hidden shadow-elegant hover:shadow-premium transition-all duration-500 cursor-pointer border border-sepia-200"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -272,26 +273,26 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
                         alt={branch.name}
                         className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#2c2420]/60 to-transparent opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-sepia-900/60 to-transparent opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
                     </div>
                     <div className="p-6 text-center">
-                      <h3 className="text-2xl font-playfair text-[#2c2420] mb-3 font-semibold tracking-tight">
+                      <h3 className="text-2xl font-playfair text-sepia-900 mb-3 font-semibold tracking-tight">
                         {branch.name}
                       </h3>
-                      <p className="text-[#8b5d3b] mb-2 text-sm">{branch.address}</p>
+                      <p className="text-sepia-700 mb-2 text-sm">{branch.address}</p>
                       {branch.distance !== undefined && (
-                        <p className="text-[#8b5d3b] mb-4 text-sm">Distance: {branch.distance.toFixed(2)} km</p>
+                        <p className="text-sepia-700 mb-4 text-sm">Distance: {branch.distance.toFixed(2)} km</p>
                       )}
                       <div className="flex justify-center gap-4">
                         <button
                           onClick={() => navigate(`/book/${branch._id}`)}
-                          className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
+                          className="px-6 py-2 bg-gradient-to-r from-sepia-700 to-sepia-900 text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
                         >
                           Book Now
                         </button>
                         <button
                           onClick={() => handleChatClick(branch._id)}
-                          className="px-6 py-2 bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
+                          className="px-6 py-2 bg-gradient-to-r from-sepia-700 to-sepia-900 text-white rounded-full font-medium hover:opacity-90 transition-all duration-300 shadow-md"
                         >
                           <FaComments className="inline-block mr-2" /> Chat
                         </button>
@@ -302,12 +303,14 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
               </div>
             ) : searchQuery && !loading ? (
               <p className="text-center text-[#8b5d3b] text-lg font-medium">No restaurants found for this address.</p>
-            ) : !loading && (
-              <p className="text-center text-[#8b5d3b] text-lg font-medium">
-                {branchesLoaded && allBranches.length === 0
-                  ? "No branches available at the moment."
-                  : "Search for restaurants near you!"}
-              </p>
+            ) : (
+              !loading && (
+                <p className="text-center text-[#8b5d3b] text-lg font-medium">
+                  {branchesLoaded && allBranches.length === 0
+                    ? "No branches available at the moment."
+                    : "Search for restaurants near you!"}
+                </p>
+              )
             )}
           </div>
 
@@ -315,11 +318,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
             <div className="lg:w-2/5">
               <div className="bg-white rounded-2xl shadow-lg border border-[#e8e2d9] p-4">
                 <h3 className="text-xl font-semibold text-[#2c2420] mb-4 text-center">Location Map</h3>
-                <GoogleMap
-                  mapContainerStyle={mapContainerStyle}
-                  center={mapCenter}
-                  zoom={12}
-                >
+                <GoogleMap mapContainerStyle={mapContainerStyle} center={mapCenter} zoom={12}>
                   {restaurants.map((branch) => (
                     <Marker
                       key={branch._id}
@@ -346,15 +345,11 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
         </div>
 
         {selectedBranchId && userId && (
-          <ChatWidget
-            userId={userId}
-            branchId={selectedBranchId}
-            onClose={handleCloseChat}
-          />
+          <ChatWidget userId={userId} branchId={selectedBranchId} onClose={handleCloseChat} />
         )}
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default RestaurantSearch;
+export default RestaurantSearch

@@ -76,7 +76,7 @@ export interface Reservation {
     email: string;
     phone: string;
   };
-  branch: { _id: string; name: string };
+  branch: { _id: string; name: string,mainImage?: string; };
   tableType: TableType;
   reservationDate: string;
   timeSlot: string;

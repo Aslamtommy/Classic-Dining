@@ -1,112 +1,115 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { fetchBranchDetails, fetchBranchReviews } from "../../Api/userApi";
-import { Branch } from "../../types/branch";
-import { Review } from "../../types/reservation";
-import { motion } from "framer-motion";
-import { Button, IconButton, Tooltip } from "@mui/material";
-import Carousel from "react-material-ui-carousel";
-import axios from "axios";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import ShareIcon from "@mui/icons-material/Share";
-import DownloadIcon from "@mui/icons-material/Download";
-import CloseIcon from "@mui/icons-material/Close";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import Header from "../../components/User/Home/Header";
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import { fetchBranchDetails, fetchBranchReviews } from "../../Api/userApi"
+import type { Branch } from "../../types/branch"
+import type { Review } from "../../types/reservation"
+import { motion } from "framer-motion"
+import { Button, IconButton, Tooltip } from "@mui/material"
+import Carousel from "react-material-ui-carousel"
+import axios from "axios"
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
+import ShareIcon from "@mui/icons-material/Share"
+import DownloadIcon from "@mui/icons-material/Download"
+import CloseIcon from "@mui/icons-material/Close"
+import ZoomInIcon from "@mui/icons-material/ZoomIn"
+import ZoomOutIcon from "@mui/icons-material/ZoomOut"
+import LocationOnIcon from "@mui/icons-material/LocationOn"
+import Header from "../../components/User/Home/Header"
 
 const mapContainerStyle = {
   width: "100%",
   height: "400px",
-};
+}
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
+const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU"
 
 const RestaurantDetailPage: React.FC = () => {
-  const { branchId } = useParams<{ branchId: string }>();
-  const navigate = useNavigate();
-  const [branch, setBranch] = useState<Branch | null>(null);
-  const [allReviews, setAllReviews] = useState<Review[]>([]); // Store all reviews
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [mapQuery, setMapQuery] = useState<string>("");
-  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const { branchId } = useParams<{ branchId: string }>()
+  const navigate = useNavigate()
+  const [branch, setBranch] = useState<Branch | null>(null)
+  const [allReviews, setAllReviews] = useState<Review[]>([]) // Store all reviews
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [mapQuery, setMapQuery] = useState<string>("")
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  const [mapError, setMapError] = useState<string | null>(null)
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)
 
   // Pagination states
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const reviewsPerPage = 5; // Number of reviews per page
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const reviewsPerPage = 5 // Number of reviews per page
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-  });
+  })
 
   useEffect(() => {
     const loadBranchAndReviews = async () => {
       try {
-        if (!branchId) throw new Error("No branch ID provided");
-        setLoading(true);
+        if (!branchId) throw new Error("No branch ID provided")
+        setLoading(true)
 
-        const branchData = await fetchBranchDetails(branchId);
-        setBranch(branchData);
+        const branchData = await fetchBranchDetails(branchId)
+        setBranch(branchData)
 
-        const reviewData = await fetchBranchReviews(branchId); // Fetch all reviews
-        setAllReviews(reviewData); // Store all reviews
+        const reviewData = await fetchBranchReviews(branchId) // Fetch all reviews
+        setAllReviews(reviewData) // Store all reviews
 
-        let query = "";
-        let coords: { lat: number; lng: number } | null = null;
+        let query = ""
+        let coords: { lat: number; lng: number } | null = null
         if (branchData.location?.coordinates) {
-          query = `${branchData.location.coordinates[1]},${branchData.location.coordinates[0]}`;
-          coords = { lat: branchData.location.coordinates[1], lng: branchData.location.coordinates[0] };
+          query = `${branchData.location.coordinates[1]},${branchData.location.coordinates[0]}`
+          coords = { lat: branchData.location.coordinates[1], lng: branchData.location.coordinates[0] }
         } else if (branchData.address) {
           const geocodeResponse: any = await axios.get(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(branchData.address)}&key=${GOOGLE_MAPS_API_KEY}`
-          );
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(branchData.address)}&key=${GOOGLE_MAPS_API_KEY}`,
+          )
           if (geocodeResponse.data.status === "OK" && geocodeResponse.data.results.length > 0) {
-            const { lat, lng } = geocodeResponse.data.results[0].geometry.location;
-            query = `${lat},${lng}`;
-            coords = { lat, lng };
+            const { lat, lng } = geocodeResponse.data.results[0].geometry.location
+            query = `${lat},${lng}`
+            coords = { lat, lng }
           } else {
-            setMapError("Unable to geocode address.");
-            query = encodeURIComponent(branchData.address || `${branchData.name}, Unknown Location`);
+            setMapError("Unable to geocode address.")
+            query = encodeURIComponent(branchData.address || `${branchData.name}, Unknown Location`)
           }
         } else {
-          setMapError("No address or coordinates provided.");
-          query = encodeURIComponent(`${branchData.name}, Unknown Location`);
+          setMapError("No address or coordinates provided.")
+          query = encodeURIComponent(`${branchData.name}, Unknown Location`)
         }
-        setMapQuery(query);
-        setCoordinates(coords);
+        setMapQuery(query)
+        setCoordinates(coords)
       } catch (error: unknown) {
-        setError(error instanceof Error ? error.message : "Failed to load restaurant details");
+        setError(error instanceof Error ? error.message : "Failed to load restaurant details")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    loadBranchAndReviews();
-  }, [branchId]);
+    }
+    loadBranchAndReviews()
+  }, [branchId])
 
   // Calculate paginated reviews
-  const indexOfLastReview = currentPage * reviewsPerPage;
-  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-  const currentReviews = allReviews.slice(indexOfFirstReview, indexOfLastReview);
-  const totalPages = Math.ceil(allReviews.length / reviewsPerPage);
+  const indexOfLastReview = currentPage * reviewsPerPage
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage
+  const currentReviews = allReviews.slice(indexOfFirstReview, indexOfLastReview)
+  const totalPages = Math.ceil(allReviews.length / reviewsPerPage)
 
   // Pagination handlers
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
+      setCurrentPage((prev) => prev + 1)
     }
-  };
+  }
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
+      setCurrentPage((prev) => prev - 1)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -115,7 +118,7 @@ const RestaurantDetailPage: React.FC = () => {
           Loading...
         </motion.div>
       </div>
-    );
+    )
   }
 
   if (error || !branch) {
@@ -123,38 +126,38 @@ const RestaurantDetailPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-red-600 text-lg font-sans">{error || "Restaurant not found"}</div>
       </div>
-    );
+    )
   }
 
-  const carouselImages = [branch.mainImage || "/placeholder-branch.jpg", ...(branch.interiorImages || [])];
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${mapQuery}`;
+  const carouselImages = [branch.mainImage || "/placeholder-branch.jpg", ...(branch.interiorImages || [])]
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${mapQuery}`
 
-  const handlePhotoClick = (imgSrc: string) => setSelectedPhoto(imgSrc);
-  const handleCloseModal = () => setSelectedPhoto(null);
+  const handlePhotoClick = (imgSrc: string) => setSelectedPhoto(imgSrc)
+  const handleCloseModal = () => setSelectedPhoto(null)
   const handleDownloadPhoto = (imgSrc: string) => {
-    const link = document.createElement("a");
-    link.href = imgSrc;
-    link.download = `photo-${Date.now()}.jpg`;
-    link.click();
-  };
+    const link = document.createElement("a")
+    link.href = imgSrc
+    link.download = `photo-${Date.now()}.jpg`
+    link.click()
+  }
   const handleShare = async () => {
     const shareData = {
       title: branch.name,
       text: `Discover ${branch.name} at ${branch.address || "this location"}!`,
       url: window.location.href,
-    };
+    }
     try {
       if (navigator.share) {
-        await navigator.share(shareData);
+        await navigator.share(shareData)
       } else {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("Link copied to clipboard!");
+        await navigator.clipboard.writeText(window.location.href)
+        alert("Link copied to clipboard!")
       }
     } catch (err) {
-      await navigator.clipboard.writeText(window.location.href);
-      alert("Failed to share. Link copied to clipboard!");
+      await navigator.clipboard.writeText(window.location.href)
+      alert("Failed to share. Link copied to clipboard!")
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans antialiased">
@@ -175,7 +178,11 @@ const RestaurantDetailPage: React.FC = () => {
         >
           {carouselImages.map((imgSrc, index) => (
             <div key={index} className="relative h-full w-full">
-              <img src={imgSrc} alt={`${branch.name} ${index + 1}`} className="w-full h-full object-cover brightness-90" />
+              <img
+                src={imgSrc || "/placeholder.svg"}
+                alt={`${branch.name} ${index + 1}`}
+                className="w-full h-full object-cover brightness-90"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent" />
               <div className="absolute inset-0 flex items-center justify-center text-center text-white px-4 md:px-8">
                 <div className="max-w-4xl mx-auto">
@@ -185,8 +192,8 @@ const RestaurantDetailPage: React.FC = () => {
                     <Button
                       variant="contained"
                       sx={{
-                        bgcolor: "#c62828",
-                        "&:hover": { bgcolor: "#b71c1c" },
+                        bgcolor: "#8F6E2E",
+                        "&:hover": { bgcolor: "#6B5222" },
                         padding: "10px 28px",
                         fontSize: "16px",
                         borderRadius: "9999px",
@@ -201,7 +208,7 @@ const RestaurantDetailPage: React.FC = () => {
                         onClick={handleShare}
                         sx={{ bgcolor: "white", "&:hover": { bgcolor: "#f0f0f0" }, padding: "10px" }}
                       >
-                        <ShareIcon sx={{ color: "#c62828" }} />
+                        <ShareIcon sx={{ color: "#8F6E2E" }} />
                       </IconButton>
                     </Tooltip>
                   </div>
@@ -226,8 +233,12 @@ const RestaurantDetailPage: React.FC = () => {
             <div>
               <p className="text-gray-700 text-base leading-relaxed mb-4">{branch.address || "N/A"}</p>
               <div className="space-y-2 text-gray-600 text-sm">
-                <p><strong>Email:</strong> {branch.email}</p>
-                <p><strong>Phone:</strong> {branch.phone || "N/A"}</p>
+                <p>
+                  <strong>Email:</strong> {branch.email}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {branch.phone || "N/A"}
+                </p>
               </div>
             </div>
             <div className="flex items-end justify-end">
@@ -235,26 +246,26 @@ const RestaurantDetailPage: React.FC = () => {
                 variant="outlined"
                 startIcon={<LocationOnIcon />}
                 sx={{
-                  borderColor: "#c62828",
-                  color: "#c62828",
-                  "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
+                  borderColor: "#8F6E2E",
+                  color: "#8F6E2E",
+                  "&:hover": { borderColor: "#6B5222", color: "#6B5222" },
                   padding: "8px 20px",
                   borderRadius: "9999px",
                 }}
                 onClick={() => {
-                  const coordinates = branch.location?.coordinates;
-                  const address = branch.address;
-                  let query = '';
-                  
+                  const coordinates = branch.location?.coordinates
+                  const address = branch.address
+                  let query = ""
+
                   if (coordinates) {
-                    query = `${coordinates[1]},${coordinates[0]}`;
+                    query = `${coordinates[1]},${coordinates[0]}`
                   } else if (address) {
-                    query = encodeURIComponent(address);
+                    query = encodeURIComponent(address)
                   } else {
-                    query = encodeURIComponent(`${branch.name}, Unknown Location`);
+                    query = encodeURIComponent(`${branch.name}, Unknown Location`)
                   }
-                  
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_blank');
+
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, "_blank")
                 }}
               >
                 Get Directions
@@ -279,7 +290,11 @@ const RestaurantDetailPage: React.FC = () => {
                 className="relative rounded-lg overflow-hidden shadow-sm cursor-pointer"
                 onClick={() => handlePhotoClick(imgSrc)}
               >
-                <img src={imgSrc} alt={`Photo ${index + 1}`} className="w-full h-40 object-cover" />
+                <img
+                  src={imgSrc || "/placeholder.svg"}
+                  alt={`Photo ${index + 1}`}
+                  className="w-full h-40 object-cover"
+                />
                 <div className="absolute inset-0 bg-black/10 opacity-0 hover:opacity-100 transition-opacity duration-200" />
               </motion.div>
             ))}
@@ -336,9 +351,7 @@ const RestaurantDetailPage: React.FC = () => {
                           </span>
                         ))}
                     </div>
-                    {review.comment && (
-                      <p className="text-gray-700 text-base leading-relaxed mb-2">{review.comment}</p>
-                    )}
+                    {review.comment && <p className="text-gray-700 text-base leading-relaxed mb-2">{review.comment}</p>}
                     <p className="text-gray-500 text-sm">
                       {new Date(review.createdAt).toLocaleDateString("en-US", {
                         month: "long",
@@ -356,9 +369,9 @@ const RestaurantDetailPage: React.FC = () => {
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
                   sx={{
-                    borderColor: "#c62828",
-                    color: "#c62828",
-                    "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
+                    borderColor: "#8F6E2E",
+                    color: "#8F6E2E",
+                    "&:hover": { borderColor: "#6B5222", color: "#6B5222" },
                     "&:disabled": { borderColor: "#cccccc", color: "#cccccc" },
                   }}
                 >
@@ -372,9 +385,9 @@ const RestaurantDetailPage: React.FC = () => {
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                   sx={{
-                    borderColor: "#c62828",
-                    color: "#c62828",
-                    "&:hover": { borderColor: "#b71c1c", color: "#b71c1c" },
+                    borderColor: "#8F6E2E",
+                    color: "#8F6E2E",
+                    "&:hover": { borderColor: "#6B5222", color: "#6B5222" },
                     "&:disabled": { borderColor: "#cccccc", color: "#cccccc" },
                   }}
                 >
@@ -398,8 +411,8 @@ const RestaurantDetailPage: React.FC = () => {
         <Button
           variant="contained"
           sx={{
-            bgcolor: "#c62828",
-            "&:hover": { bgcolor: "#b71c1c" },
+            bgcolor: "#8F6E2E",
+            "&:hover": { bgcolor: "#6B5222" },
             padding: "10px 24px",
             fontSize: "14px",
             borderRadius: "9999px",
@@ -420,23 +433,21 @@ const RestaurantDetailPage: React.FC = () => {
           onClick={handleCloseModal}
         >
           <div className="relative bg-white p-4 rounded-lg max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              onClick={handleCloseModal}
-              sx={{ position: "absolute", top: 8, right: 8, color: "#c62828" }}
-            >
+            <IconButton onClick={handleCloseModal} sx={{ position: "absolute", top: 8, right: 8, color: "#8F6E2E" }}>
               <CloseIcon />
             </IconButton>
             <TransformWrapper>
               {({ zoomIn, zoomOut }) => (
                 <>
                   <TransformComponent>
-                    <img src={selectedPhoto} alt="Enlarged" className="max-h-[80vh] w-full object-contain rounded-md" />
+                    <img
+                      src={selectedPhoto || "/placeholder.svg"}
+                      alt="Enlarged"
+                      className="max-h-[80vh] w-full object-contain rounded-md"
+                    />
                   </TransformComponent>
                   <div className="flex justify-center gap-4 mt-4">
-                    <IconButton
-                      onClick={() => zoomIn()}
-                      sx={{ bgcolor: "#f5f5f5", "&:hover": { bgcolor: "#e0e0e0" } }}
-                    >
+                    <IconButton onClick={() => zoomIn()} sx={{ bgcolor: "#f5f5f5", "&:hover": { bgcolor: "#e0e0e0" } }}>
                       <ZoomInIcon sx={{ color: "#c62828" }} />
                     </IconButton>
                     <IconButton
@@ -459,7 +470,7 @@ const RestaurantDetailPage: React.FC = () => {
         </motion.div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default RestaurantDetailPage;
+export default RestaurantDetailPage

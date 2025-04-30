@@ -7,5 +7,6 @@
 body {
   font-family: 'Lora', serif;
   @apply bg-sepia-100 text-sepia-900;
+  margin: 0; /* Reset default browser margin */
+  padding: 0; /* Reset default browser padding */
 }
-
