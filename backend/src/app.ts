@@ -45,7 +45,7 @@ app.use(express.json());
 // CORS configuration
 
 const corsOptions = {
-  origin:'https://classic-dining-at8x.vercel.app',
+  origin:'http://localhost:5173',
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

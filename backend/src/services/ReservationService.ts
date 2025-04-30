@@ -389,32 +389,63 @@ export class ReservationService implements IReservationService {
 
   async confirmWithWallet(reservationId: string, userId: string): Promise<IReservation> {
     try {
+      console.log(`Confirming reservation with wallet for user: ${userId} reservation: ${reservationId}`);
+
+      // Fetch the reservation
       const reservation = await this._reservationRepo.findById(reservationId);
-      if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
-      if (reservation.userId.toString() !== userId) throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      if (!reservation) {
+        console.error(`Reservation not found for ID: ${reservationId}`);
+        throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      }
+
+      console.log('Reservation found:', reservation);
+
+      // Verify user ownership
+      if (reservation.userId.toString() !== userId) {
+        console.error(`User ${userId} does not own reservation ${reservationId}`);
+        throw new AppError(HttpStatus.Forbidden, MessageConstants.PERMISSION_DENIED);
+      }
+
+      // Check reservation status
       if (reservation.status !== ReservationStatus.PENDING) {
+        console.error(`Invalid reservation status: ${reservation.status}`);
         throw new AppError(HttpStatus.BadRequest, `${MessageConstants.INVALID_RESERVATION_STATUS}: ${reservation.status}`);
       }
 
-      const tableTypeId = typeof reservation.tableType === 'object' && 'price' in reservation.tableType
-        ? (reservation.tableType as ITableType)._id.toString()
-        : reservation.tableType.toString();
+      // Extract branch and tableType, assuming they are populated (like confirmReservation)
+      const branch = typeof reservation.branch === 'object' && 'name' in reservation.branch
+        ? reservation.branch
+        : await this._branchRepo.findById(reservation.branch.toString());
 
-      const [branch, tableType] = await Promise.all([
-        this._branchRepo.findById(reservation.branch.toString()),
-        this._tableTypeRepo.findById(tableTypeId)
-      ]);
+      const tableType = typeof reservation.tableType === 'object' && 'name' in reservation.tableType
+        ? reservation.tableType
+        : await this._tableTypeRepo.findById(reservation.tableType.toString());
 
-      if (!branch || !tableType) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INVALID_BRANCH_OR_TABLE);
+      // Validate branch and tableType
+      if (!branch || !tableType) {
+        console.error('Branch or tableType is missing:', { branch, tableType });
+        throw new AppError(HttpStatus.BadRequest, MessageConstants.INVALID_BRANCH_OR_TABLE);
+      }
 
+      // Calculate the amount to be paid
       const amount = reservation.finalAmount !== undefined ? reservation.finalAmount : (tableType.price || 0) * reservation.tableQuantity;
+
+      // Process wallet payment
       await this._walletRepo.payWithWallet(userId, amount, reservationId);
+
+      // Update reservation status and set whatsappOptIn to true by default (like confirmReservation)
       const updatedReservation = await this._reservationRepo.update(reservationId, {
         status: ReservationStatus.CONFIRMED,
         paymentMethod: 'wallet',
+        whatsappOptIn: true, // Align with confirmReservation's default behavior
       });
 
-      if (!updatedReservation) throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      if (!updatedReservation) {
+        console.error('Failed to update reservation');
+        throw new AppError(HttpStatus.InternalServerError, MessageConstants.INTERNAL_SERVER_ERROR);
+      }
+
+      console.log('Reservation updated:', updatedReservation);
 
       // Send confirmation email
       const emailBody = this.generateConfirmationEmail(updatedReservation, branch, tableType);
@@ -426,10 +457,50 @@ export class ReservationService implements IReservationService {
 
       if (!emailSent) {
         console.error('Failed to send confirmation email for reservation:', reservationId);
+      } else {
+        console.log('Confirmation email sent to:', updatedReservation.user.email);
+      }
+
+      // Send WhatsApp notification if opted in (same as confirmReservation)
+      console.log('Checking WhatsApp opt-in:', updatedReservation.whatsappOptIn);
+      if (updatedReservation.whatsappOptIn) {
+        console.log('WhatsApp opt-in is true. Preparing to send message...');
+        console.log('User phone number:', updatedReservation.user.phone);
+
+        if (!updatedReservation.user.phone) {
+          console.error('User phone number is missing for reservation ID:', reservationId);
+        } else if (!updatedReservation.user.phone.startsWith('+')) {
+          console.warn('Phone number format may be incorrect (should start with +):', updatedReservation.user.phone);
+        }
+
+        const { template, parameters } = this.generateWhatsAppMessage(updatedReservation);
+        console.log('WhatsApp message parameters:', { template, parameters });
+
+        try {
+          const messageResponse = await this.twilioClient.messages.create({
+            from: process.env.TWILIO_WHATSAPP_NUMBER,
+            to: `whatsapp:${updatedReservation.user.phone}`,
+            contentSid: 'HXe992703cd9bbe13e5ff2de8201a6c7c5',
+            contentVariables: JSON.stringify({
+              '1': parameters[0],
+              '2': parameters[1],
+            }),
+          });
+          console.log('WhatsApp message sent successfully. Message SID:', messageResponse.sid);
+        } catch (error) {
+          console.error('Failed to send WhatsApp message:', error);
+          if (error instanceof Error) {
+            console.error('Error details:', error.message);
+            console.error('Error stack:', error.stack);
+          }
+        }
+      } else {
+        console.log('WhatsApp opt-in is false. Skipping WhatsApp message.');
       }
 
       return updatedReservation;
     } catch (error) {
+      console.error('Error in confirmWithWallet:', error);
       if (error instanceof AppError) throw error;
       throw new AppError(HttpStatus.InternalServerError, MessageConstants.WALLET_CONFIRMATION_FAILED);
     }
