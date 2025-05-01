@@ -1,26 +1,33 @@
-import React, { useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import restaurentApi from "../../Axios/restaurentInstance";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import axios from "axios";
+"use client"
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
+import type React from "react"
+import { useState } from "react"
+import { useFormik } from "formik"
+import * as Yup from "yup"
+import restaurentApi from "../../Axios/restaurentInstance"
+import { useSelector } from "react-redux"
+import type { RootState } from "../../redux/store"
+import { useNavigate } from "react-router-dom"
+import toast from "react-hot-toast"
+import axios from "axios"
+import { motion } from "framer-motion"
+import { MapPin, Mail, Phone, Lock, Store, ImageIcon, Upload } from "lucide-react"
+
+const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU"
 
 const AddBranch = () => {
-  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
-  const [interiorImagesPreview, setInteriorImagesPreview] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false); // Add loading state
-  const { restaurent } = useSelector((state: RootState) => state.restaurent);
-  const navigate = useNavigate();
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
+  const [interiorImagesPreview, setInteriorImagesPreview] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const { restaurent } = useSelector((state: RootState) => state.restaurent)
+  const navigate = useNavigate()
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required").min(4, "Name must be at least 4 characters"),
     email: Yup.string().email("Invalid email address").required("Email is required"),
-    phone: Yup.string().matches(/^\d{10}$/, "Phone number must be 10 digits").required("Phone is required"),
+    phone: Yup.string()
+      .matches(/^\d{10}$/, "Phone number must be 10 digits")
+      .required("Phone is required"),
     password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
     address: Yup.string().required("Address is required"),
     longitude: Yup.number().required("Longitude is required").min(-180).max(180),
@@ -29,24 +36,23 @@ const AddBranch = () => {
       .required("Main image is required")
       .test("fileSize", "File size must be less than 5MB", (value) => {
         if (value) {
-          const file = value as File;
-          return file.size <= 5 * 1024 * 1024;
+          const file = value as File
+          return file.size <= 5 * 1024 * 1024
         }
-        return false;
+        return false
       }),
     interiorImages: Yup.array()
       .of(
-        Yup.mixed()
-          .test("fileSize", "Each file must be less than 5MB", (value) => {
-            if (value) {
-              const file = value as File;
-              return file.size <= 5 * 1024 * 1024;
-            }
-            return true;
-          })
+        Yup.mixed().test("fileSize", "Each file must be less than 5MB", (value) => {
+          if (value) {
+            const file = value as File
+            return file.size <= 5 * 1024 * 1024
+          }
+          return true
+        }),
       )
       .max(3, "You can upload up to 3 interior images"),
-  });
+  })
 
   const formik = useFormik({
     initialValues: {
@@ -62,93 +68,96 @@ const AddBranch = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      setLoading(true); // Start loading
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("email", values.email);
-      formData.append("phone", values.phone);
-      formData.append("password", values.password);
-      formData.append("address", values.address);
-      formData.append("longitude", values.longitude.toString());
-      formData.append("latitude", values.latitude.toString());
-      formData.append("parentRestaurant", restaurent?._id || "");
+      setLoading(true)
+      const formData = new FormData()
+      formData.append("name", values.name)
+      formData.append("email", values.email)
+      formData.append("phone", values.phone)
+      formData.append("password", values.password)
+      formData.append("address", values.address)
+      formData.append("longitude", values.longitude.toString())
+      formData.append("latitude", values.latitude.toString())
+      formData.append("parentRestaurant", restaurent?._id || "")
       if (values.mainImage) {
-        formData.append("mainImage", values.mainImage);
+        formData.append("mainImage", values.mainImage)
       }
       values.interiorImages.forEach((image) => {
-        formData.append("interiorImages", image);
-      });
+        formData.append("interiorImages", image)
+      })
 
       try {
         const response = await restaurentApi.post("/branches", formData, {
           headers: { "Content-Type": "multipart/form-data" },
-        });
-        toast.success("Branch successfully added!"); // Updated success message
-        setLoading(false); // Stop loading
-        navigate("/restaurent/branches"); // Navigate after success
+        })
+        toast.success("Branch successfully added!")
+        setLoading(false)
+        navigate("/restaurent/branches")
       } catch (error: any) {
-        setLoading(false); // Stop loading on error
-        toast.error(error.response?.data?.message || "Failed to create branch");
+        setLoading(false)
+        toast.error(error.response?.data?.message || "Failed to create branch")
       }
     },
-  });
+  })
 
   const handleMainImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
+    const file = event.target.files?.[0] || null
     if (file) {
-      setMainImagePreview(URL.createObjectURL(file));
-      formik.setFieldValue("mainImage", file);
+      setMainImagePreview(URL.createObjectURL(file))
+      formik.setFieldValue("mainImage", file)
     }
-  };
+  }
 
   const handleInteriorImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+    const files = Array.from(event.target.files || [])
     if (files.length + formik.values.interiorImages.length > 3) {
-      toast.error("You can upload up to 3 interior images.");
-      return;
+      toast.error("You can upload up to 3 interior images.")
+      return
     }
-    const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setInteriorImagesPreview((prev) => [...prev, ...newPreviews]);
-    formik.setFieldValue("interiorImages", [...formik.values.interiorImages, ...files]);
-  };
+    const newPreviews = files.map((file) => URL.createObjectURL(file))
+    setInteriorImagesPreview((prev) => [...prev, ...newPreviews])
+    formik.setFieldValue("interiorImages", [...formik.values.interiorImages, ...files])
+  }
 
   const removeInteriorImage = (index: number) => {
-    const updatedImages = formik.values.interiorImages.filter((_, i) => i !== index);
-    const updatedPreviews = interiorImagesPreview.filter((_, i) => i !== index);
-    setInteriorImagesPreview(updatedPreviews);
-    formik.setFieldValue("interiorImages", updatedImages);
-  };
+    const updatedImages = formik.values.interiorImages.filter((_, i) => i !== index)
+    const updatedPreviews = interiorImagesPreview.filter((_, i) => i !== index)
+    setInteriorImagesPreview(updatedPreviews)
+    formik.setFieldValue("interiorImages", updatedImages)
+  }
 
   const handleAddressBlur = async () => {
-    const address = formik.values.address.trim();
-    if (!address) return;
+    const address = formik.values.address.trim()
+    if (!address) return
 
     try {
       const response: any = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`
-      );
-      const results = response.data.results;
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`,
+      )
+      const results = response.data.results
       if (results.length > 0) {
-        const { lat, lng } = results[0].geometry.location;
-        formik.setFieldValue("latitude", lat);
-        formik.setFieldValue("longitude", lng);
+        const { lat, lng } = results[0].geometry.location
+        formik.setFieldValue("latitude", lat)
+        formik.setFieldValue("longitude", lng)
       } else {
-        toast.error("Could not find coordinates for this address.");
+        toast.error("Could not find coordinates for this address.")
       }
     } catch (error) {
-      toast.error("Failed to geocode address.");
-      console.error(error);
+      toast.error("Failed to geocode address.")
+      console.error(error)
     }
-  };
+  }
 
   return (
-    <div className="p-8 bg-[#f8f1ea] min-h-screen font-sans">
-      <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-xl border border-[#e8e2d9]">
-        <h2 className="text-4xl font-playfair text-[#2c2420] font-bold mb-8 tracking-tight">Add New Branch</h2>
-        <form onSubmit={formik.handleSubmit} className="space-y-8">
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <h2 className="text-3xl font-bold text-black mb-8">Add New Branch</h2>
+        <form onSubmit={formik.handleSubmit} className="space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Branch Name</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <Store className="w-4 h-4 mr-2 text-amber-600" />
+              Branch Name
+            </label>
             <input
               type="text"
               name="name"
@@ -156,8 +165,8 @@ const AddBranch = () => {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="Enter branch name"
-              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
-              disabled={loading} // Disable input during loading
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-black transition-all"
+              disabled={loading}
             />
             {formik.touched.name && formik.errors.name && (
               <div className="text-red-600 text-sm mt-1">{formik.errors.name}</div>
@@ -166,7 +175,10 @@ const AddBranch = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Email</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <Mail className="w-4 h-4 mr-2 text-amber-600" />
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -174,7 +186,7 @@ const AddBranch = () => {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="Enter branch email"
-              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-black transition-all"
               disabled={loading}
             />
             {formik.touched.email && formik.errors.email && (
@@ -184,7 +196,10 @@ const AddBranch = () => {
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Phone</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <Phone className="w-4 h-4 mr-2 text-amber-600" />
+              Phone
+            </label>
             <input
               type="text"
               name="phone"
@@ -192,7 +207,7 @@ const AddBranch = () => {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="Enter 10-digit phone number"
-              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-black transition-all"
               disabled={loading}
             />
             {formik.touched.phone && formik.errors.phone && (
@@ -202,7 +217,10 @@ const AddBranch = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Password</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <Lock className="w-4 h-4 mr-2 text-amber-600" />
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -210,7 +228,7 @@ const AddBranch = () => {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="Enter branch password"
-              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-black transition-all"
               disabled={loading}
             />
             {formik.touched.password && formik.errors.password && (
@@ -220,18 +238,21 @@ const AddBranch = () => {
 
           {/* Address */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Address</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <MapPin className="w-4 h-4 mr-2 text-amber-600" />
+              Address
+            </label>
             <input
               type="text"
               name="address"
               value={formik.values.address}
               onChange={formik.handleChange}
               onBlur={(e) => {
-                formik.handleBlur(e);
-                handleAddressBlur();
+                formik.handleBlur(e)
+                handleAddressBlur()
               }}
               placeholder="Enter branch address"
-              className="w-full p-3 border border-[#e8e2d9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] bg-[#faf7f2] text-[#2c2420] transition-all"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-black transition-all"
               disabled={loading}
             />
             {formik.touched.address && formik.errors.address && (
@@ -242,7 +263,7 @@ const AddBranch = () => {
           {/* Coordinates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#2c2420] mb-2">Longitude</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
               <input
                 type="number"
                 name="longitude"
@@ -251,14 +272,14 @@ const AddBranch = () => {
                 onBlur={formik.handleBlur}
                 placeholder="Auto-filled from address"
                 readOnly
-                className="w-full p-3 border border-[#e8e2d9] rounded-lg bg-[#f0ede8] text-[#2c2420] cursor-not-allowed"
+                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
               />
               {formik.touched.longitude && formik.errors.longitude && (
                 <div className="text-red-600 text-sm mt-1">{formik.errors.longitude}</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#2c2420] mb-2">Latitude</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
               <input
                 type="number"
                 name="latitude"
@@ -267,7 +288,7 @@ const AddBranch = () => {
                 onBlur={formik.handleBlur}
                 placeholder="Auto-filled from address"
                 readOnly
-                className="w-full p-3 border border-[#e8e2d9] rounded-lg bg-[#f0ede8] text-[#2c2420] cursor-not-allowed"
+                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
               />
               {formik.touched.latitude && formik.errors.latitude && (
                 <div className="text-red-600 text-sm mt-1">{formik.errors.latitude}</div>
@@ -277,20 +298,32 @@ const AddBranch = () => {
 
           {/* Main Image */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Main Image</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <ImageIcon className="w-4 h-4 mr-2 text-amber-600" />
+              Main Image
+            </label>
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#e8e2d9] rounded-lg cursor-pointer hover:border-[#8b5d3b] transition-all bg-[#faf7f2]">
+              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-amber-500 transition-all bg-white">
                 {mainImagePreview ? (
-                  <img src={mainImagePreview} alt="Main Preview" className="h-full w-full object-cover rounded-lg" />
+                  <img
+                    src={mainImagePreview || "/placeholder.svg"}
+                    alt="Main Preview"
+                    className="h-full w-full object-cover rounded-lg"
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center">
-                    <svg className="w-8 h-8 text-[#8b5d3b] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    <span className="text-sm text-[#8b5d3b]">Upload main image</span>
+                    <Upload className="w-8 h-8 text-gray-500 mb-2" />
+                    <span className="text-sm text-gray-500">Upload main image</span>
                   </div>
                 )}
-                <input type="file" name="mainImage" onChange={handleMainImageChange} className="hidden" accept="image/*" disabled={loading} />
+                <input
+                  type="file"
+                  name="mainImage"
+                  onChange={handleMainImageChange}
+                  className="hidden"
+                  accept="image/*"
+                  disabled={loading}
+                />
               </label>
             </div>
             {formik.touched.mainImage && formik.errors.mainImage && (
@@ -300,14 +333,15 @@ const AddBranch = () => {
 
           {/* Interior Images */}
           <div>
-            <label className="block text-sm font-medium text-[#2c2420] mb-2">Interior Images (up to 3)</label>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              <ImageIcon className="w-4 h-4 mr-2 text-amber-600" />
+              Interior Images (up to 3)
+            </label>
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-[#e8e2d9] rounded-lg cursor-pointer hover:border-[#8b5d3b] transition-all bg-[#faf7f2]">
+              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-amber-500 transition-all bg-white">
                 <div className="flex flex-col items-center justify-center">
-                  <svg className="w-8 h-8 text-[#8b5d3b] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  <span className="text-sm text-[#8b5d3b]">Upload interior images</span>
+                  <Upload className="w-8 h-8 text-gray-500 mb-2" />
+                  <span className="text-sm text-gray-500">Upload interior images</span>
                 </div>
                 <input
                   type="file"
@@ -324,7 +358,11 @@ const AddBranch = () => {
               <div className="mt-4 grid grid-cols-3 gap-4">
                 {interiorImagesPreview.map((preview, index) => (
                   <div key={index} className="relative">
-                    <img src={preview} alt={`Interior ${index + 1}`} className="h-24 w-full object-cover rounded-lg shadow-md" />
+                    <img
+                      src={preview || "/placeholder.svg"}
+                      alt={`Interior ${index + 1}`}
+                      className="h-24 w-full object-cover rounded-lg shadow-md"
+                    />
                     <button
                       type="button"
                       onClick={() => removeInteriorImage(index)}
@@ -348,30 +386,48 @@ const AddBranch = () => {
 
           {/* Submit Button with Loading State */}
           <div>
-            <button
+            <motion.button
               type="submit"
-              disabled={loading} // Disable button during loading
-              className={`w-full bg-gradient-to-r from-[#8b5d3b] to-[#2c2420] text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3b] transition-all shadow-md ${
-                loading ? "opacity-50 cursor-not-allowed" : "hover:from-[#2c2420] hover:to-[#8b5d3b]"
+              disabled={loading}
+              className={`w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-md ${
+                loading ? "opacity-50 cursor-not-allowed" : "hover:from-amber-700 hover:to-amber-800"
               }`}
+              whileHover={!loading ? { scale: 1.02 } : {}}
+              whileTap={!loading ? { scale: 0.98 } : {}}
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"></path>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Adding Branch...
                 </span>
               ) : (
                 "Add Branch"
               )}
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
-  );
-};
+  )
+}
 
-export default AddBranch;
+export default AddBranch

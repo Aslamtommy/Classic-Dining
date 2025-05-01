@@ -1,15 +1,14 @@
 "use client"
 
-import React from "react"
 import { useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import { ChevronDown, User, Wallet, Calendar, MapPin, Menu, X } from "lucide-react"
 import type { RootState } from "../../../redux/store"
 import { logoutUser } from "../../../redux/userslice"
 import { setLocation, clearLocation } from "../../../redux/locationSlice"
 import api from "../../../Axios/userInstance"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, User, Wallet, Calendar, MapPin, Menu, X } from "lucide-react"
 import axios from "axios"
 import toast from "react-hot-toast"
 import SignupModal from "../SignupForm"
@@ -28,7 +27,7 @@ interface GeocodeResponse {
   }>
 }
 
-const Header: React.FC = () => {
+const Header = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const user = useSelector((state: RootState) => state.user.user)
@@ -66,7 +65,7 @@ const Header: React.FC = () => {
   const toggleLocationDropdown = () => setIsLocationDropdownOpen(!isLocationDropdownOpen)
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
 
-  const getLocationName = async (lat: number, lng: number): Promise<string | null> => {
+  const getLocationName = async (lat: number, lng: number): Promise<string | undefined> => {
     try {
       const response = await axios.get<GeocodeResponse>(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`,
@@ -85,10 +84,10 @@ const Header: React.FC = () => {
         }
         return placeName
       }
-      return null
+      return undefined // Changed from null to undefined
     } catch (error) {
       toast.error("Error fetching location name")
-      return null
+      return undefined // Changed from null to undefined
     }
   }
 
@@ -97,7 +96,7 @@ const Header: React.FC = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords
-          const locationName:any = await getLocationName(latitude, longitude)
+          const locationName = await getLocationName(latitude, longitude)
           dispatch(setLocation({ lat: latitude, lng: longitude, locationName }))
           setIsLocationDropdownOpen(false)
           toast.success(`Location set to ${locationName || "your current position"}.`)
@@ -169,7 +168,9 @@ const Header: React.FC = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-sm shadow-md" : "bg-white shadow-sm"}`}
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled ? "bg-white shadow-md" : "bg-white shadow-sm"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex justify-between items-center h-16 md:h-20">
@@ -182,7 +183,7 @@ const Header: React.FC = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-sepia-700 to-sepia-900 rounded-full flex items-center justify-center shadow-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 text-sepia-100"
+                className="w-6 h-6 text-white"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -240,7 +241,7 @@ const Header: React.FC = () => {
               <AnimatePresence>
                 {isLocationDropdownOpen && (
                   <motion.div
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-premium border border-sepia-200 z-50 overflow-hidden"
+                    className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden"
                     variants={dropdownVariants}
                     initial="hidden"
                     animate="visible"
@@ -249,14 +250,14 @@ const Header: React.FC = () => {
                     <div className="p-4">
                       <button
                         onClick={handleUseCurrentLocation}
-                        className="w-full bg-gradient-to-r from-sepia-700 to-sepia-900 text-white p-2 rounded-md hover:from-sepia-800 hover:to-sepia-950 transition-all duration-300 flex items-center justify-center"
+                        className="w-full bg-gradient-to-r from-gold-600 to-gold-700 text-white p-2 rounded-md hover:from-gold-700 hover:to-gold-800 transition-all duration-300 flex items-center justify-center"
                       >
                         <MapPin className="w-4 h-4 mr-2" /> Set My Location
                       </button>
                       {hasValidLocation && (
                         <button
                           onClick={() => dispatch(clearLocation())}
-                          className="mt-2 w-full bg-sepia-100 text-sepia-900 p-2 rounded-md hover:bg-sepia-200 transition-colors border border-sepia-300"
+                          className="mt-2 w-full bg-white text-gray-700 p-2 rounded-md hover:bg-gray-50 transition-colors border border-gray-300"
                         >
                           Clear Location
                         </button>
@@ -267,11 +268,20 @@ const Header: React.FC = () => {
               </AnimatePresence>
             </div>
 
+            <button
+              onClick={() => navigate("/join-us")}
+              className="text-sm bg-gradient-to-r from-gold-600 to-gold-700 text-white py-2 px-4 rounded-md hover:from-gold-700 hover:to-gold-800 transition-all duration-300 shadow-md"
+            >
+              Join Us
+            </button>
+          </div>
+
+          <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={toggleDropdown}
-                  className="flex items-center space-x-2 text-sm text-sepia-900 hover:text-sepia-700 transition-colors focus:outline-none font-medium"
+                  className="flex items-center space-x-2 text-sm text-gray-800 hover:text-gray-600 transition-colors focus:outline-none font-medium"
                 >
                   <span>Hello, {user.name}</span>
                   <ChevronDown
@@ -281,7 +291,7 @@ const Header: React.FC = () => {
                 <AnimatePresence>
                   {isDropdownOpen && (
                     <motion.div
-                      className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-premium border border-sepia-200 overflow-hidden"
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
                       variants={dropdownVariants}
                       initial="hidden"
                       animate="visible"
@@ -293,9 +303,9 @@ const Header: React.FC = () => {
                             navigate("/profile")
                             setIsDropdownOpen(false)
                           }}
-                          className="w-full text-left flex items-center px-4 py-3 text-sm text-sepia-900 hover:bg-sepia-50 hover:text-sepia-700 transition-colors"
+                          className="w-full text-left flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
-                          <User className="w-4 h-4 mr-3 text-bronze-700" />
+                          <User className="w-4 h-4 mr-3 text-gold-600" />
                           Profile
                         </button>
                         <button
@@ -303,9 +313,9 @@ const Header: React.FC = () => {
                             navigate("/wallet")
                             setIsDropdownOpen(false)
                           }}
-                          className="w-full text-left flex items-center px-4 py-3 text-sm text-sepia-900 hover:bg-sepia-50 hover:text-sepia-700 transition-colors"
+                          className="w-full text-left flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
-                          <Wallet className="w-4 h-4 mr-3 text-bronze-700" />
+                          <Wallet className="w-4 h-4 mr-3 text-gold-600" />
                           Wallet
                         </button>
                         <button
@@ -313,12 +323,12 @@ const Header: React.FC = () => {
                             navigate("/bookings")
                             setIsDropdownOpen(false)
                           }}
-                          className="w-full text-left flex items-center px-4 py-3 text-sm text-sepia-900 hover:bg-sepia-50 hover:text-sepia-700 transition-colors"
+                          className="w-full text-left flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
-                          <Calendar className="w-4 h-4 mr-3 text-bronze-700" />
+                          <Calendar className="w-4 h-4 mr-3 text-gold-600" />
                           Bookings
                         </button>
-                        <div className="border-t border-sepia-200 my-1"></div>
+                        <div className="border-t border-gray-200 my-1"></div>
                         <button
                           onClick={() => {
                             handleLogout()
@@ -353,7 +363,7 @@ const Header: React.FC = () => {
                 </motion.button>
                 <motion.button
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="text-sm bg-white text-sepia-900 py-2 px-6 rounded-md border border-sepia-300 hover:bg-sepia-50 transition-colors shadow-sm"
+                  className="text-sm bg-white text-gray-800 py-2 px-6 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -363,10 +373,16 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center space-x-4">
+            <button
+              onClick={() => navigate("/join-us")}
+              className="text-sm bg-gradient-to-r from-gold-600 to-gold-700 text-white py-2 px-4 rounded-md hover:from-gold-700 hover:to-gold-800 transition-all duration-300 shadow-md"
+            >
+              Join Us
+            </button>
             <button
               onClick={toggleMobileMenu}
-              className="text-sepia-900 p-2 rounded-md hover:bg-sepia-50 transition-colors"
+              className="text-gray-800 p-2 rounded-md hover:bg-gray-100 transition-colors"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -388,18 +404,18 @@ const Header: React.FC = () => {
               <div className="space-y-4">
                 {isAuthenticated && (
                   <motion.div
-                    className="bg-sepia-50 p-4 rounded-lg mb-6 border border-sepia-200"
+                    className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200"
                     variants={menuItemVariants}
                   >
                     <div className="flex items-center space-x-3">
                       <img
                         src={user?.profilePicture || "/default-profile.jpg"}
                         alt="Profile"
-                        className="w-12 h-12 rounded-full border-2 border-sepia-300 object-cover"
+                        className="w-12 h-12 rounded-full border-2 border-gray-300 object-cover"
                       />
                       <div>
-                        <h3 className="font-playfair font-medium text-sepia-900">{user.name}</h3>
-                        <p className="text-sm text-bronze-700">{user.email}</p>
+                        <h3 className="font-medium text-gray-900">{user.name}</h3>
+                        <p className="text-sm text-gray-600">{user.email}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -410,7 +426,7 @@ const Header: React.FC = () => {
                     navigate("/")
                     setIsMobileMenuOpen(false)
                   }}
-                  className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors"
+                  className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors"
                   variants={menuItemVariants}
                 >
                   Home
@@ -421,7 +437,7 @@ const Header: React.FC = () => {
                     navigate("/menu")
                     setIsMobileMenuOpen(false)
                   }}
-                  className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors"
+                  className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors"
                   variants={menuItemVariants}
                 >
                   Menu
@@ -432,7 +448,7 @@ const Header: React.FC = () => {
                     navigate("/restaurentList")
                     setIsMobileMenuOpen(false)
                   }}
-                  className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors"
+                  className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors"
                   variants={menuItemVariants}
                 >
                   Restaurants
@@ -443,13 +459,13 @@ const Header: React.FC = () => {
                     handleNearMeClick()
                     setIsMobileMenuOpen(false)
                   }}
-                  className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors flex items-center"
+                  className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors flex items-center"
                   variants={menuItemVariants}
                 >
                   <MapPin className="w-5 h-5 mr-2" /> Near Me
                 </motion.button>
 
-                <motion.div className="border-t border-sepia-200 my-4" variants={menuItemVariants} />
+                <motion.div className="border-t border-gray-200 my-4" variants={menuItemVariants} />
 
                 {isAuthenticated ? (
                   <>
@@ -458,10 +474,10 @@ const Header: React.FC = () => {
                         navigate("/profile")
                         setIsMobileMenuOpen(false)
                       }}
-                      className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors flex items-center"
+                      className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors flex items-center"
                       variants={menuItemVariants}
                     >
-                      <User className="w-5 h-5 mr-2 text-bronze-700" /> Profile
+                      <User className="w-5 h-5 mr-2 text-gold-600" /> Profile
                     </motion.button>
 
                     <motion.button
@@ -469,10 +485,10 @@ const Header: React.FC = () => {
                         navigate("/wallet")
                         setIsMobileMenuOpen(false)
                       }}
-                      className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors flex items-center"
+                      className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors flex items-center"
                       variants={menuItemVariants}
                     >
-                      <Wallet className="w-5 h-5 mr-2 text-bronze-700" /> Wallet
+                      <Wallet className="w-5 h-5 mr-2 text-gold-600" /> Wallet
                     </motion.button>
 
                     <motion.button
@@ -480,10 +496,10 @@ const Header: React.FC = () => {
                         navigate("/bookings")
                         setIsMobileMenuOpen(false)
                       }}
-                      className="w-full text-left p-4 rounded-lg hover:bg-sepia-50 text-sepia-900 transition-colors flex items-center"
+                      className="w-full text-left p-4 rounded-lg hover:bg-gray-50 text-gray-800 transition-colors flex items-center"
                       variants={menuItemVariants}
                     >
-                      <Calendar className="w-5 h-5 mr-2 text-bronze-700" /> Bookings
+                      <Calendar className="w-5 h-5 mr-2 text-gold-600" /> Bookings
                     </motion.button>
 
                     <motion.button
@@ -523,7 +539,7 @@ const Header: React.FC = () => {
                         setIsSignupModalOpen(true)
                         setIsMobileMenuOpen(false)
                       }}
-                      className="w-full p-4 bg-white border border-sepia-300 text-sepia-900 rounded-lg shadow-sm"
+                      className="w-full p-4 bg-white border border-gray-300 text-gray-800 rounded-lg shadow-sm"
                       variants={menuItemVariants}
                     >
                       Sign Up

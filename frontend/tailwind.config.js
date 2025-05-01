@@ -19,6 +19,11 @@ module.exports = {
     },
     extend: {
       colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -97,14 +102,22 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 2s infinite linear",
       },
       boxShadow: {
         elegant: "0 4px 20px -2px rgba(107, 82, 34, 0.15)",
         premium: "0 10px 30px -5px rgba(107, 82, 34, 0.2)",
+      },
+      fontFamily: {
+        playfair: ["Playfair Display", "serif"],
       },
     },
   },

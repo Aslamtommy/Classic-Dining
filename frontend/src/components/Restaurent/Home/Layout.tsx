@@ -1,15 +1,35 @@
-import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar";  
+"use client"
+import { useState, useEffect } from "react"
+import { Outlet } from "react-router-dom"
+import { motion } from "framer-motion"
+import Sidebar from "./Sidebar"
+import Header from "./Header"
 
 const Layout = () => {
-  return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6 ml-72 bg-[#f8f1ea] overflow-y-auto">
-        <Outlet />
-      </main>
-    </div>
-  );
-};
+  const [isMounted, setIsMounted] = useState(false)
 
-export default Layout;
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) return null
+
+  return (
+    <div className="flex min-h-screen bg-white">
+      <Sidebar />
+      <motion.div
+        className="flex-1 lg:ml-72 flex flex-col"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Header />
+        <main className="flex-1 p-8 overflow-y-auto">
+          <Outlet />
+        </main>
+      </motion.div>
+    </div>
+  )
+}
+
+export default Layout

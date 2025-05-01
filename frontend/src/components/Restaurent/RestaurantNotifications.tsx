@@ -1,142 +1,188 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../redux/store';
-import { tableTypeApi } from '../../Api/restaurentApi';
-import io from 'socket.io-client';
-import toast from 'react-hot-toast';
-import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { BaseUrl } from '../../../Config/BaseUrl';
+"use client"
+
+import type React from "react"
+import { useEffect, useState } from "react"
+import { useSelector } from "react-redux"
+import type { RootState } from "../../redux/store"
+import { tableTypeApi } from "../../Api/restaurentApi"
+import io from "socket.io-client"
+import toast from "react-hot-toast"
+import { format } from "date-fns"
+import { ChevronLeft, ChevronRight, Bell, CheckCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { BaseUrl } from "../../../Config/BaseUrl"
+
 interface Notification {
-  _id: string;
-  message: string;
-   read:string
-  timestamp: string;
+  _id: string
+  message: string
+  read: string
+  timestamp: string
 }
 
 const RestaurantNotifications: React.FC = () => {
-  const { restaurent, role } = useSelector((state: RootState) => state.restaurent);
-  const accessToken = restaurent?.accessToken || '';
-  const [page, setPage] = useState(1);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const limit = 10;
+  const { restaurent, role } = useSelector((state: RootState) => state.restaurent)
+  const accessToken = restaurent?.accessToken || ""
+  const [page, setPage] = useState(1)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const limit = 10
 
   const fetchNotifications = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response :any= await tableTypeApi.getNotifications(page, limit);
-      setNotifications(response.notifications);
-      setTotal(response.total);
+      const response: any = await tableTypeApi.getNotifications(page, limit)
+      setNotifications(response.notifications)
+      setTotal(response.total)
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Failed to load notifications');
+      console.error("Error fetching notifications:", error)
+      toast.error("Failed to load notifications")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchNotifications();
-  }, [page]);
+    fetchNotifications()
+  }, [page])
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken) return
 
     const socket = io(BaseUrl, {
       auth: { token: accessToken },
-    });
+    })
 
-    socket.on('receiveNotification', (notification: any) => {
-      console.log('New restaurant notification:', notification);
-      toast.success('New notification received!');
-      fetchNotifications();
-    });
+    socket.on("receiveNotification", (notification: any) => {
+      console.log("New restaurant notification:", notification)
+      toast.success("New notification received!")
+      fetchNotifications()
+    })
 
-    socket.on('connect_error', (error: any) => {
-      console.error('Socket connection error:', error);
-      toast.error('Failed to connect to notification service');
-    });
+    socket.on("connect_error", (error: any) => {
+      console.error("Socket connection error:", error)
+      toast.error("Failed to connect to notification service")
+    })
 
     return () => {
-      socket.disconnect();
-    };
-  }, [accessToken]);
+      socket.disconnect()
+    }
+  }, [accessToken])
 
- 
-
-  if (role !== 'restaurent') {
+  if (role !== "restaurent") {
     return (
-      <div className="flex items-center justify-center h-screen text-red-500 text-lg font-playfair">
+      <div className="flex items-center justify-center h-screen text-red-500 text-lg font-medium">
         Unauthorized Access
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-playfair">
+    <div className="bg-white rounded-xl shadow-lg p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Restaurant Notifications</h1>
+        <div className="flex items-center mb-8">
+          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+            <Bell className="h-6 w-6 text-amber-700" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-black mb-1">Notifications</h1>
+            <p className="text-gray-600 text-sm">Stay updated with your restaurant activities</p>
+          </div>
+        </div>
 
-        {loading ? (
+        {loading && notifications.length === 0 ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-amber-700"></div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            {notifications.length ? (
-              notifications.map((notification) => (
-                <div
-                  key={notification._id}
-                  className={`p-6 border-b border-gray-200 last:border-b-0 ${
-                    notification.read ? 'bg-gray-50' : 'bg-white'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-gray-800 text-base">{notification.message}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {format(new Date(notification.timestamp), 'PPP p')}
-                      </p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-200">
+            <AnimatePresence>
+              {notifications.length ? (
+                notifications.map((notification, index) => (
+                  <motion.div
+                    key={notification._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className={`p-6 border-b border-gray-200 last:border-b-0 ${
+                      notification.read ? "bg-white" : "bg-amber-50"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex">
+                        <div
+                          className={`mt-1 mr-4 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                            notification.read ? "bg-amber-100" : "bg-amber-200"
+                          }`}
+                        >
+                          <CheckCircle
+                            className={`h-4 w-4 ${notification.read ? "text-amber-600" : "text-amber-700"}`}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-black text-base">{notification.message}</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {format(new Date(notification.timestamp), "PPP p")}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                
+                  </motion.div>
+                ))
+              ) : (
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bell className="h-8 w-8 text-amber-400" />
                   </div>
+                  <p className="text-gray-600">No notifications available</p>
                 </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-gray-500">No notifications available</div>
-            )}
+              )}
+            </AnimatePresence>
           </div>
         )}
 
         {/* Pagination */}
         {total > limit && (
-          <div className="flex justify-between items-center mt-6">
-            <button
+          <div className="flex justify-between items-center mt-8">
+            <motion.button
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               disabled={page === 1}
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:bg-gray-300 hover:bg-indigo-700 transition-colors"
+              className={`flex items-center px-4 py-2 rounded-lg text-white shadow-md transition-all ${
+                page === 1
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900"
+              }`}
+              whileHover={page !== 1 ? { scale: 1.05 } : {}}
+              whileTap={page !== 1 ? { scale: 0.95 } : {}}
             >
               <ChevronLeft className="w-5 h-5 mr-1" />
               Previous
-            </button>
-            <span className="text-gray-700">
+            </motion.button>
+
+            <span className="text-gray-700 font-medium">
               Page {page} of {Math.ceil(total / limit)}
             </span>
-            <button
+
+            <motion.button
               onClick={() => setPage((prev) => prev + 1)}
               disabled={page >= Math.ceil(total / limit)}
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:bg-gray-300 hover:bg-indigo-700 transition-colors"
+              className={`flex items-center px-4 py-2 rounded-lg text-white shadow-md transition-all ${
+                page >= Math.ceil(total / limit)
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900"
+              }`}
+              whileHover={page < Math.ceil(total / limit) ? { scale: 1.05 } : {}}
+              whileTap={page < Math.ceil(total / limit) ? { scale: 0.95 } : {}}
             >
               Next
               <ChevronRight className="w-5 h-5 ml-1" />
-            </button>
+            </motion.button>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default RestaurantNotifications;
+export default RestaurantNotifications
