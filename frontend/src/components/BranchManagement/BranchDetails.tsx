@@ -67,7 +67,7 @@ const BranchDetails = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
   }
@@ -96,7 +96,7 @@ const BranchDetails = () => {
           <p className="text-gray-600 mb-6">{error || "Branch not found"}</p>
           <button
             onClick={() => navigate("/restaurent/branches")}
-            className="px-4 py-2 bg-gold-600 text-white rounded-lg hover:bg-gold-700 transition-colors"
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
           >
             Back to Branches
           </button>
@@ -123,7 +123,7 @@ const BranchDetails = () => {
           <div className="flex flex-wrap gap-4 mb-6">
             <motion.button
               onClick={() => navigate(`/restaurent/branches/edit/${branchId}`)}
-              className="flex items-center gap-2 px-4 py-2 bg-gold-600 text-white rounded-lg hover:bg-gold-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -133,7 +133,7 @@ const BranchDetails = () => {
 
             <motion.button
               onClick={() => navigate(`/restaurent/branches/${branchId}/tables`)}
-              className="flex items-center gap-2 px-4 py-2 bg-gold-600 text-white rounded-lg hover:bg-gold-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -172,7 +172,7 @@ const BranchDetails = () => {
                 <div className="grid grid-cols-4 gap-4">
                   <div
                     className={`relative cursor-pointer rounded-lg overflow-hidden h-20 ${
-                      activeImage === branch.mainImage ? "ring-2 ring-gold-500" : ""
+                      activeImage === branch.mainImage ? "ring-2 ring-amber-500" : ""
                     }`}
                     onClick={() => setActiveImage(branch.mainImage)}
                   >
@@ -187,7 +187,7 @@ const BranchDetails = () => {
                     <div
                       key={index}
                       className={`relative cursor-pointer rounded-lg overflow-hidden h-20 ${
-                        activeImage === img ? "ring-2 ring-gold-500" : ""
+                        activeImage === img ? "ring-2 ring-amber-500" : ""
                       }`}
                       onClick={() => setActiveImage(img)}
                     >
@@ -209,7 +209,7 @@ const BranchDetails = () => {
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Branch Information</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <Mail className="w-5 h-5 text-gold-600 mt-0.5" />
+                      <Mail className="w-5 h-5 text-amber-600 mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-500">Email</p>
                         <p className="text-gray-900">{branch.email}</p>
@@ -217,7 +217,7 @@ const BranchDetails = () => {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Phone className="w-5 h-5 text-gold-600 mt-0.5" />
+                      <Phone className="w-5 h-5 text-amber-600 mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-500">Phone</p>
                         <p className="text-gray-900">{branch.phone}</p>
@@ -225,7 +225,7 @@ const BranchDetails = () => {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <MapPin className="w-5 h-5 text-gold-600 mt-0.5" />
+                      <MapPin className="w-5 h-5 text-amber-600 mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-500">Address</p>
                         <p className="text-gray-900">{branch.address}</p>
@@ -233,7 +233,7 @@ const BranchDetails = () => {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Calendar className="w-5 h-5 text-gold-600 mt-0.5" />
+                      <Calendar className="w-5 h-5 text-amber-600 mt-0.5" />
                       <div>
                         <p className="text-sm text-gray-500">Created</p>
                         <p className="text-gray-900">{new Date(branch.createdAt).toLocaleDateString()}</p>
