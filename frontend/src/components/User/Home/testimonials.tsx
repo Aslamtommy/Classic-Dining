@@ -1,161 +1,101 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react"
+import type React from "react"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
-const TestimonialsSection = () => {
-  const [activeIndex, setActiveIndex] = useState(0)
-
+const Testimonials: React.FC = () => {
   const testimonials = [
     {
-      id: 1,
-      name: "Priya Sharma",
-      role: "Food Enthusiast",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80",
       quote:
-        "Classic Dining offers an unparalleled experience that combines traditional flavors with modern elegance. Every visit feels like a special occasion.",
-      rating: 5,
+        "The dining experience at Classic Dining was nothing short of extraordinary. The ambiance, service, and cuisine were all impeccable.",
+      author: "Priya Sharma",
+      title: "Food Critic",
+      image:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
     },
     {
-      id: 2,
-      name: "Rajiv Mehta",
-      role: "Business Executive",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80",
       quote:
-        "The attention to detail in both the cuisine and service is remarkable. Perfect for business dinners when you need to impress clients.",
-      rating: 5,
+        "As a regular patron, I can confidently say that Classic Dining maintains its high standards consistently. Their attention to detail is remarkable.",
+      author: "Rajiv Mehta",
+      title: "Business Executive",
+      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
     },
     {
-      id: 3,
-      name: "Ananya Patel",
-      role: "Food Blogger",
-      image:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80",
       quote:
-        "As someone who dines out professionally, I can confidently say that Classic Dining stands out for its authentic flavors and impeccable presentation.",
-      rating: 4.5,
+        "The fusion of traditional flavors with modern culinary techniques creates a unique dining experience that keeps me coming back.",
+      author: "Ananya Patel",
+      title: "Celebrity Chef",
+      image:
+        "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80",
     },
   ]
 
-  const nextTestimonial = () => {
-    setActiveIndex((prevIndex) => (prevIndex + 1) % testimonials.length)
-  }
+  const [current, setCurrent] = useState(0)
 
-  const prevTestimonial = () => {
-    setActiveIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % testimonials.length)
+    }, 6000)
+    return () => clearInterval(interval)
+  }, [testimonials.length])
+
+  const variants = {
+    enter: { opacity: 0, y: 20 },
+    center: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
   }
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white to-sepia-50">
-      <div className="max-w-6xl mx-auto px-6">
+    <section className="py-20 bg-sepia-900 text-white">
+      <div className="max-w-5xl mx-auto px-6">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center mb-16"
+          transition={{ duration: 0.8 }}
         >
-          <h2 className="font-playfair text-4xl md:text-5xl text-sepia-900 font-bold mb-4 relative inline-block">
-            Guest Experiences
-            <motion.div
-              className="absolute -bottom-3 left-1/2 h-1 bg-gold-500 rounded-full"
-              initial={{ width: 0, x: "-50%" }}
-              whileInView={{ width: "60%", x: "-50%" }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            />
-          </h2>
-          <p className="text-sepia-800 text-lg max-w-2xl mx-auto mt-6">
-            Hear what our valued guests have to say about their dining experiences with us.
-          </p>
+          <h2 className="font-playfair text-4xl md:text-5xl text-gold-300 font-bold mb-4">What Our Guests Say</h2>
+          <div className="h-1 w-24 bg-gold-500 mx-auto mb-6"></div>
         </motion.div>
 
-        <div className="relative">
-          <div className="overflow-hidden">
+        <div className="relative h-[300px] md:h-[250px]">
+          <AnimatePresence mode="wait">
             <motion.div
-              className="flex"
-              initial={{ opacity: 0 }}
-              animate={{
-                opacity: 1,
-                x: `-${activeIndex * 100}%`,
-              }}
-              transition={{ duration: 0.5 }}
+              key={current}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="absolute inset-0"
             >
-              {testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="min-w-full px-4">
-                  <div className="bg-white rounded-xl shadow-elegant p-8 md:p-10 border border-sepia-100 relative">
-                    <Quote className="absolute top-6 left-6 w-12 h-12 text-sepia-100 opacity-50" />
-
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 relative z-10">
-                      <div className="flex-shrink-0">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-sepia-100 shadow-md">
-                          <img
-                            src={testimonial.image || "/placeholder.svg"}
-                            alt={testimonial.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 text-center md:text-left">
-                        <div className="flex justify-center md:justify-start mb-3">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-5 h-5 ${
-                                i < Math.floor(testimonial.rating)
-                                  ? "text-amber-500 fill-amber-500"
-                                  : i < testimonial.rating
-                                    ? "text-amber-500 fill-amber-500 opacity-70"
-                                    : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-
-                        <blockquote className="text-xl md:text-2xl font-playfair text-sepia-900 italic mb-6">
-                          "{testimonial.quote}"
-                        </blockquote>
-
-                        <div>
-                          <h4 className="text-lg font-semibold text-sepia-900">{testimonial.name}</h4>
-                          <p className="text-sepia-600">{testimonial.role}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-6">
+                  <img
+                    src={testimonials[current].image || "/placeholder.svg"}
+                    alt={testimonials[current].author}
+                    className="w-20 h-20 rounded-full border-4 border-gold-400 object-cover"
+                  />
                 </div>
-              ))}
+                <p className="text-xl md:text-2xl italic text-white/90 mb-6 max-w-3xl">
+                  "{testimonials[current].quote}"
+                </p>
+                <h4 className="font-playfair text-xl font-semibold text-gold-300">{testimonials[current].author}</h4>
+                <p className="text-white/70">{testimonials[current].title}</p>
+              </div>
             </motion.div>
-          </div>
-
-          <button
-            onClick={prevTestimonial}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 md:-translate-x-0 bg-white w-10 h-10 rounded-full shadow-md flex items-center justify-center text-sepia-900 hover:bg-sepia-50 transition-colors z-10"
-            aria-label="Previous testimonial"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={nextTestimonial}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 md:translate-x-0 bg-white w-10 h-10 rounded-full shadow-md flex items-center justify-center text-sepia-900 hover:bg-sepia-50 transition-colors z-10"
-            aria-label="Next testimonial"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          </AnimatePresence>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-8 space-x-2">
           {testimonials.map((_, index) => (
             <button
               key={index}
-              onClick={() => setActiveIndex(index)}
-              className={`w-3 h-3 rounded-full mx-1 transition-colors ${
-                index === activeIndex ? "bg-gold-500" : "bg-sepia-200"
+              onClick={() => setCurrent(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === current ? "bg-gold-400 scale-125" : "bg-white/30"
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
             />
@@ -166,4 +106,4 @@ const TestimonialsSection = () => {
   )
 }
 
-export default TestimonialsSection
+export default Testimonials
