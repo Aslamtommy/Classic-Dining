@@ -17,7 +17,7 @@ const UserHomePage: React.FC = () => {
        
         <Divider />
         <Gallery />
-        <Divider />
+      
         <FeaturedSection />
         <Divider />
         <Testimonials />

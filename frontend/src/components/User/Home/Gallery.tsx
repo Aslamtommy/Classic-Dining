@@ -91,16 +91,16 @@ export const Gallery: React.FC = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-center mb-20"
         >
-          <h2 className="font-playfair text-5xl md:text-6xl text-sepia-900 font-bold mb-4 relative inline-block">
+          <h2 className="font-playfair text-5xl md:text-6xl text-black font-bold mb-4 relative inline-block">
             Discover Our Restaurants
             <motion.div
-              className="absolute -bottom-3 left-1/2 h-1 bg-sepia-600"
+              className="absolute -bottom-3 left-1/2 h-1 bg-gold-600"
               initial={{ width: 0, x: "-50%" }}
               animate={{ width: "80%", x: "-50%" }}
               transition={{ delay: 0.5, duration: 0.8 }}
             />
           </h2>
-          <p className="text-sepia-800 text-lg max-w-2xl mx-auto mt-6">
+          <p className="text-black text-lg max-w-2xl mx-auto mt-6">
             Experience the finest dining atmospheres with our carefully curated selection of premium restaurants.
           </p>
         </motion.div>
@@ -127,7 +127,7 @@ export const Gallery: React.FC = () => {
             animate={{ opacity: 1 }}
             className="bg-sepia-50 border border-sepia-200 p-6 rounded-lg shadow-md"
           >
-            <p className="text-center text-sepia-700 font-medium">No restaurants available at the moment.</p>
+            <p className="text-center text-black font-medium">No restaurants available at the moment.</p>
           </motion.div>
         ) : (
           <motion.div
@@ -176,12 +176,12 @@ export const Gallery: React.FC = () => {
 
                 <div className="bg-white p-6 rounded-b-xl shadow-elegant transform -translate-y-8 group-hover:-translate-y-4 transition-transform duration-500 ease-out">
                   <h3
-                    className="text-2xl font-playfair font-semibold text-sepia-900 mb-3 group-hover:text-sepia-700 transition-colors duration-300 cursor-pointer"
+                    className="text-2xl font-playfair font-semibold text-black mb-3 group-hover:text-gold-700 transition-colors duration-300 cursor-pointer"
                     onClick={(e) => handleNameClick(branch._id, e)}
                   >
                     {branch.parentRestaurant?.name} - {branch.name}
                   </h3>
-                  <div className="space-y-2 text-sepia-800">
+                  <div className="space-y-2 text-black">
                     <p className="flex items-center">
                       <svg
                         className="w-4 h-4 mr-2"
