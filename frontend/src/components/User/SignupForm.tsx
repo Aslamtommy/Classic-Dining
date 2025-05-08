@@ -56,6 +56,7 @@ const SignupModal = ({ show, onClose, onLoginClick }: SignupModalProps) => {
   const navigate = useNavigate()
   const [message, setMessage] = useState("")
   const [showOtpModal, setShowOtpModal] = useState(false)
+  const [isSendingOtp, setIsSendingOtp] = useState(false)
 
   const {
     control,
@@ -68,12 +69,21 @@ const SignupModal = ({ show, onClose, onLoginClick }: SignupModalProps) => {
 
   const onSubmit = async (data: any) => {
     setMessage("")
-    const { success, message: otpMessage } = await sendOtp(data.email, dispatch)
-    setMessage(otpMessage)
-    toast.success(otpMessage)
+    setIsSendingOtp(true) // Set loading to true before sending OTP
 
-    if (success) {
-      setShowOtpModal(true)
+    try {
+      const { success, message: otpMessage } = await sendOtp(data.email, dispatch)
+      setMessage(otpMessage)
+      toast.success(otpMessage)
+
+      if (success) {
+        setShowOtpModal(true)
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error)
+      toast.error("Failed to send OTP. Please try again.")
+    } finally {
+      setIsSendingOtp(false) // Set loading to false after OTP is sent
     }
   }
 
@@ -301,9 +311,17 @@ const SignupModal = ({ show, onClose, onLoginClick }: SignupModalProps) => {
               duration: 0.5,
               backgroundColor: { duration: 0.2 },
             }}
-            className="w-full py-3 px-4 bg-sepia-700 text-white rounded-lg font-playfair font-medium hover:bg-sepia-800 transition-colors shadow-elegant mt-4"
+            disabled={isSendingOtp}
+            className="w-full py-3 px-4 bg-sepia-700 text-white rounded-lg font-playfair font-medium hover:bg-sepia-800 transition-colors shadow-elegant mt-4 disabled:opacity-70"
           >
-            Send OTP
+            {isSendingOtp ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Sending OTP...
+              </div>
+            ) : (
+              "Send OTP"
+            )}
           </motion.button>
         </form>
 
@@ -371,6 +389,7 @@ const SignupModal = ({ show, onClose, onLoginClick }: SignupModalProps) => {
           onClose={() => setShowOtpModal(false)}
           onSuccess={handleOtpSuccess}
           show={showOtpModal}
+          initialSending={isSendingOtp}
         />
       )}
     </ModalWrapper>
