@@ -62,7 +62,7 @@ const ReservationSchema: Schema = new Schema({
   user: {
     name: { type: String, required: true },
     email: { type: String, required: true },
-    phone: { type: String, required: true }
+    phone: { type: String  }
   },
   branch: { type: Schema.Types.ObjectId, ref: 'Branch', required: true },
   tableType: { type: Schema.Types.ObjectId, ref: 'TableType', required: true },
