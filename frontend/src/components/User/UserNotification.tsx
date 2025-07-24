@@ -134,7 +134,7 @@ const UserNotifications: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sepia-50 to-white pt-8 pb-16 pl-0 lg:pl-[280px] transition-all duration-300">
+    <div className="min-h-screen bg-gradient-to-b from-sepia-50 to-white pt-8 pb-16 pl-0   transition-all duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
