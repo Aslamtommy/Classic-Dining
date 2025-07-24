@@ -8,7 +8,7 @@ import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { LoadScript } from '@react-google-maps/api';
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const rootElement = document.getElementById('root') as HTMLElement;
 const root = createRoot(rootElement);

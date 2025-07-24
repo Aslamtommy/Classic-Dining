@@ -14,7 +14,7 @@ import toast from "react-hot-toast"
 import SignupModal from "../SignupForm"
 import LoginModal from "../LoginForm"
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU"
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 interface GeocodeResponse {
   status: string

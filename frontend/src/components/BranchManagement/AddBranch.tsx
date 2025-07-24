@@ -13,7 +13,7 @@ import axios from "axios"
 import { motion } from "framer-motion"
 import { MapPin, Mail, Phone, Lock, Store, ImageIcon, Upload } from "lucide-react"
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCmtwdLj4ezHr_PmZunPte9-bb14e4OUNU"
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 const AddBranch = () => {
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)

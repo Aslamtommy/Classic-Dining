@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 import { logoutUser } from '../redux/userslice';
-import toast  from  'react-hot-toast';import { BaseUrl } from '../../Config/BaseUrl';
+import toast  from  'react-hot-toast';
+import { BaseUrl } from '../../Config/BaseUrl';
 ;
 
 interface TokenResponse {
