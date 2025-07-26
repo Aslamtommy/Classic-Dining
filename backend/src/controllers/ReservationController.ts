@@ -6,7 +6,9 @@ import Razorpay from 'razorpay';
 import { HttpStatus } from '../constants/HttpStatus';
 import { AppError } from '../utils/AppError';
 import { MessageConstants } from '../constants/MessageConstants';
+import { INotificationService } from '../services/NotificationService';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 const razorpay = new Razorpay({
@@ -15,8 +17,7 @@ const razorpay = new Razorpay({
 });
 
 export class ReservationController {
-  constructor(private _reservationService: IReservationService) {
-    // Validate Razorpay credentials on initialization
+  constructor(private _reservationService: IReservationService, private _notificationService: INotificationService) {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       console.error('Razorpay credentials missing: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not set in .env');
       throw new Error('Razorpay configuration error: Missing credentials');
@@ -67,6 +68,20 @@ export class ReservationController {
       console.log('Cancelling reservation with ID:', id);
       const reservation = await this._reservationService.cancelReservation(id);
       if (!reservation) throw new AppError(HttpStatus.NotFound, MessageConstants.RESERVATION_NOT_FOUND);
+      
+      await this._notificationService.sendNotification(
+        'system',
+        `Reservation #${id} has been cancelled.`,
+        'user',
+        reservation.userId.toString()
+      );
+      await this._notificationService.sendNotification(
+        'system',
+        `Reservation #${id} has been cancelled.`,
+        'branch',
+        reservation.branch.toString()
+      );
+
       console.log(`Reservation ${id} cancelled${reservation.status === 'confirmed' ? ', amount credited to wallet' : ''}`);
       sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_CANCELLED, reservation);
     } catch (error: unknown) {
@@ -85,7 +100,21 @@ export class ReservationController {
       const id = req.params.id;
       if (!id || !paymentId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       console.log('Confirming reservation with ID:', id, 'Payment ID:', paymentId, 'WhatsApp Opt-in:', whatsappOptIn);
-      const reservation = await this._reservationService.confirmReservation(id, paymentId );
+      const reservation = await this._reservationService.confirmReservation(id, paymentId);
+
+      await this._notificationService.sendNotification(
+        'system',
+        `Reservation #${id} has been confirmed successfully.`,
+        'user',
+        reservation.userId.toString()
+      );
+      await this._notificationService.sendNotification(
+        'system',
+        `New reservation #${id} confirmed.`,
+        'branch',
+        reservation.branch.toString()
+      );
+
       sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_CONFIRMED, reservation);
     } catch (error: unknown) {
       console.error('Reservation confirmation error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);
@@ -145,7 +174,7 @@ export class ReservationController {
       if (!amount || !currency) {
         throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       }
-      if (amount < 100) { // Razorpay minimum amount is 1 INR (100 paise)
+      if (amount < 100) {
         throw new AppError(HttpStatus.BadRequest, 'Amount must be at least 100 paise (1 INR)');
       }
       if (currency !== 'INR') {
@@ -212,6 +241,20 @@ export class ReservationController {
       if (!userId) throw new AppError(HttpStatus.Unauthorized, MessageConstants.UNAUTHORIZED);
       if (!reservationId) throw new AppError(HttpStatus.BadRequest, MessageConstants.REQUIRED_FIELDS_MISSING);
       const reservation = await this._reservationService.confirmWithWallet(reservationId, userId);
+
+      await this._notificationService.sendNotification(
+        'system',
+        `Reservation #${reservationId} has been confirmed successfully using wallet.`,
+        'user',
+        userId
+      );
+      await this._notificationService.sendNotification(
+        'system',
+        `New reservation #${reservationId} confirmed using wallet.`,
+        'branch',
+        reservation.branch.toString()
+      );
+
       sendResponse(res, HttpStatus.OK, MessageConstants.RESERVATION_CONFIRMED_WITH_WALLET, reservation);
     } catch (error: unknown) {
       console.error('Wallet payment error:', error instanceof Error ? error.message : 'Unknown error', error instanceof Error ? error.stack : undefined);

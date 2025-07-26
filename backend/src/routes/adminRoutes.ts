@@ -13,8 +13,9 @@ import { CouponController } from "../controllers/CouponController";
 import { CouponRepository } from "../repositories/CouponRepository";
 import { AdminDashboardRepository } from "../repositories/AdminDashboardRepository"; // New import
 import { ChatController } from "../controllers/chatController";
-
-
+import { NotificationController } from "../controllers/NotificationController"; // Added import
+import { NotificationService } from "../services/NotificationService";
+import { NotificationRepository } from "../repositories/NotificationRepository";
 const adminRoute: Router = express.Router();
 
 // Dependency Injection
@@ -27,6 +28,11 @@ const adminController = new AdminController(adminService);
 const adminDashboardRepository = new AdminDashboardRepository();
 const adminDashboardService = new AdminDashboardService(adminDashboardRepository);
 const adminDashboardController = new AdminDashboardController(adminDashboardService);
+const notificationRepository = new NotificationRepository();
+
+const notificationService = new NotificationService(notificationRepository);
+
+const notificationController = new NotificationController(notificationService);
 
 const couponRepository = new CouponRepository();
 const couponService = new CouponService(couponRepository);
@@ -55,7 +61,11 @@ adminRoute.delete("/coupons/:id", authenticateToken("admin"), (req, res) => coup
 
 
 // Notification Route
+
+// Notification Routes
 adminRoute.post('/notifications', authenticateToken('admin'), (req, res) => adminDashboardController.sendNotification(req, res));
-// New Chat Route
+adminRoute.get('/notifications', authenticateToken('admin'), (req, res) => notificationController.getNotifications(req, res));
+adminRoute.get('/notifications/unread-count', authenticateToken('admin'), (req, res) => notificationController.getUnreadNotificationCount(req, res));
+adminRoute.patch('/notifications/:notificationId/read', authenticateToken('admin'), (req, res) => notificationController.markNotificationAsRead(req, res));// New Chat Route
 adminRoute.get('/chats/restaurants', authenticateToken('admin'), (req, res) => chatController.getRestaurantsForAdmin(req, res));
 export default adminRoute;

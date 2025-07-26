@@ -19,6 +19,10 @@ import { WalletRepository } from '../repositories/WalletRepository'; // Added im
 import { WalletService } from '../services/WalletService';
 import { NotificationService } from '../services/NotificationService';
 import { NotificationRepository } from '../repositories/NotificationRepository';
+import { NotificationController } from '../controllers/NotificationController'; // Added import
+
+
+
 const userRoute: Router = express.Router();
 
 // Instantiate repositories
@@ -44,9 +48,9 @@ const walletService = new WalletService( walletRepository );
 const notificationService = new NotificationService(notificationRepository);
 // Instantiate controllers
 const userController = new Usercontroller(userService, couponService,notificationService);
-const reservationController = new ReservationController(reservationService); // Pass reservationService
+const reservationController = new ReservationController(reservationService,notificationService); // Pass reservationService
 const walletController = new WalletController(walletService);
-
+const notificationController = new NotificationController(notificationService);
 // Register user
 userRoute.post('/register', (req: Request, res: Response) => {
   userController.registerUser(req, res);
@@ -120,7 +124,8 @@ userRoute.get('/coupons', authenticateToken('user'), (req, res) => userControlle
 
 
 // Notification routes
-userRoute.get('/notifications', authenticateToken('user'), (req: Request, res: Response) => userController.getNotifications(req, res));
- 
-
+// Notification routes
+userRoute.get('/notifications', authenticateToken('user'), (req: Request, res: Response) => notificationController.getNotifications(req, res));
+userRoute.get('/notifications/unread-count', authenticateToken('user'), (req: Request, res: Response) => notificationController.getUnreadNotificationCount(req, res));
+userRoute.patch('/notifications/:notificationId/read', authenticateToken('user'), (req: Request, res: Response) => notificationController.markNotificationAsRead(req, res));
 export default userRoute;

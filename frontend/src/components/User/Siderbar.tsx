@@ -1,58 +1,112 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { useSelector, useDispatch } from "react-redux"
-import { RootState } from "../../redux/store"
-import { logoutUser } from "../../redux/userslice"
-import { motion } from "framer-motion"
-import { User, Calendar, Wallet, LogOut, Utensils, Bell, ChevronRight, Home, Search, Menu, X } from "lucide-react"
-import toast from "react-hot-toast"
+import React from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../../redux/store";
+import { logoutUser } from "../../redux/userslice";
+import { motion } from "framer-motion";
+import { User, Calendar, Wallet, LogOut, Utensils, Bell, ChevronRight, Home, Search, Menu, X } from "lucide-react";
+import toast from "react-hot-toast";
+import { BaseUrl } from "../../../Config/BaseUrl";
+import axios from "axios";
+import io from "socket.io-client";
 
 interface SidebarProps {
-  isCollapsed: boolean
-  toggleSidebar: () => void
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
-  const profile = useSelector((state: RootState) => state.user.user)
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [isMobile, setIsMobile] = useState(false)
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const profile = useSelector((state: RootState) => state.user.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response: any = await axios.get(`${BaseUrl}/users/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${profile?.accessToken}` },
+      });
+      setUnreadCount(response.data.data.count || 0);
+    } catch (error) {
+      console.error("Error fetching unread notification count:", error);
+      toast.error("Failed to fetch notification count");
+    }
+  };
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 1024)
+      setIsMobile(window.innerWidth < 1024);
       if (window.innerWidth < 1024) {
-        setIsMobileOpen(false) // Close mobile menu on resize to mobile
+        setIsMobileOpen(false);
       }
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  useEffect(() => {
+    if (profile?.accessToken) {
+      fetchUnreadCount();
+
+      const socket = io(BaseUrl, {
+        auth: { token: profile.accessToken },
+      });
+
+      socket.on("receiveNotification", (notification: any) => {
+        console.log("Sidebar received notification:", notification);
+        fetchUnreadCount();
+      });
+
+      socket.on("notificationMarkedAsRead", (data: { notificationId: string }) => {
+        console.log("Sidebar received notificationMarkedAsRead:", data);
+        fetchUnreadCount();
+      });
+
+      socket.on("connect_error", (error: any) => {
+        console.error("Sidebar socket connection error:", error);
+        toast.error("Failed to connect to notification service");
+      });
+
+      return () => {
+        socket.disconnect();
+      };
     }
 
-    checkScreenSize()
-    window.addEventListener("resize", checkScreenSize)
-    return () => window.removeEventListener("resize", checkScreenSize)
-  }, [])
+    const handleUnreadCountUpdate = (event: CustomEvent) => {
+      setUnreadCount(event.detail || 0);
+    };
+
+    window.addEventListener('updateUnreadCount', handleUnreadCountUpdate as EventListener);
+    return () => {
+      window.removeEventListener('updateUnreadCount', handleUnreadCountUpdate as EventListener);
+    };
+  }, [profile?.accessToken]);
+
 
   const handleNavigation = (path: string) => {
     if (path === "/logout") {
       try {
-        dispatch(logoutUser())
-        toast.success("Logged out successfully")
-        navigate("/")
+        dispatch(logoutUser());
+        toast.success("Logged out successfully");
+        navigate("/");
       } catch (error) {
-        toast.error("Failed to log out")
+        toast.error("Failed to log out");
       }
     } else {
-      navigate(path)
+      navigate(path);
     }
     if (isMobile) {
-      setIsMobileOpen(false)
+      setIsMobileOpen(false);
     }
-  }
+  };
 
-  // Animation variants
   const sidebarVariants = {
     expanded: {
       width: "280px",
@@ -70,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         damping: 30,
       },
     },
-  }
+  };
 
   const itemVariants = {
     expanded: {
@@ -91,12 +145,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         damping: 30,
       },
     },
-  }
+  };
 
   const iconVariants = {
     expanded: { marginRight: "16px" },
     collapsed: { marginRight: "0" },
-  }
+  };
 
   const navItems = [
     { to: "/", icon: <Home className="w-5 h-5" />, text: "Home" },
@@ -105,17 +159,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
     { to: "/wallet", icon: <Wallet className="w-5 h-5" />, text: "Wallet" },
     { to: "/restaurentList", icon: <Utensils className="w-5 h-5" />, text: "Restaurants" },
     { to: "/search", icon: <Search className="w-5 h-5" />, text: "Search" },
-    { to: "/notifications", icon: <Bell className="w-5 h-5" />, text: "Notifications" },
-  ]
+    {
+      to: "/notifications",
+      icon: (
+        <div className="relative">
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </div>
+      ),
+      text: "Notifications",
+    },
+  ];
 
-  // Mobile menu toggle
   const toggleMobileMenu = () => {
-    setIsMobileOpen(!isMobileOpen)
-  }
+    setIsMobileOpen(!isMobileOpen);
+  };
 
   return (
     <>
-      {/* Mobile Menu Button */}
       {isMobile && (
         <button
           onClick={toggleMobileMenu}
@@ -126,7 +191,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         </button>
       )}
 
-      {/* Sidebar for Desktop */}
       <motion.div
         className={`fixed top-0 left-0 h-full bg-white/90 backdrop-blur-md border-r border-sepia-200 shadow-md z-40 overflow-hidden ${
           isMobile ? "hidden" : "flex"
@@ -136,7 +200,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         animate={isCollapsed ? "collapsed" : "expanded"}
       >
         <div className="flex flex-col h-full w-full relative">
-          {/* Toggle Button */}
           <button
             onClick={toggleSidebar}
             className="absolute top-6 right-4 p-1.5 rounded-full bg-sepia-50 hover:bg-sepia-100 transition-colors"
@@ -147,7 +210,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
             />
           </button>
 
-          {/* Logo */}
           <div className="flex items-center h-20 px-6 border-b border-gold-200">
             <div className="w-10 h-10 bg-gradient-to-br from-sepia-700 to-sepia-900 rounded-full flex items-center justify-center shadow-md">
               <svg
@@ -173,7 +235,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
             </motion.span>
           </div>
 
-          {/* Profile Section */}
           <div className="mt-6 px-4">
             <div
               className={`relative rounded-xl overflow-hidden transition-all duration-300 ${
@@ -209,11 +270,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
             </div>
           </div>
 
-          {/* Navigation Links */}
           <nav className="flex-1 mt-6 px-3">
             <div className="space-y-1.5">
               {navItems.map((link, index) => {
-                const isActive = window.location.pathname === link.to
+                const isActive = window.location.pathname === link.to;
                 return (
                   <button
                     key={index}
@@ -251,12 +311,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
                       />
                     )}
                   </button>
-                )
+                );
               })}
             </div>
           </nav>
 
-          {/* Footer */}
           <div className="mt-auto pt-6 px-3 pb-6 border-t border-gold-200">
             <button
               onClick={() => handleNavigation("/logout")}
@@ -294,7 +353,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         </div>
       </motion.div>
 
-      {/* Mobile Sidebar (Slide-in) */}
       <motion.div
         className={`fixed inset-0 bg-black/50 z-40 ${isMobileOpen ? "block" : "hidden"}`}
         initial={{ opacity: 0 }}
@@ -312,7 +370,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <div className="flex flex-col h-full w-full">
-          {/* Logo */}
           <div className="flex items-center justify-between h-20 px-6 border-b border-gold-200">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-gradient-to-br from-sepia-700 to-sepia-900 rounded-full flex items-center justify-center shadow-md">
@@ -339,7 +396,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
             </button>
           </div>
 
-          {/* Profile Section */}
           <div className="mt-6 px-4">
             <div className="relative rounded-xl overflow-hidden p-4">
               <div className="absolute inset-0 bg-gradient-to-r from-sepia-100/80 to-gold-100/80 rounded-xl" />
@@ -364,11 +420,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
             </div>
           </div>
 
-          {/* Navigation Links */}
           <nav className="flex-1 mt-6 px-3">
             <div className="space-y-1.5">
               {navItems.map((link, index) => {
-                const isActive = window.location.pathname === link.to
+                const isActive = window.location.pathname === link.to;
                 return (
                   <button
                     key={index}
@@ -390,12 +445,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
 
                     {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold-300" />}
                   </button>
-                )
+                );
               })}
             </div>
           </nav>
 
-          {/* Footer */}
           <div className="mt-auto pt-6 px-3 pb-6 border-t border-gold-200">
             <button
               onClick={() => handleNavigation("/logout")}
@@ -414,7 +468,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         </div>
       </motion.div>
     </>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;

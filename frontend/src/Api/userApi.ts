@@ -236,8 +236,9 @@ export const fetchBranchReviews = async (branchId: string): Promise<Review[]> =>
   
 };
 
- // Fetch notifications for user
- export const getNotifications= async (
+ 
+// Fetch notifications for user
+export const getNotifications = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NotificationsResponse['data']> => {
@@ -254,9 +255,10 @@ export const fetchBranchReviews = async (branchId: string): Promise<Review[]> =>
     console.error('Error fetching notifications:', error);
     throw new Error('Failed to fetch notifications');
   }
-} 
+};
+
 // Mark a notification as read
- export const markNotificationAsRead= async (notificationId: string): Promise<void> => {
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
   try {
     const response = await api.patch(`/notifications/${notificationId}/read`);
     console.log('markNotificationAsRead response', response);
@@ -264,4 +266,18 @@ export const fetchBranchReviews = async (branchId: string): Promise<Review[]> =>
     console.error('Error marking notification as read:', error);
     throw new Error('Failed to mark notification as read');
   }
-} 
+};
+
+// Fetch unread notification count
+export const getUnreadNotificationCount = async (): Promise<number> => {
+  try {
+    const response = await api.get<any>(`/notifications/unread-count`);
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch unread notification count');
+    }
+    return response.data.count;
+  } catch (error) {
+    console.error('Error fetching unread notification count:', error);
+    throw new Error('Failed to fetch unread notification count');
+  }
+};

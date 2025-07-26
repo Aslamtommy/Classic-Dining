@@ -28,6 +28,9 @@ import { MainDashboardService } from '../services/MainDashboardService';
 import { MainDashboardController } from '../controllers/MainDashboardController';
 import { NotificationService } from '../services/NotificationService';
 import { NotificationRepository } from '../repositories/NotificationRepository';
+import { NotificationController } from '../controllers/NotificationController'; // Added import
+
+
 // ... existing instantiations ...
 
 
@@ -64,11 +67,11 @@ const tableTypeService = new TableTypeService(tableTypeRepository, branchReposit
  
 // Instantiate controllers
 const branchController = new BranchController(branchService,notificationService);
-const reservationController = new ReservationController(reservationService);
+const reservationController = new ReservationController(reservationService,notificationService);
 const restaurentService = new RestaurentServices(restaurentRepository, otpRepository,  branchRepository);
 const restaurentController = new RestaurentController(restaurentService,notificationService);
 const tabletypeController = new TableTypeController(tableTypeService);
-
+const notificationController = new NotificationController(notificationService);
 
 import { ChatController } from '../controllers/chatController';
 const chatController = new ChatController();
@@ -126,10 +129,13 @@ restaurentRoute.get(
 
 // Notification Routes
 restaurentRoute.get('/notifications', authenticateToken(['restaurent', 'branch']), (req, res) => {
-  if (req.data!.role === 'restaurent') {
-    return restaurentController.getNotifications(req, res);
-  }
-  return branchController.getNotifications(req, res);
+  return notificationController.getNotifications(req, res);
+});
+restaurentRoute.get('/notifications/unread-count', authenticateToken(['restaurent', 'branch']), (req, res) => {
+  return notificationController.getUnreadNotificationCount(req, res);
+});
+restaurentRoute.patch('/notifications/:notificationId/read', authenticateToken(['restaurent', 'branch']), (req, res) => {
+  return notificationController.markNotificationAsRead(req, res);
 });
 
  

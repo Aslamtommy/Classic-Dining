@@ -3,9 +3,10 @@ import { Server as HttpServer } from 'http';
 import { verifyToken } from './utils/jwt';
 import Message from './models/User/message';
 import adminModel from './models/Admin/adminModel';
+import dotenv from 'dotenv';
 
-import dotenv from "dotenv";
 dotenv.config();
+
 interface SocketData {
   id: string;
   role: 'user' | 'branch' | 'restaurent' | 'admin';
@@ -17,10 +18,9 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export const initializeSocket = (server: HttpServer): Server => {
-
   const io = new Server(server, {
     cors: {
-      origin:process.env.FrontendUrl,
+      origin: process.env.FrontendUrl,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
@@ -29,16 +29,21 @@ export const initializeSocket = (server: HttpServer): Server => {
 
   io.use((socket: Socket, next) => {
     const token = socket.handshake.auth.token;
-    if (!token) return next(new Error('Authentication error: No token provided'));
+    if (!token) {
+      socket.emit('error', 'Authentication error: No token provided');
+      return next(new Error('Authentication error: No token provided'));
+    }
     try {
       const decoded = verifyToken(token);
       if (!decoded || typeof decoded !== 'object' || !('id' in decoded) || !('role' in decoded)) {
+        socket.emit('error', 'Invalid token');
         return next(new Error('Invalid token'));
       }
       (socket as AuthenticatedSocket).data = decoded as SocketData;
       next();
     } catch (error) {
       console.error('Socket auth error:', error);
+      socket.emit('error', 'Authentication error: Invalid token');
       next(new Error('Authentication error: Invalid token'));
     }
   });
@@ -60,11 +65,6 @@ export const initializeSocket = (server: HttpServer): Server => {
       socket.join(notificationRoom);
       console.log(`Socket ${socket.id} joined notification room: ${notificationRoom}`);
     }
-
-    // Optional: Log incoming notifications for debugging
-    socket.on('receiveNotification', (notification: any) => {
-      console.log(`Notification received by ${socket.id} (Role: ${role}, ID: ${id}):`, notification);
-    });
 
     socket.on('joinChat', async (data: { userId?: string; branchId?: string; restaurantId?: string; adminId?: string }) => {
       try {
